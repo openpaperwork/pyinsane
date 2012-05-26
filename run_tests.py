@@ -8,9 +8,9 @@ from tests import tests_abstract
 
 if __name__ == '__main__':
     print "---"
-    print "RawAPI"
+    print "=== RawAPI: ==="
     unittest.TextTestRunner().run(tests_rawapi.get_all_tests())
     print "---"
-    print "Abstract:"
+    print "=== Abstract: ==="
     unittest.TextTestRunner().run(tests_abstract.get_all_tests())
 
