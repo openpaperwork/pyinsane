@@ -11,10 +11,8 @@ class TestSaneInit(unittest.TestCase):
         pass
 
     def test_init(self):
-        out = rawapi.sane_init()
-        self.assertEqual(len(out), 2)
-        self.assertEqual(out[0], rawapi.SaneStatus(rawapi.SaneStatus.GOOD))
-        self.assertTrue(out[1].is_current())
+        version = rawapi.sane_init()
+        self.assertTrue(version.is_current())
         rawapi.sane_exit()
 
     def tearDown(self):
@@ -25,7 +23,8 @@ class TestSaneGetDevices(unittest.TestCase):
         rawapi.sane_init()
 
     def test_get_devices(self):
-        pass
+        devices = rawapi.sane_get_devices()
+        self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
         rawapi.sane_exit()

@@ -106,6 +106,11 @@ class SaneStatus(SaneEnum):
     }
 
 
+class SaneException(Exception):
+    def __init__(self, status):
+        Exception.__init__(self, str(status))
+        self.status = status
+
 class SaneValueType(SaneEnum):
     BOOL = 0
     INT = 1
@@ -144,16 +149,17 @@ class SaneUnit(SaneEnum):
     }
 
 
-class SaneDevice(object):
-    def __init__(self, name, vendor, model, dev_type):
-        self.name = name
-        self.vendor = vendor
-        self.model = model
-        self.dev_type = dev_type
+class SaneDevice(ctypes.Structure):
+    _fields_ = [
+        ("name", ctypes.c_char_p),
+        ("vendor", ctypes.c_char_p),
+        ("model", ctypes.c_char_p),
+        ("type", ctypes.c_char_p),
+    ]
 
     def __str__(self):
-        return "%s (%s, %s, %d)" % (self.name, self.vendor, self.model,
-                                    self.dev_type)
+        return ("Device: %s (%s, %s, %d)"
+                % (self.name, self.vendor, self.model, self.type))
 
 
 class SaneCapabilities(SaneFlags):
@@ -212,28 +218,38 @@ class SaneConstraintType(SaneEnum):
     }
 
 
-class SaneRange(object):
-    def __init__(self, min_val, max_val, quant):
-        self.min_val = min_val
-        self.max_val = max_val
-        self.quant = quant
+class SaneRange(ctypes.Structure):
+    _fields_ = [
+        ("min", ctypes.c_int),
+        ("max", ctypes.c_int),
+        ("quant", ctypes.c_int),
+    ]
 
     def __str__(self):
-        return "Range: %d-%d (%s)" % (self.min_val, self.max_val,
-                                      str(self.quant))
+        return "Range: %d-%d (%d)" % (self.min, self.max, self.quant)
 
 
-class SaneOptionDescriptor(object):
-    name = ""
-    title = ""
-    desc = ""
-    value_type = SaneValueType(SaneValueType.INT)
-    unit = SaneUnit(SaneUnit.NONE)
-    size = 0
-    capabilities = SaneCapabilities()
+class SaneConstraint(ctypes.Union):
+    _fields_ = [
+        ("string_list", ctypes.POINTER(ctypes.c_char_p)),
+        ("word_list", ctypes.POINTER(ctypes.c_int)),
+        ("range", ctypes.POINTER(SaneRange))
+    ]
 
-    constraint_type = SaneConstraintType(SaneConstraintType.NONE)
-    contraint = None
+
+class SaneOptionDescriptor(ctypes.Structure):
+    _fields_ = [
+        ("name", ctypes.c_char_p),
+        ("title", ctypes.c_char_p),
+        ("desc", ctypes.c_char_p),
+        ("type", ctypes.c_int),  # SaneValueType
+        ("unit", ctypes.c_int),  # SaneUnit
+        ("size", ctypes.c_int),
+        ("cap", ctypes.c_int),  # SaneCapabilities
+
+        ("constraint_type", ctypes.c_int),  # SaneConstraintType
+        ("constraint", SaneConstraint),
+    ]
 
 
 class SaneAction(SaneEnum):
@@ -273,23 +289,76 @@ class SaneParameters(object):
     depth = 0
 
 
-def __dummy_auth_callback(ressource, username, password):
-    pass
+def __dummy_auth_callback(sane_ressource_str):
+    return ("anonymous", # login
+            "" # password
+           )
+
+class __AuthCallbackWrapper(object):
+    MAX_USERNAME_LEN = 128
+    MAX_PASSWORD_LEN = 128
+
+    def __init__(self, auth_callback):
+        self.__auth_callback = auth_callback
+
+    def wrapper(self, ressource_ptr, login_ptr, passwd_ptr):
+        (login, password) = self.__auth_callback(ressource_ptr.value)
+        # TODO(Jflesch): Make sure the following works
+        ctypes.memmove(login_ptr, ctypes.c_char_p(login),
+                       min(len(login)+1, MAX_USERNAME_LEN))
+        ctypes.memmove(passwd_ptr, ctypes.c_char_p(password),
+                       min(len(password)+1, MAX_USERNAME_LEN))
+
 
 def sane_init(auth_callback=__dummy_auth_callback):
-    version_code = ctypes.c_int32()
-    status = SANE_LIB.sane_init(ctypes.pointer(version_code),
-                                ctypes.c_voidp())
+    auth_callback_def = ctypes.CFUNCTYPE(None,
+                                         ctypes.c_char_p, ctypes.c_char_p,
+                                         ctypes.c_char_p)
+    SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int),
+                                   auth_callback_def]
+    SANE_LIB.sane_init.restype = ctypes.c_int
+
+    version_code = ctypes.c_int()
+    wrap_func = __AuthCallbackWrapper(auth_callback).wrapper
+    auth_callback = auth_callback_def(wrap_func)
+
+    status = SANE_LIB.sane_init(ctypes.pointer(version_code), auth_callback)
     if status != SaneStatus.GOOD:
-        return (SaneStatus(status),)
+        raise SaneException(SaneStatus(status))
     version_code = version_code.value
     major = (version_code >> 24) & 0xFF
     minor = (version_code >> 16) & 0xFF
     build = (version_code >> 0) & 0xFFFF
-    return (SaneStatus(status), SaneVersion(major, minor, build))
+    return SaneVersion(major, minor, build)
+
 
 def sane_exit():
+    SANE_LIB.sane_exit.argtypes = []
+    SANE_LIB.sane_exit.restype = None
     SANE_LIB.sane_exit()
+
+
+def sane_get_devices(remote=True):
+    SANE_LIB.sane_get_devices.argtypes = [
+        ctypes.POINTER(ctypes.c_void_p),
+        ctypes.c_int
+    ]
+    SANE_LIB.sane_get_devices.restype = ctypes.c_int
+
+    devices = ctypes.c_void_p()
+    status = SANE_LIB.sane_get_devices(ctypes.pointer(devices),
+                                       ctypes.c_int(remote))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    devices_ptr = ctypes.cast(devices, ctypes.POINTER(ctypes.POINTER(SaneDevice)))
+    devices = []
+    i = 0
+    while devices_ptr[i]:
+        devices.append(devices_ptr[i].contents)
+        i += 1
+    return devices
+
 
 def sane_strstatus(status):
     if status in SaneStatus.__meanings:

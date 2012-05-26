@@ -7,6 +7,7 @@ from tests import tests_rawapi
 from tests import tests_abstract
 
 if __name__ == '__main__':
+    print "Don't forget to turn at least one scanner on !"
     print "---"
     print "=== RawAPI: ==="
     unittest.TextTestRunner().run(tests_rawapi.get_all_tests())
