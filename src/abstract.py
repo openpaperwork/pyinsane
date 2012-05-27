@@ -8,17 +8,20 @@ __all__ = [
     'get_devices',
 ]
 
-_sane_is_init = False
+_sane_is_init = 0
 
-def _sane_init():
+def sane_init():
     global _sane_is_init
-    if not _sane_is_init:
+    if _sane_is_init <= 0:
         rawapi.sane_init()
-        _sane_is_init = True
+    _sane_is_init += 1
 
 
-def _sane_exit():
-    pass
+def sane_exit():
+    global _sane_is_init
+    _sane_is_init -= 1
+    if _sane_is_init <= 0:
+        rawapi.sane_exit()
 
 
 class ScannerOption(object):
@@ -234,14 +237,17 @@ class Scanner(object):
     def _open(self):
         if self._handle != None:
             return
-        _sane_init()
+        sane_init()
         self._handle = rawapi.sane_open(self.name)
 
-    def __del__(self):
+    def force_close(self):
         if self._handle == None:
             return
         rawapi.sane_close(self._handle)
-        _sane_exit()
+        sane_exit()
+
+    def __del__(self):
+        self.force_close()
 
     def __load_options(self):
         if self.__options != None:
@@ -278,10 +284,10 @@ class Scanner(object):
 
 
 def get_devices():
-    _sane_init()
+    sane_init()
     try:
         return [Scanner.build_from_rawapi(device)
                 for device in rawapi.sane_get_devices()]
     finally:
-        _sane_exit()
+        sane_exit()
 
