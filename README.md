@@ -11,6 +11,8 @@ Why Ctype ?
   python-imaging-sane tends to do (for instance it blocks the Gtk/Gobject
   main loop)
 
+Beware: This implementation is not thread safe !
+
 ## Installation
 
 $ sudo python ./setup.py install
