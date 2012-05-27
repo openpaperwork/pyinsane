@@ -27,7 +27,7 @@ $ sudo python ./setup.py install
 
 	import pyinsane.abstract
 
-	devices = pyinsance.abstract.get\_devices()
+	devices = pyinsance.abstract.get_devices()
 	assert(len(devices) > 0)
 	device = devices[0]
 	print "I'm going to use the following scanner: %s" % (str(device))
