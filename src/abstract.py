@@ -8,20 +8,17 @@ __all__ = [
     'get_devices',
 ]
 
-_sane_instances = 0
+_sane_is_init = False
 
 def _sane_init():
-    global _sane_instances
-    if _sane_instances == 0:
+    global _sane_is_init
+    if not _sane_is_init:
         rawapi.sane_init()
-    _sane_instances += 1
+        _sane_is_init = True
 
 
 def _sane_exit():
-    global _sane_instances
-    _sane_instances -= 1
-    if _sane_instances == 0:
-        rawapi.sane_exit()
+    pass
 
 
 class ScannerOption(object):
