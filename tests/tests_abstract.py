@@ -53,15 +53,10 @@ class TestSaneScan(unittest.TestCase):
         self.assertTrue(len(devices) > 0)
         self.dev = devices[0]
 
-    def __test_progress_cb(self, page):
-        self.__progress_called = True
-
     def test_simple_scan_gray(self):
         self.assertTrue("Gray" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Gray"
-        self.__progress_called = False
-        scan = self.dev.scan(multiple=False,
-                             progress_cb=self.__test_progress_cb)
+        scan = self.dev.scan(multiple=False)
         try:
             while True:
                 scan.read()
@@ -69,14 +64,11 @@ class TestSaneScan(unittest.TestCase):
             pass
         img = scan.get_img()
         self.assertNotEqual(img, None)
-        self.assertTrue(self.__progress_called)
 
     def test_simple_scan_color(self):
         self.assertTrue("Color" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Color"
-        self.__progress_called = False
-        scan = self.dev.scan(multiple=False,
-                             progress_cb=self.__test_progress_cb)
+        scan = self.dev.scan(multiple=False)
         try:
             while True:
                 scan.read()
@@ -84,15 +76,12 @@ class TestSaneScan(unittest.TestCase):
             pass
         img = scan.get_img()
         self.assertNotEqual(img, None)
-        self.assertTrue(self.__progress_called)
 
     def test_multi_scan_on_flatbed(self):
         self.assertTrue("Flatbed" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "Flatbed"
         self.dev.options['mode'].value = "Color"
-        self.__progress_called = False
-        scan = self.dev.scan(multiple=True,
-                             progress_cb=self.__test_progress_cb)
+        scan = self.dev.scan(multiple=True)
         try:
             while True:
                 scan.read()
@@ -100,22 +89,18 @@ class TestSaneScan(unittest.TestCase):
             pass
         self.assertEqual(scan.get_nb_img(), 1)
         self.assertNotEqual(scan.get_img(0), None)
-        self.assertTrue(self.__progress_called)
 
     def test_multi_scan_on_adf(self):
         self.assertTrue("ADF" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "ADF"
         self.dev.options['mode'].value = "Color"
-        self.__progress_called = False
-        scan = self.dev.scan(multiple=True,
-                             progress_cb=self.__test_progress_cb)
+        scan = self.dev.scan(multiple=True)
         try:
             while True:
                 scan.read()
         except EOFError:
             pass
         self.assertEqual(scan.get_nb_img(), 0)
-        self.assertFalse(self.__progress_called)
 
     def tearDown(self):
         del(self.dev)

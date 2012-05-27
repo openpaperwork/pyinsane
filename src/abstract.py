@@ -23,8 +23,6 @@ def _sane_exit():
     if _sane_instances == 0:
         rawapi.sane_exit()
 
-def _dummy_scan_progress_cb(page_nb):
-    pass
 
 class ScannerOption(object):
     idx = 0
@@ -124,9 +122,8 @@ class ImgUtil(object):
 
 
 class SimpleScanSession(object):
-    def __init__(self, scanner, progress_cb=_dummy_scan_progress_cb):
+    def __init__(self, scanner):
         self.__scanner = scanner
-        self.__callback = progress_cb
 
         self.__is_scanning = True
         self.__raw_output = b""
@@ -144,7 +141,6 @@ class SimpleScanSession(object):
     def read(self):
         try:
             self.__raw_output += rawapi.sane_read(self.__scanner._handle)
-            self.__callback(0)
         except EOFError, exc:
             rawapi.sane_cancel(self.__scanner._handle)
             self.__is_scanning = False
@@ -174,9 +170,8 @@ class SimpleScanSession(object):
 
 
 class MultiScanSession(object):
-    def __init__(self, scanner, progress_cb=_dummy_scan_progress_cb):
+    def __init__(self, scanner):
         self.__scanner = scanner
-        self.__callback = progress_cb
 
         self.__is_scanning = True
         self.__raw_output = b""
@@ -194,15 +189,12 @@ class MultiScanSession(object):
                 self.__must_clean = True
                 self.__parameters = \
                         rawapi.sane_get_parameters(self.__scanner._handle)
-                self.__callback(len(self.__imgs))
                 return
             try:
                 self.__raw_output += rawapi.sane_read(self.__scanner._handle)
-                self.__callback(len(self.__imgs))
             except EOFError, exc:
                 self.__imgs.append(ImgUtil.raw_to_img(self.__raw_output,
                                                        self.__parameters))
-                self.__callback(len(self.__imgs))
                 self.__is_scanning = False
         except StopIteration, exc:
             rawapi.sane_cancel(self.__scanner._handle)
@@ -273,15 +265,15 @@ class Scanner(object):
 
     options = property(__get_options)
 
-    def scan(self, multiple=False, progress_cb=_dummy_scan_progress_cb):
+    def scan(self, multiple=False):
         if (not multiple) or self.options['source'].value != "ADF":
             # XXX(Jflesch): We cannot use MultiScanSession() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
             # loop forever
-            return SimpleScanSession(self, progress_cb)
+            return SimpleScanSession(self)
         else:
-            return MultiScanSession(self, progress_cb)
+            return MultiScanSession(self)
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"
