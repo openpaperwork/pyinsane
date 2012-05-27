@@ -139,18 +139,21 @@ class SaneValueType(SaneEnum):
         BOOL :      ctypes.c_int,
         INT :       ctypes.c_int,
         FIXED :     ctypes.c_int,
-        STRING :    None,  # use as-is
+        STRING :    ctypes.c_buffer,
     }
 
     def can_getset_opt(self):
         return int(self) in self.VALUE_TO_CLASS
 
-    def buf_to_value(self, buf):
+    def buf_to_pyobj(self, buf):
         cl = self.VALUE_TO_CLASS[int(self)]
-        if cl != None:
-            return cl.from_buffer(buf).value
-        return buf.value
+        if cl == ctypes.c_buffer:
+            return buf.value
+        return cl.from_buffer(buf).value
 
+    def get_ctype_obj(self, pyobj):
+        cl = self.VALUE_TO_CLASS[int(self)]
+        return cl(pyobj)
 
 
 class SaneUnit(SaneEnum):
@@ -265,6 +268,9 @@ class SaneOptionDescriptor(ctypes.Structure):
     _fields_ = [
         ("name", ctypes.c_char_p),
         ("title", ctypes.c_char_p),
+        # Is actually multi-line ! -> you have to get
+        # a pointer on the pointer and use ptr[0], ptr[1], etc to get all the
+        # lines
         ("desc", ctypes.c_char_p),
         ("type", ctypes.c_int),  # SaneValueType
         ("unit", ctypes.c_int),  # SaneUnit
@@ -472,12 +478,28 @@ def sane_get_option_value(handle, option_idx):
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
 
-    return SaneValueType(opt_desc.type).buf_to_value(buf)
+    return SaneValueType(opt_desc.type).buf_to_pyobj(buf)
 
 
 def sane_set_option_value(handle, option_idx, new_value):
     global sane_available
     assert(sane_available)
+
+    # we need the descriptor first in order to allocate a buffer of the correct
+    # size, then cast it to the correct type
+    opt_desc = sane_get_option_descriptor(handle, option_idx)
+
+    value = SaneValueType(opt_desc.type).get_ctype_obj(new_value)
+    info = ctypes.c_int()
+
+    status = SANE_LIB.sane_control_option(handle, ctypes.c_int(option_idx),
+                                          SaneAction.SET_VALUE,
+                                          ctypes.pointer(value),
+                                          ctypes.pointer(info))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    return SaneInfo(info.value)
 
 
 def sane_set_option_auto(handle, option_idx):

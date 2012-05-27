@@ -97,10 +97,18 @@ class TestSaneControlOption(unittest.TestCase):
             if not rawapi.SaneValueType(desc.type).can_getset_opt():
                 continue
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
-            print "OPT: %d, %s -> %s" % (opt_idx, desc.name, str(val))
+            self.assertNotEqual(val, None)
 
     def test_set_option_value(self):
-        pass
+        for opt_idx in range(0, self.nb_options):
+            desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
+            if (desc.name != "mode"
+                or not rawapi.SaneValueType(desc.type).can_getset_opt()):
+                continue
+            info = rawapi.sane_set_option_value(self.dev_handle, opt_idx, "Gray")
+            self.assertFalse(rawapi.SaneInfo.INEXACT in info)
+            val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
+            self.assertEqual(val, "Gray")
 
     def test_set_option_auto(self):
         pass
