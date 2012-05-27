@@ -506,6 +506,18 @@ def sane_set_option_auto(handle, option_idx):
     global sane_available
     assert(sane_available)
 
+    info = ctypes.c_int()
+
+    status = SANE_LIB.sane_control_option(handle, ctypes.c_int(option_idx),
+                                          SaneAction.SET_AUTO,
+                                          ctypes.c_void_p(),
+                                          ctypes.pointer(info))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    return SaneInfo(info.value)
+
+
 
 def sane_strstatus(status):
     global sane_available

@@ -111,6 +111,7 @@ class TestSaneControlOption(unittest.TestCase):
             self.assertEqual(val, "Gray")
 
     def test_set_option_auto(self):
+        # TODO(Jflesch)
         pass
 
     def tearDown(self):
