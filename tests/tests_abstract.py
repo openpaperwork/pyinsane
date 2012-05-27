@@ -57,6 +57,7 @@ class TestSaneScan(unittest.TestCase):
         self.__progress_called = True
 
     def test_simple_scan_gray(self):
+        self.assertTrue("Gray" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Gray"
         self.__progress_called = False
         scan = self.dev.scan(multiple=False,
@@ -71,6 +72,7 @@ class TestSaneScan(unittest.TestCase):
         self.assertTrue(self.__progress_called)
 
     def test_simple_scan_color(self):
+        self.assertTrue("Color" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Color"
         self.__progress_called = False
         scan = self.dev.scan(multiple=False,
@@ -85,6 +87,7 @@ class TestSaneScan(unittest.TestCase):
         self.assertTrue(self.__progress_called)
 
     def test_multi_scan_on_flatbed(self):
+        self.assertTrue("Flatbed" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "Flatbed"
         self.dev.options['mode'].value = "Color"
         self.__progress_called = False
@@ -100,6 +103,7 @@ class TestSaneScan(unittest.TestCase):
         self.assertTrue(self.__progress_called)
 
     def test_multi_scan_on_adf(self):
+        self.assertTrue("ADF" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "ADF"
         self.dev.options['mode'].value = "Color"
         self.__progress_called = False

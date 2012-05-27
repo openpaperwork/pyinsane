@@ -244,6 +244,39 @@ class SaneConstraintType(SaneEnum):
         STRING_LIST :   "String list",
     }
 
+    @staticmethod
+    def __constraint_none_to_pyobj(sane_constraint):
+        return None
+
+    @staticmethod
+    def __constraint_range_to_pyobj(sane_constraint):
+        return (sane_constraint.range.contents.min,
+                sane_constraint.range.contents.max,
+                sane_constraint.range.contents.quant)
+
+    @staticmethod
+    def __constraint_word_list_to_pyobj(sane_constraint):
+        list_lng = sane_constraint.word_list[0]
+        return sane_constraint.word_list[1:list_lng+1]
+
+    @staticmethod
+    def __constraint_string_list_to_pyobj(sane_constraint):
+        string_list = []
+        idx = 0
+        while sane_constraint.string_list[idx]:
+            string_list.append(sane_constraint.string_list[idx])
+            idx += 1
+        return string_list
+
+    def get_pyobj_constraint(self, sane_constraint):
+        pyobj = {
+            self.NONE :         self.__constraint_none_to_pyobj,
+            self.RANGE :        self.__constraint_range_to_pyobj,
+            self.WORD_LIST :    self.__constraint_word_list_to_pyobj,
+            self.STRING_LIST :  self.__constraint_string_list_to_pyobj,
+        }[int(self)](sane_constraint)
+        return pyobj
+
 
 class SaneRange(ctypes.Structure):
     _fields_ = [

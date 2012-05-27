@@ -1,5 +1,3 @@
-import ctypes
-
 import Image
 
 import rawapi
@@ -32,6 +30,9 @@ class ScannerOption(object):
     size = 4
     capabilities = rawapi.SaneCapabilities(rawapi.SaneCapabilities.NONE)
 
+    constraint_type = rawapi.SaneConstraintType(rawapi.SaneConstraintType.NONE)
+    constraint = None
+
     def __init__(self, scanner, idx):
         self.__scanner = scanner
         self.idx = idx
@@ -46,6 +47,9 @@ class ScannerOption(object):
         opt.unit = rawapi.SaneUnit(opt_raw.unit)
         opt.size = opt_raw.size
         opt.capabilities = rawapi.SaneCapabilities(opt_raw.cap)
+        opt.constraint_type = rawapi.SaneConstraintType(opt_raw.constraint_type)
+        opt.constraint = opt.constraint_type.get_pyobj_constraint(
+                opt_raw.constraint)
         return opt
 
     def __get_value(self):
