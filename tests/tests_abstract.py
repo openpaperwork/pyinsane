@@ -6,6 +6,7 @@ import unittest
 import abstract
 import rawapi
 
+
 class TestSaneGetDevices(unittest.TestCase):
     def setUp(self):
         pass
@@ -16,6 +17,7 @@ class TestSaneGetDevices(unittest.TestCase):
 
     def tearDown(self):
         pass
+
 
 class TestSaneOptions(unittest.TestCase):
     def setUp(self):
@@ -45,6 +47,46 @@ class TestSaneOptions(unittest.TestCase):
         del(self.dev)
 
 
+class TestSaneScan(unittest.TestCase):
+    def setUp(self):
+        devices = abstract.get_devices()
+        self.assertTrue(len(devices) > 0)
+        self.dev = devices[0]
+
+    def __test_progress_cb(self, page):
+        self.__progress_called = True
+
+    def test_simple_scan_gray(self):
+        self.dev.options['mode'].value = "Gray"
+        self.__progress_called = False
+        scan = self.dev.scan(multiple=False,
+                             progress_cb=self.__test_progress_cb)
+        try:
+            while True:
+                scan.read()
+        except EOFError:
+            pass
+        img = scan.get_img()
+        self.assertNotEqual(img, None)
+        self.assertTrue(self.__progress_called)
+
+    def test_simple_scan_color(self):
+        self.dev.options['mode'].value = "Color"
+        self.__progress_called = False
+        scan = self.dev.scan(multiple=False,
+                             progress_cb=self.__test_progress_cb)
+        try:
+            while True:
+                scan.read()
+        except EOFError:
+            pass
+        img = scan.get_img()
+        self.assertNotEqual(img, None)
+        self.assertTrue(self.__progress_called)
+
+    def tearDown(self):
+        del(self.dev)
+
 def get_all_tests():
     all_tests = unittest.TestSuite()
 
@@ -56,6 +98,12 @@ def get_all_tests():
         TestSaneOptions("test_set_option"),
         TestSaneOptions("test_set_inexisting_option"),
         TestSaneOptions("test_set_invalid_value"),
+    ])
+    all_tests.addTest(tests)
+
+    tests = unittest.TestSuite([
+        TestSaneScan("test_simple_scan_gray"),
+        TestSaneScan("test_simple_scan_color"),
     ])
     all_tests.addTest(tests)
 

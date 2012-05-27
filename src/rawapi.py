@@ -309,6 +309,17 @@ class SaneFrame(SaneEnum):
         BLUE :  "Blue",
     }
 
+    VALUE_TO_PIL_FORMAT = {
+        GRAY : "L",
+        RGB : "RGB",
+        RED : "L",
+        GREEN : "L",
+        BLUE : "L",
+    }
+
+    def get_pil_format(self):
+        return self.VALUE_TO_PIL_FORMAT[int(self)]
+
 
 class SaneParameters(ctypes.Structure):
     _fields_ = [
@@ -549,13 +560,13 @@ def sane_get_parameters(handle):
     global sane_available
     assert(sane_available)
 
-    parameters_ptr = ctypes.c_pointer(SaneParameters())
+    parameters = SaneParameters()
 
-    status = SANE_LIB.sane_open(handle, parameters_ptr)
+    status = SANE_LIB.sane_get_parameters(handle, ctypes.pointer(parameters))
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
 
-    return parameters_ptr.contents
+    return parameters
 
 
 def sane_start(handle):
@@ -580,7 +591,7 @@ def sane_read(handle):
         raise EOFError()
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
-    return bytearray(buf)[:length.value]
+    return buf[:length.value]
 
 
 def sane_cancel(handle):
