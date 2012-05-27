@@ -119,6 +119,45 @@ class TestSaneControlOption(unittest.TestCase):
         rawapi.sane_exit()
 
 
+class TestSaneScan(unittest.TestCase):
+    def setUp(self):
+        rawapi.sane_init()
+        devices = rawapi.sane_get_devices()
+        self.assertTrue(len(devices) > 0)
+        dev_name = devices[0].name
+        self.dev_handle = rawapi.sane_open(dev_name)
+
+    def test_simple_scan(self):
+        # XXX(Jflesch): set_io_mode() always return SANE_STATUS_UNSUPPORTED
+        # with my scanner
+        #rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
+
+        rawapi.sane_start(self.dev_handle)
+
+        # XXX(Jflesch): get_select_fd() always return SANE_STATUS_UNSUPPORTED
+        # with my scanner
+        #fd = rawapi.sane_get_select_fd(self.dev_handle)
+        #self.assertTrue(fd > 0)
+
+        try:
+            while True:
+                buf = rawapi.sane_read(self.dev_handle)
+                self.assertTrue(len(buf) > 0)
+        except EOFError:
+            pass
+        rawapi.sane_cancel(self.dev_handle)
+
+    def test_cancelled_scan(self):
+        rawapi.sane_start(self.dev_handle)
+        buf = rawapi.sane_read(self.dev_handle)
+        self.assertTrue(len(buf) > 0)
+        rawapi.sane_cancel(self.dev_handle)
+
+    def tearDown(self):
+        rawapi.sane_close(self.dev_handle)
+        rawapi.sane_exit()
+
+
 def get_all_tests():
     all_tests = unittest.TestSuite()
 
@@ -145,6 +184,12 @@ def get_all_tests():
         TestSaneControlOption("test_get_option_value"),
         TestSaneControlOption("test_set_option_value"),
         TestSaneControlOption("test_set_option_auto"),
+    ])
+    all_tests.addTest(tests)
+
+    tests = unittest.TestSuite([
+        TestSaneScan("test_simple_scan"),
+        TestSaneScan("test_cancelled_scan"),
     ])
     all_tests.addTest(tests)
 

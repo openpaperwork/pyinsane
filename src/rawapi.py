@@ -385,7 +385,26 @@ SANE_LIB.sane_get_parameters.argtypes = [
     ctypes.c_void_p,
     ctypes.POINTER(SaneParameters),
 ]
-SANE_LIB.sane_control_option.restype = ctypes.c_int
+SANE_LIB.sane_get_parameters.restype = ctypes.c_int
+
+SANE_LIB.sane_start.argtypes = [ctypes.c_void_p]
+SANE_LIB.sane_start.restype = ctypes.c_int
+
+SANE_LIB.sane_read.argtypes = [ctypes.c_void_p,
+                               ctypes.c_void_p,
+                               ctypes.c_int,
+                               ctypes.POINTER(ctypes.c_int)]
+SANE_LIB.sane_read.restype = ctypes.c_int
+
+SANE_LIB.sane_cancel.argtypes = [ctypes.c_void_p]
+SANE_LIB.sane_cancel.restype = None
+
+SANE_LIB.sane_set_io_mode.argtypes = [ctypes.c_void_p, ctypes.c_int]
+SANE_LIB.sane_set_io_mode.restype = ctypes.c_int
+
+SANE_LIB.sane_get_select_fd.argtypes = [ctypes.c_void_p,
+                                        ctypes.POINTER(ctypes.c_int)]
+SANE_LIB.sane_get_select_fd.restype = ctypes.c_int
 
 def is_sane_available():
     global sane_available
@@ -537,6 +556,59 @@ def sane_get_parameters(handle):
         raise SaneException(SaneStatus(status))
 
     return parameters_ptr.contents
+
+
+def sane_start(handle):
+    global sane_available
+    assert(sane_available)
+
+    status = SANE_LIB.sane_start(handle)
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+
+def sane_read(handle):
+    global sane_available
+    assert(sane_available)
+
+    buf = ctypes.c_buffer(4096)
+    length = ctypes.c_int()
+
+    status = SANE_LIB.sane_read(handle, ctypes.pointer(buf), len(buf),
+                                ctypes.pointer(length))
+    if status == SaneStatus.EOF:
+        raise EOFError()
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+    return bytearray(buf)[:length.value]
+
+
+def sane_cancel(handle):
+    global sane_available
+    assert(sane_available)
+
+    SANE_LIB.sane_cancel(handle)
+
+
+def sane_set_io_mode(handle, non_blocking=False):
+    global sane_available
+    assert(sane_available)
+
+    status = SANE_LIB.sane_set_io_mode(handle,
+                                       ctypes.c_int(int(non_blocking)))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+
+def sane_get_select_fd(handle):
+    global sane_available
+    assert(sane_available)
+
+    fd = ctypes.c_int()
+    status = SANE_LIB.sane_get_select_fd(handle, ctypes.pointer(fd))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+    return fd.value
 
 
 def sane_strstatus(status):
