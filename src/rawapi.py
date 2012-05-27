@@ -1,6 +1,42 @@
 import ctypes
 import sys
 
+__all__ = [
+    'SaneCapabilities',
+    'SaneConstraint',
+    'SaneConstraintType',
+    'SaneDevice',
+    'SaneException',
+    'SaneFrame',
+    'SaneInfo',
+    'SaneOptionDescriptor',
+    'SaneParameters',
+    'SaneRange',
+    'SaneStatus',
+    'SaneUnit',
+    'SaneValueType',
+    'SaneVersion',
+
+    'is_sane_available',
+    'sane_init',
+    'sane_exit',
+    'sane_get_devices',
+    'sane_open',
+    'sane_close',
+    'sane_get_option_descriptor',
+    'sane_get_option_value',
+    'sane_set_option_value',
+    'sane_set_option_auto',
+    'sane_get_parameters',
+    'sane_start',
+    'sane_read',
+    'sane_cancel',
+    'sane_set_io_mode',
+    'sane_get_select_fd',
+    'sane_strstatus',
+]
+
+
 try:
     SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
     sane_available = True

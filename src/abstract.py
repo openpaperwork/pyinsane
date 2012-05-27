@@ -2,6 +2,12 @@ import Image
 
 import rawapi
 
+__all__ = [
+    'Scanner',
+    'ScannerOption',
+    'get_devices',
+]
+
 _sane_instances = 0
 
 def _sane_init():
