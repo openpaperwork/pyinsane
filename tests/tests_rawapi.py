@@ -82,6 +82,33 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
         rawapi.sane_exit()
 
 
+class TestSaneControlOption(unittest.TestCase):
+    def setUp(self):
+        rawapi.sane_init()
+        devices = rawapi.sane_get_devices()
+        self.assertTrue(len(devices) > 0)
+        dev_name = devices[0].name
+        self.dev_handle = rawapi.sane_open(dev_name)
+        self.nb_options = rawapi.sane_get_option_value(self.dev_handle, 0)
+
+    def test_get_option_value(self):
+        for opt_idx in range(0, self.nb_options):
+            desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
+            if not rawapi.SaneValueType(desc.type).can_getset_opt():
+                continue
+            val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
+            print "OPT: %d, %s -> %s" % (opt_idx, desc.name, str(val))
+
+    def test_set_option_value(self):
+        pass
+
+    def test_set_option_auto(self):
+        pass
+
+    def tearDown(self):
+        rawapi.sane_close(self.dev_handle)
+        rawapi.sane_exit()
+
 
 def get_all_tests():
     all_tests = unittest.TestSuite()
@@ -102,6 +129,13 @@ def get_all_tests():
         TestSaneGetOptionDescriptor("test_get_option_descriptor_0"),
         TestSaneGetOptionDescriptor(
             "test_get_option_descriptor_out_of_bounds"),
+    ])
+    all_tests.addTest(tests)
+
+    tests = unittest.TestSuite([
+        TestSaneControlOption("test_get_option_value"),
+        TestSaneControlOption("test_set_option_value"),
+        TestSaneControlOption("test_set_option_auto"),
     ])
     all_tests.addTest(tests)
 

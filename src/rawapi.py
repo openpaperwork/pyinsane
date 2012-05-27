@@ -44,7 +44,7 @@ class SaneFlags(object):
         return (self.flags & ~(old_flag))
 
     def __contains__(self, flag):
-        return ((self.flags & flag) == flag)
+        return ((self.__flags & flag) == flag)
 
     def __hex__(self):
         return hex(self.__flags)
@@ -134,6 +134,23 @@ class SaneValueType(SaneEnum):
         BUTTON :    "Button",
         GROUP :     "Group",
     }
+
+    VALUE_TO_CLASS = {
+        BOOL :      ctypes.c_int,
+        INT :       ctypes.c_int,
+        FIXED :     ctypes.c_int,
+        STRING :    None,  # use as-is
+    }
+
+    def can_getset_opt(self):
+        return int(self) in self.VALUE_TO_CLASS
+
+    def buf_to_value(self, buf):
+        cl = self.VALUE_TO_CLASS[int(self)]
+        if cl != None:
+            return cl.from_buffer(buf).value
+        return buf.value
+
 
 
 class SaneUnit(SaneEnum):
@@ -347,6 +364,14 @@ SANE_LIB.sane_get_option_descriptor.argtypes = [
 SANE_LIB.sane_get_option_descriptor.restype = \
     ctypes.POINTER(SaneOptionDescriptor)
 
+SANE_LIB.sane_control_option.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.POINTER(ctypes.c_int)
+]
+SANE_LIB.sane_control_option.restype = ctypes.c_int
 
 def is_sane_available():
     global sane_available
@@ -418,15 +443,46 @@ def sane_close(handle):
     SANE_LIB.sane_close(handle)
 
 
-def sane_get_option_descriptor(handle, option):
+def sane_get_option_descriptor(handle, option_idx):
     global sane_available
     assert(sane_available)
 
     opt_desc_ptr = SANE_LIB.sane_get_option_descriptor(
-            handle, ctypes.c_int(option))
+            handle, ctypes.c_int(option_idx))
     if not opt_desc_ptr:
         raise SaneException(SaneStatus(SaneStatus.INVAL))
     return opt_desc_ptr.contents
+
+
+def sane_get_option_value(handle, option_idx):
+    global sane_available
+    assert(sane_available)
+
+    # we need the descriptor first in order to allocate a buffer of the correct
+    # size, then cast it to the correct type
+    opt_desc = sane_get_option_descriptor(handle, option_idx)
+
+    buf = ctypes.c_buffer(max(4, opt_desc.size))
+    info = ctypes.c_int()
+
+    status = SANE_LIB.sane_control_option(handle, ctypes.c_int(option_idx),
+                                          SaneAction.GET_VALUE,
+                                          ctypes.pointer(buf),
+                                          ctypes.pointer(info))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    return SaneValueType(opt_desc.type).buf_to_value(buf)
+
+
+def sane_set_option_value(handle, option_idx, new_value):
+    global sane_available
+    assert(sane_available)
+
+
+def sane_set_option_auto(handle, option_idx):
+    global sane_available
+    assert(sane_available)
 
 
 def sane_strstatus(status):
