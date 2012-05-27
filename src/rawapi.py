@@ -310,13 +310,15 @@ class SaneFrame(SaneEnum):
     }
 
 
-class SaneParameters(object):
-    frame_format = SaneFrame(SaneFrame.RGB)
-    last_frame = True
-    bytes_per_line = 0
-    pixels_per_line = 0
-    lines = 0
-    depth = 0
+class SaneParameters(ctypes.Structure):
+    _fields_ = [
+        ("format",          ctypes.c_int),  # SaneFrame
+        ("last_frame",      ctypes.c_int),  # boolean
+        ("bytes_per_line",  ctypes.c_int),
+        ("pixels_per_line", ctypes.c_int),
+        ("lines",           ctypes.c_int),
+        ("depth",           ctypes.c_int),
+    ]
 
 
 def __dummy_auth_callback(sane_ressource_str):
@@ -376,6 +378,12 @@ SANE_LIB.sane_control_option.argtypes = [
     ctypes.c_int,
     ctypes.c_void_p,
     ctypes.POINTER(ctypes.c_int)
+]
+SANE_LIB.sane_control_option.restype = ctypes.c_int
+
+SANE_LIB.sane_get_parameters.argtypes = [
+    ctypes.c_void_p,
+    ctypes.POINTER(SaneParameters),
 ]
 SANE_LIB.sane_control_option.restype = ctypes.c_int
 
@@ -517,6 +525,18 @@ def sane_set_option_auto(handle, option_idx):
 
     return SaneInfo(info.value)
 
+
+def sane_get_parameters(handle):
+    global sane_available
+    assert(sane_available)
+
+    parameters_ptr = ctypes.c_pointer(SaneParameters())
+
+    status = SANE_LIB.sane_open(handle, parameters_ptr)
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    return parameters_ptr.contents
 
 
 def sane_strstatus(status):
