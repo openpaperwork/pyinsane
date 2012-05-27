@@ -59,24 +59,7 @@ class ScannerOption(object):
     value = property(__get_value, __set_value)
 
 
-class SimpleScan(object):
-    def __init__(self, scanner, progress_cb=_dummy_scan_progress_cb):
-        self.__scanner = scanner
-        self.__callback = progress_cb
-
-        self.__is_scanning = True
-        self.__raw_output = b""
-        self.__img = None
-
-        self.__scanner._open()
-        rawapi.sane_start(self.__scanner._handle)
-        try:
-            self.__parameters = \
-                    rawapi.sane_get_parameters(self.__scanner._handle)
-        except Exception, exc:
-            rawapi.sane_cancel(self.__scanner._handle)
-            raise exc
-
+class ImgUtil(object):
     @staticmethod
     def __raw_1_to_img(raw_packed, mode, pixels_per_line):
         """
@@ -91,7 +74,7 @@ class SimpleScan(object):
                 else:
                     raw_unpacked.append(chr(0x00))
         assert(len(raw_packed) * 8 == len(raw_packed))
-        return SimpleScan.__raw_8_to_img(raw_unpacked, mode, pixels_per_line)
+        return ImgUtil.__raw_8_to_img(raw_unpacked, mode, pixels_per_line)
 
     @staticmethod
     def __raw_8_to_img(raw, mode, pixels_per_line):
@@ -119,6 +102,35 @@ class SimpleScan(object):
         height = (len(raw) / (width*nb_colors)) / nb_colors
         return Image.frombuffer(mode, (width, height), raw, "raw", mode, 0, 1)
 
+    @staticmethod
+    def raw_to_img(raw, parameters):
+        mode = rawapi.SaneFrame(parameters.format).get_pil_format()
+
+        return {
+            1 : ImgUtil.__raw_1_to_img,
+            8 : ImgUtil.__raw_8_to_img,
+            16 : ImgUtil.__raw_16_to_img,
+        }[parameters.depth](raw, mode, parameters.pixels_per_line)
+
+
+class SimpleScanSession(object):
+    def __init__(self, scanner, progress_cb=_dummy_scan_progress_cb):
+        self.__scanner = scanner
+        self.__callback = progress_cb
+
+        self.__is_scanning = True
+        self.__raw_output = b""
+        self.__img = None
+
+        self.__scanner._open()
+        rawapi.sane_start(self.__scanner._handle)
+        try:
+            self.__parameters = \
+                    rawapi.sane_get_parameters(self.__scanner._handle)
+        except Exception, exc:
+            rawapi.sane_cancel(self.__scanner._handle)
+            raise exc
+
     def read(self):
         try:
             self.__raw_output += rawapi.sane_read(self.__scanner._handle)
@@ -126,18 +138,18 @@ class SimpleScan(object):
         except EOFError, exc:
             rawapi.sane_cancel(self.__scanner._handle)
             self.__is_scanning = False
-
-            mode = rawapi.SaneFrame(self.__parameters.format).get_pil_format()
-
-            self.__img = {
-                1 : self.__raw_1_to_img,
-                8 : self.__raw_8_to_img,
-                16 : self.__raw_16_to_img,
-            }[self.__parameters.depth](self.__raw_output, mode,
-                                       self.__parameters.pixels_per_line)
+            self.__img = ImgUtil.raw_to_img(self.__raw_output,
+                                             self.__parameters)
             raise exc
 
-    def get_img(self):
+    def get_nb_img(self):
+        if self.__is_scanning:
+            return 0
+        return 1
+
+    def get_img(self, number=0):
+        if number != 0:
+            raise IndexError("No such image available")
         if self.__is_scanning:
             try:
                 while True:
@@ -148,6 +160,60 @@ class SimpleScan(object):
 
     def __del__(self):
         if self.__is_scanning:
+            rawapi.sane_cancel(self.__scanner._handle)
+
+
+class MultiScanSession(object):
+    def __init__(self, scanner, progress_cb=_dummy_scan_progress_cb):
+        self.__scanner = scanner
+        self.__callback = progress_cb
+
+        self.__is_scanning = True
+        self.__raw_output = b""
+        self.__imgs = []
+
+        self.__scanner._open()
+        self.__must_clean = False
+        self.__is_scanning = False
+
+    def read(self):
+        try:
+            if not self.__is_scanning:
+                rawapi.sane_start(self.__scanner._handle)
+                self.__is_scanning = True
+                self.__must_clean = True
+                self.__parameters = \
+                        rawapi.sane_get_parameters(self.__scanner._handle)
+                self.__callback(len(self.__imgs))
+                return
+            try:
+                self.__raw_output += rawapi.sane_read(self.__scanner._handle)
+                self.__callback(len(self.__imgs))
+            except EOFError, exc:
+                self.__imgs.append(ImgUtil.raw_to_img(self.__raw_output,
+                                                       self.__parameters))
+                self.__callback(len(self.__imgs))
+                self.__is_scanning = False
+        except StopIteration, exc:
+            rawapi.sane_cancel(self.__scanner._handle)
+            self.__must_clean = False
+            self.__is_scanning = False
+            raise EOFError()
+
+    def get_nb_img(self):
+        return len(self.__imgs)
+
+    def get_img(self, number):
+        if number >= len(self.__imgs) and self.__must_clean:
+            try:
+                while True:
+                    self.read()
+            except EOFError, exc:
+                pass
+        return self.__imgs[number]
+
+    def __del__(self):
+        if self.__must_clean:
             rawapi.sane_cancel(self.__scanner._handle)
 
 
@@ -198,11 +264,14 @@ class Scanner(object):
     options = property(__get_options)
 
     def scan(self, multiple=False, progress_cb=_dummy_scan_progress_cb):
-        if not multiple:
-            return SimpleScan(self, progress_cb)
+        if (not multiple) or self.options['source'].value != "ADF":
+            # XXX(Jflesch): We cannot use MultiScanSession() with something
+            # else than an ADF. If we try, we will never get
+            # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
+            # loop forever
+            return SimpleScanSession(self, progress_cb)
         else:
-            # TODO
-            pass
+            return MultiScanSession(self, progress_cb)
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"

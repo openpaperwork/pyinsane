@@ -84,6 +84,35 @@ class TestSaneScan(unittest.TestCase):
         self.assertNotEqual(img, None)
         self.assertTrue(self.__progress_called)
 
+    def test_multi_scan_on_flatbed(self):
+        self.dev.options['source'].value = "Flatbed"
+        self.dev.options['mode'].value = "Color"
+        self.__progress_called = False
+        scan = self.dev.scan(multiple=True,
+                             progress_cb=self.__test_progress_cb)
+        try:
+            while True:
+                scan.read()
+        except EOFError:
+            pass
+        self.assertEqual(scan.get_nb_img(), 1)
+        self.assertNotEqual(scan.get_img(0), None)
+        self.assertTrue(self.__progress_called)
+
+    def test_multi_scan_on_adf(self):
+        self.dev.options['source'].value = "ADF"
+        self.dev.options['mode'].value = "Color"
+        self.__progress_called = False
+        scan = self.dev.scan(multiple=True,
+                             progress_cb=self.__test_progress_cb)
+        try:
+            while True:
+                scan.read()
+        except EOFError:
+            pass
+        self.assertEqual(scan.get_nb_img(), 0)
+        self.assertFalse(self.__progress_called)
+
     def tearDown(self):
         del(self.dev)
 
@@ -104,6 +133,8 @@ def get_all_tests():
     tests = unittest.TestSuite([
         TestSaneScan("test_simple_scan_gray"),
         TestSaneScan("test_simple_scan_color"),
+        TestSaneScan("test_multi_scan_on_flatbed"),
+        TestSaneScan("test_multi_scan_on_adf"),
     ])
     all_tests.addTest(tests)
 

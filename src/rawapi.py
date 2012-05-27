@@ -574,6 +574,8 @@ def sane_start(handle):
     assert(sane_available)
 
     status = SANE_LIB.sane_start(handle)
+    if status == SaneStatus.NO_DOCS:
+        raise StopIteration()
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
 
@@ -587,9 +589,11 @@ def sane_read(handle):
 
     status = SANE_LIB.sane_read(handle, ctypes.pointer(buf), len(buf),
                                 ctypes.pointer(length))
-    if status == SaneStatus.EOF:
+    if status == SaneStatus.NO_DOCS:
+        raise StopIteration()
+    elif status == SaneStatus.EOF:
         raise EOFError()
-    if status != SaneStatus.GOOD:
+    elif status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
     return buf[:length.value]
 
