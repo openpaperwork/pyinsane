@@ -244,6 +244,7 @@ class Scanner(object):
         if self._handle == None:
             return
         rawapi.sane_close(self._handle)
+        self._handle = None
         sane_exit()
 
     def __del__(self):
