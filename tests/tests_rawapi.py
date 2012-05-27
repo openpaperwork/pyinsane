@@ -48,6 +48,40 @@ class TestSaneOpen(unittest.TestCase):
         rawapi.sane_exit()
 
 
+class TestSaneGetOptionDescriptor(unittest.TestCase):
+    def setUp(self):
+        rawapi.sane_init()
+        devices = rawapi.sane_get_devices()
+        self.assertTrue(len(devices) > 0)
+        dev_name = devices[0].name
+        self.dev_handle = rawapi.sane_open(dev_name)
+
+    def test_get_option_descriptor_0(self):
+        opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
+        self.assertEqual(opt_desc.name, "")
+        self.assertEqual(opt_desc.title, "Number of options")
+        self.assertEqual(opt_desc.type, rawapi.SaneValueType.INT)
+        self.assertEqual(opt_desc.unit, rawapi.SaneUnit.NONE)
+        self.assertEqual(opt_desc.size, 4)
+        self.assertEqual(opt_desc.cap, rawapi.SaneCapabilities.SOFT_DETECT)
+        self.assertEqual(opt_desc.constraint_type,
+                         rawapi.SaneConstraintType.NONE)
+
+    def test_get_option_descriptor_out_of_bounds(self):
+        # XXX(Jflesch): Sane's documentation says get_option_descriptor()
+        # should return NULL if the index value is invalid. It seems the actual
+        # implementation prefers to segfault.
+
+        #self.assertRaises(rawapi.SaneException,
+        #                  rawapi.sane_get_option_descriptor, self.dev_handle,
+        #                  999999)
+        pass
+
+    def tearDown(self):
+        rawapi.sane_close(self.dev_handle)
+        rawapi.sane_exit()
+
+
 
 def get_all_tests():
     all_tests = unittest.TestSuite()
@@ -61,6 +95,13 @@ def get_all_tests():
     tests = unittest.TestSuite([
         TestSaneOpen("test_open_invalid"),
         TestSaneOpen("test_open_valid"),
+    ])
+    all_tests.addTest(tests)
+
+    tests = unittest.TestSuite([
+        TestSaneGetOptionDescriptor("test_get_option_descriptor_0"),
+        TestSaneGetOptionDescriptor(
+            "test_get_option_descriptor_out_of_bounds"),
     ])
     all_tests.addTest(tests)
 

@@ -1,7 +1,11 @@
 import ctypes
+import sys
 
-
-SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
+try:
+    SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
+    sane_available = True
+except OSError:
+    sane_available = False
 
 
 class SaneEnum(object):
@@ -44,6 +48,9 @@ class SaneFlags(object):
 
     def __hex__(self):
         return hex(self.__flags)
+
+    def __cmp__(self, other):
+        return cmp(self.__flags, other.__flags)
 
     def __str__(self):
         txt = "%s :" % (type(self))
@@ -310,17 +317,49 @@ class __AuthCallbackWrapper(object):
                        min(len(password)+1, MAX_USERNAME_LEN))
 
 
+AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
+                                     ctypes.c_char_p)
+SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF]
+SANE_LIB.sane_init.restype = ctypes.c_int
+
+SANE_LIB.sane_exit.argtypes = []
+SANE_LIB.sane_exit.restype = None
+
+SANE_LIB.sane_get_devices.argtypes = [
+    ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(SaneDevice))),
+    ctypes.c_int
+]
+SANE_LIB.sane_get_devices.restype = ctypes.c_int
+
+SANE_LIB.sane_open.argtypes = [
+    ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_void_p),
+]
+SANE_LIB.sane_open.restype = ctypes.c_int
+
+SANE_LIB.sane_close.argtypes = [ctypes.c_void_p]
+SANE_LIB.sane_close.restype = None
+
+SANE_LIB.sane_get_option_descriptor.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int
+]
+SANE_LIB.sane_get_option_descriptor.restype = \
+    ctypes.POINTER(SaneOptionDescriptor)
+
+
+def is_sane_available():
+    global sane_available
+    return sane_available
+
+
 def sane_init(auth_callback=__dummy_auth_callback):
-    auth_callback_def = ctypes.CFUNCTYPE(None,
-                                         ctypes.c_char_p, ctypes.c_char_p,
-                                         ctypes.c_char_p)
-    SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int),
-                                   auth_callback_def]
-    SANE_LIB.sane_init.restype = ctypes.c_int
+    global sane_available
+    assert(sane_available)
 
     version_code = ctypes.c_int()
     wrap_func = __AuthCallbackWrapper(auth_callback).wrapper
-    auth_callback = auth_callback_def(wrap_func)
+    auth_callback = AUTH_CALLBACK_DEF(wrap_func)
 
     status = SANE_LIB.sane_init(ctypes.pointer(version_code), auth_callback)
     if status != SaneStatus.GOOD:
@@ -333,17 +372,15 @@ def sane_init(auth_callback=__dummy_auth_callback):
 
 
 def sane_exit():
-    SANE_LIB.sane_exit.argtypes = []
-    SANE_LIB.sane_exit.restype = None
+    global sane_available
+    assert(sane_available)
+
     SANE_LIB.sane_exit()
 
 
 def sane_get_devices(remote=True):
-    SANE_LIB.sane_get_devices.argtypes = [
-        ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(SaneDevice))),
-        ctypes.c_int
-    ]
-    SANE_LIB.sane_get_devices.restype = ctypes.c_int
+    global sane_available
+    assert(sane_available)
 
     devices_ptr = ctypes.POINTER(ctypes.POINTER(SaneDevice))()
 
@@ -361,11 +398,8 @@ def sane_get_devices(remote=True):
 
 
 def sane_open(dev_name):
-    SANE_LIB.sane_open.argtypes = [
-        ctypes.c_char_p,
-        ctypes.POINTER(ctypes.c_void_p),
-    ]
-    SANE_LIB.sane_open.restype = ctypes.c_int
+    global sane_available
+    assert(sane_available)
 
     handle_ptr = ctypes.c_void_p()
 
@@ -378,13 +412,27 @@ def sane_open(dev_name):
 
 
 def sane_close(handle):
-    SANE_LIB.sane_close.argtypes = [ctypes.c_void_p]
-    SANE_LIB.sane_close.restype = None
+    global sane_available
+    assert(sane_available)
 
     SANE_LIB.sane_close(handle)
 
 
+def sane_get_option_descriptor(handle, option):
+    global sane_available
+    assert(sane_available)
+
+    opt_desc_ptr = SANE_LIB.sane_get_option_descriptor(
+            handle, ctypes.c_int(option))
+    if not opt_desc_ptr:
+        raise SaneException(SaneStatus(SaneStatus.INVAL))
+    return opt_desc_ptr.contents
+
+
 def sane_strstatus(status):
+    global sane_available
+    assert(sane_available)
+
     if status in SaneStatus.__meanings:
         return SaneStatus.__meanings[status]
     return "Unknown error code: %d" % (status)
