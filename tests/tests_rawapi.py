@@ -30,6 +30,25 @@ class TestSaneGetDevices(unittest.TestCase):
         rawapi.sane_exit()
 
 
+class TestSaneOpen(unittest.TestCase):
+    def setUp(self):
+        rawapi.sane_init()
+        devices = rawapi.sane_get_devices()
+        self.assertTrue(len(devices) > 0)
+        self.dev_name = devices[0].name
+
+    def test_open_invalid(self):
+        self.assertRaises(rawapi.SaneException, rawapi.sane_open, "whatever")
+
+    def test_open_valid(self):
+        dev_handle = rawapi.sane_open(self.dev_name)
+        rawapi.sane_close(dev_handle)
+
+    def tearDown(self):
+        rawapi.sane_exit()
+
+
+
 def get_all_tests():
     all_tests = unittest.TestSuite()
 
@@ -37,6 +56,12 @@ def get_all_tests():
     all_tests.addTest(tests)
 
     tests = unittest.TestSuite([TestSaneGetDevices("test_get_devices")])
+    all_tests.addTest(tests)
+
+    tests = unittest.TestSuite([
+        TestSaneOpen("test_open_invalid"),
+        TestSaneOpen("test_open_valid"),
+    ])
     all_tests.addTest(tests)
 
     return all_tests

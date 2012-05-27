@@ -340,24 +340,48 @@ def sane_exit():
 
 def sane_get_devices(remote=True):
     SANE_LIB.sane_get_devices.argtypes = [
-        ctypes.POINTER(ctypes.c_void_p),
+        ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(SaneDevice))),
         ctypes.c_int
     ]
     SANE_LIB.sane_get_devices.restype = ctypes.c_int
 
-    devices = ctypes.c_void_p()
-    status = SANE_LIB.sane_get_devices(ctypes.pointer(devices),
+    devices_ptr = ctypes.POINTER(ctypes.POINTER(SaneDevice))()
+
+    status = SANE_LIB.sane_get_devices(ctypes.pointer(devices_ptr),
                                        ctypes.c_int(remote))
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
 
-    devices_ptr = ctypes.cast(devices, ctypes.POINTER(ctypes.POINTER(SaneDevice)))
     devices = []
     i = 0
     while devices_ptr[i]:
         devices.append(devices_ptr[i].contents)
         i += 1
     return devices
+
+
+def sane_open(dev_name):
+    SANE_LIB.sane_open.argtypes = [
+        ctypes.c_char_p,
+        ctypes.POINTER(ctypes.c_void_p),
+    ]
+    SANE_LIB.sane_open.restype = ctypes.c_int
+
+    handle_ptr = ctypes.c_void_p()
+
+    status = SANE_LIB.sane_open(ctypes.c_char_p(dev_name),
+                                ctypes.pointer(handle_ptr))
+    if status != SaneStatus.GOOD:
+        raise SaneException(SaneStatus(status))
+
+    return handle_ptr
+
+
+def sane_close(handle):
+    SANE_LIB.sane_close.argtypes = [ctypes.c_void_p]
+    SANE_LIB.sane_close.restype = None
+
+    SANE_LIB.sane_close(handle)
 
 
 def sane_strstatus(status):
