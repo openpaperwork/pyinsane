@@ -8,19 +8,25 @@ __all__ = [
     'get_devices',
 ]
 
-_sane_is_init = 0
+sane_is_init = 0
+
+# XXX(Jflesch): Never open more than one handle at the same time.
+# Some Sane backends don't support it. For instance, I have 2 HP scanners, and
+# if I try to access both from the same process, I get I/O errors.
+sane_dev_handle = ("", None)
+
 
 def sane_init():
-    global _sane_is_init
-    if _sane_is_init <= 0:
+    global sane_is_init
+    if sane_is_init <= 0:
         rawapi.sane_init()
-    _sane_is_init += 1
+    sane_is_init += 1
 
 
 def sane_exit():
-    global _sane_is_init
-    _sane_is_init -= 1
-    if _sane_is_init <= 0:
+    global sane_is_init
+    sane_is_init -= 1
+    if sane_is_init <= 0:
         rawapi.sane_exit()
 
 
@@ -58,11 +64,11 @@ class ScannerOption(object):
 
     def __get_value(self):
         self.__scanner._open()
-        return rawapi.sane_get_option_value(self.__scanner._handle, self.idx)
+        return rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
 
     def __set_value(self, new_value):
         self.__scanner._open()
-        rawapi.sane_set_option_value(self.__scanner._handle, self.idx, new_value)
+        rawapi.sane_set_option_value(sane_dev_handle[1], self.idx, new_value)
 
     value = property(__get_value, __set_value)
 
@@ -130,19 +136,19 @@ class SimpleScanSession(object):
         self.__img = None
 
         self.__scanner._open()
-        rawapi.sane_start(self.__scanner._handle)
+        rawapi.sane_start(sane_dev_handle[1])
         try:
             self.__parameters = \
-                    rawapi.sane_get_parameters(self.__scanner._handle)
+                    rawapi.sane_get_parameters(sane_dev_handle[1])
         except Exception, exc:
-            rawapi.sane_cancel(self.__scanner._handle)
+            rawapi.sane_cancel(sane_dev_handle[1])
             raise exc
 
     def read(self):
         try:
-            self.__raw_output += rawapi.sane_read(self.__scanner._handle)
+            self.__raw_output += rawapi.sane_read(sane_dev_handle[1])
         except EOFError, exc:
-            rawapi.sane_cancel(self.__scanner._handle)
+            rawapi.sane_cancel(sane_dev_handle[1])
             self.__is_scanning = False
             self.__img = ImgUtil.raw_to_img(self.__raw_output,
                                              self.__parameters)
@@ -166,7 +172,7 @@ class SimpleScanSession(object):
 
     def __del__(self):
         if self.__is_scanning:
-            rawapi.sane_cancel(self.__scanner._handle)
+            rawapi.sane_cancel(sane_dev_handle[1])
 
 
 class MultiScanSession(object):
@@ -184,20 +190,20 @@ class MultiScanSession(object):
     def read(self):
         try:
             if not self.__is_scanning:
-                rawapi.sane_start(self.__scanner._handle)
+                rawapi.sane_start(sane_dev_handle[1])
                 self.__is_scanning = True
                 self.__must_clean = True
                 self.__parameters = \
-                        rawapi.sane_get_parameters(self.__scanner._handle)
+                        rawapi.sane_get_parameters(sane_dev_handle[1])
                 return
             try:
-                self.__raw_output += rawapi.sane_read(self.__scanner._handle)
+                self.__raw_output += rawapi.sane_read(sane_dev_handle[1])
             except EOFError, exc:
                 self.__imgs.append(ImgUtil.raw_to_img(self.__raw_output,
                                                        self.__parameters))
                 self.__is_scanning = False
         except StopIteration, exc:
-            rawapi.sane_cancel(self.__scanner._handle)
+            rawapi.sane_cancel(sane_dev_handle[1])
             self.__must_clean = False
             self.__is_scanning = False
             raise EOFError()
@@ -216,7 +222,7 @@ class MultiScanSession(object):
 
     def __del__(self):
         if self.__must_clean:
-            rawapi.sane_cancel(self.__scanner._handle)
+            rawapi.sane_cancel(sane_dev_handle[1])
 
 
 class Scanner(object):
@@ -226,7 +232,6 @@ class Scanner(object):
         self.vendor = vendor
         self.model = model
         self.dev_type = dev_type
-        self._handle = None
         self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
@@ -235,17 +240,23 @@ class Scanner(object):
                        sane_device.type)
 
     def _open(self):
-        if self._handle != None:
+        global sane_dev_handle
+        (devid, handle) = sane_dev_handle
+        if devid == self.name:
             return
+        self.force_close()
         sane_init()
-        self._handle = rawapi.sane_open(self.name)
+        handle = rawapi.sane_open(self.name)
+        sane_dev_handle = (self.name, handle)
 
     def force_close(self):
-        if self._handle == None:
+        global sane_dev_handle
+        (devid, handle) = sane_dev_handle
+        if handle == None:
             return
-        rawapi.sane_close(self._handle)
-        self._handle = None
+        rawapi.sane_close(handle)
         sane_exit()
+        sane_dev_handle = ("", None)
 
     def __del__(self):
         self.force_close()
@@ -254,10 +265,10 @@ class Scanner(object):
         if self.__options != None:
             return
         self._open()
-        nb_options = rawapi.sane_get_option_value(self._handle, 0)
+        nb_options = rawapi.sane_get_option_value(sane_dev_handle[1], 0)
         self.__options = {}
         for opt_idx in range(1, nb_options):
-            opt_desc = rawapi.sane_get_option_descriptor(self._handle, opt_idx)
+            opt_desc = rawapi.sane_get_option_descriptor(sane_dev_handle[1], opt_idx)
             if not rawapi.SaneValueType(opt_desc.type).can_getset_opt():
                 continue
             opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)

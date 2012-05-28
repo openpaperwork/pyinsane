@@ -21,21 +21,23 @@ class TestSaneGetDevices(unittest.TestCase):
 
 class TestSaneOptions(unittest.TestCase):
     def setUp(self):
-        devices = abstract.get_devices()
-        self.assertTrue(len(devices) > 0)
-        self.dev = devices[0]
+        self.devices = abstract.get_devices()
+        self.assertTrue(len(self.devices) > 0)
 
     def test_get_option(self):
-        val = self.dev.options['mode'].value
-        self.assertNotEqual(val, None)
+        for dev in self.devices:
+            val = dev.options['mode'].value
+            self.assertNotEqual(val, None)
 
     def test_set_option(self):
-        self.dev.options['mode'].value = "Gray"
-        val = self.dev.options['mode'].value
-        self.assertEqual(val, "Gray")
+        for dev in self.devices:
+            dev.options['mode'].value = "Gray"
+            val = dev.options['mode'].value
+            self.assertEqual(val, "Gray")
 
     def __set_opt(self, opt_name, opt_val):
-        self.dev.options[opt_name].value = opt_val
+        for dev in self.devices:
+            dev.options[opt_name].value = opt_val
 
     def test_set_inexisting_option(self):
         self.assertRaises(KeyError, self.__set_opt, 'xyz', "Gray")
@@ -44,7 +46,9 @@ class TestSaneOptions(unittest.TestCase):
         self.assertRaises(rawapi.SaneException, self.__set_opt, 'mode', "XYZ")
 
     def tearDown(self):
-        del(self.dev)
+        for dev in self.devices:
+            del(dev)
+        del(self.devices)
 
 
 class TestSaneScan(unittest.TestCase):
