@@ -103,7 +103,7 @@ class ImgUtil(object):
             "RGB" : 3,
         }[mode]
         width = pixels_per_line
-        height = (len(raw) / (width * nb_colors)) / nb_colors
+        height = (len(raw) / (width * nb_colors))
         return Image.frombuffer(mode, (width, height), raw, "raw", mode, 0, 1)
 
     @staticmethod
@@ -116,7 +116,7 @@ class ImgUtil(object):
             "RGB" : 6,
         }[mode]
         width = pixels_per_line
-        height = (len(raw) / (width*nb_colors)) / nb_colors
+        height = (len(raw) / (width*nb_colors))
         return Image.frombuffer(mode, (width, height), raw, "raw", mode, 0, 1)
 
     @staticmethod
