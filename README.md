@@ -18,7 +18,20 @@ libsane
 
 ## Installation
 
-$ sudo python ./setup.py install
+	$ sudo python ./setup.py install
+
+## Unit tests
+
+	$ python ./run_tests.py
+
+Unit tests require at least one scanner with a flatbed and an ADF (Automatic
+Document Feeder).
+
+If possible, they should be run with at least 2 scanners connected. The first that appear in "scanimage -L" must be the one with the ADF.
+
+My current setup:
+- HP Officejet 4500 G510g (Flatbed + ADF)
+- HP Deskjet 2050 J510 series (Flatbed)
 
 ## Usage
 
