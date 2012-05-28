@@ -653,7 +653,7 @@ def sane_read(handle):
     global sane_available
     assert(sane_available)
 
-    buf = ctypes.c_buffer(4096)
+    buf = ctypes.c_buffer(128*1024)
     length = ctypes.c_int()
 
     status = SANE_LIB.sane_read(handle, ctypes.pointer(buf), len(buf),
