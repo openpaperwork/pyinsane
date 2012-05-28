@@ -7,7 +7,8 @@ Python implementation of the Sane API (using ctypes) and abstration layer.
 The code is divided in 3 layers:
 - rawapi : Ctypes binding to the raw Sane API
 - abstract : An Object-Oriented layer that simplifies the use of the Sane API
-  and try to avoid possible misuse of the Sane API.
+  and try to avoid possible misuse of the Sane API. When scanning, it also takes
+  care of returning a PIL image.
 - abstract\_th : The Sane API is absolutely not thread-safe. This layer solves
   this problem but using a fully dedicated thread.
 

@@ -19,15 +19,16 @@ class SaneAction(object):
         self.exception = None
         self.__sem = threading.Semaphore(0)
 
-    def wait(self):
+    def start(self):
         global sane_thread
         global sane_action_queue
 
         if sane_thread == None or not sane_thread.is_alive():
-            sane_thread = SaneWorker()
-            sane_thread.start()
-
+            raise rawapi.SaneException("Sane thread died unexpectidly !")
         sane_action_queue.put(self)
+
+    def wait(self):
+        self.start()
         self.__sem.acquire()
         if self.exception != None:
             raise self.exception
@@ -35,7 +36,7 @@ class SaneAction(object):
 
     def do(self):
         try:
-            print "SANE: Calling function '%s'" % (self.func.func_name)
+            sys.stdout.flush()
             self.result = self.func(**self.args)
         except Exception, exc:
             self.exception = exc
@@ -47,17 +48,17 @@ class SaneWorker(threading.Thread):
         global sane_action_queue
         while True:
             try:
-                action = sane_action_queue.get(block=True, timeout=2)
+                action = sane_action_queue.get(block=True, timeout=1)
                 action.do()
             except Queue.Empty:
                 if not parent_thread.is_alive():
                     return
 
 
-# TODO(Jflesch): Lock for sane_thread*
-sane_thread = SaneWorker()
 parent_thread = threading.current_thread()
 sane_action_queue = Queue.Queue()
+# TODO(Jflesch): Lock for sane_thread*
+sane_thread = SaneWorker()
 sane_thread.start()
 
 
@@ -70,6 +71,8 @@ def sane_exit():
 
 
 class ScannerOption(object):
+    _abstract_opt = None
+
     idx = 0
     name = ""
     title = ""
@@ -83,59 +86,61 @@ class ScannerOption(object):
     constraint = None
 
     def __init__(self, scanner, idx):
-        self.__scanner = scanner
         self.idx = idx
+        self._abstract_opt = abstract.ScannerOption(scanner._abstract_dev, idx)
 
     @staticmethod
-    def build_from_abstract(scanner, opt_idx, opt_abstract):
-        opt = ScannerOption(scanner, opt_idx)
-        opt.name = opt_abstract.name
-        opt.title = opt_abstract.title
-        opt.desc = opt_abstract.desc
-        opt.val_type = opt_abstract.val_type
-        opt.unit = opt_abstract.unit
-        opt.size = opt_abstract.size
-        opt.capabilities = opt_abstract.capabilities
-        opt.constraint_type = opt_abstract.constraint_type
-        opt.constraint = opt_abstract.constraint
+    def build_from_abstract(scanner, abstract_opt):
+        opt = ScannerOption(scanner, abstract_opt.idx)
+        opt._abstract_opt = abstract_opt
+        opt.name = abstract_opt.name
+        opt.title = abstract_opt.title
+        opt.desc = abstract_opt.desc
+        opt.val_type = abstract_opt.val_type
+        opt.unit = abstract_opt.unit
+        opt.size = abstract_opt.size
+        opt.capabilities = abstract_opt.capabilities
+        opt.constraint_type = abstract_opt.constraint_type
+        opt.constraint = abstract_opt.constraint
         return opt
 
-    def __get_value(self):
-        # TODO
-        pass
+    def _get_value(self):
+        return SaneAction(self._abstract_opt._get_value).wait()
 
-    def __set_value(self, new_value):
-        # TODO
-        pass
+    def _set_value(self, new_value):
+        SaneAction(self._abstract_opt._set_value, new_value=new_value).wait()
 
-    value = property(__get_value, __set_value)
+    value = property(_get_value, _set_value)
 
 
 class ScanSession(object):
-    def __init__(self):
-        # TODO
-        pass
+    def __init__(self, scanner, multiple):
+        self._session = SaneAction(scanner._abstract_dev.scan, multiple=multiple).wait()
 
     def read(self):
-        # TODO
-        pass
+        SaneAction(self._session.read).wait()
 
     def get_nb_img(self):
-        # TODO
-        pass
+        return SaneAction(self._session.get_nb_img).wait()
 
-    def get_img(self):
-        # TODO
-        pass
+    def get_img(self, idx=0):
+        return SaneAction(self._session.get_img, idx=idx).wait()
 
     def __del___(self):
-        # TODO
-        pass
+        SaneAction(self._session._del).start()
 
 
 class Scanner(object):
-    def __init__(self, name, vendor="Unknown", model="Unknown",
-                 dev_type="Unkwown"):
+    def __init__(self, name=None,
+                 vendor="Unknown", model="Unknown", dev_type="Unknown",
+                 abstract_dev=None):
+        if abstract_dev == None:
+            abstract_dev = abstract.Scanner(name)
+        else:
+            vendor = abstract_dev.vendor
+            model = abstract_dev.model
+            dev_type = abstract_dev.dev_type
+        self._abstract_dev = abstract_dev
         self.name = name
         self.vendor = vendor
         self.model = model
@@ -144,18 +149,27 @@ class Scanner(object):
 
     @staticmethod
     def build_from_abstract(abstract_dev):
-        return Scanner(abstract_dev.name, abstract_dev.vendor,
-                       abstract_dev.model, abstract_dev.dev_type)
+        return Scanner(abstract_dev.name, abstract_dev=abstract_dev)
 
     def _get_options(self):
-        # TODO
-        pass
+        if self.__options != None:
+            return self.__options
+        options = SaneAction(self._abstract_dev._get_options).wait()
+        ar_options = [ScannerOption.build_from_abstract(self, opt)
+                      for opt in options.values()]
+        options = {}
+        for opt in ar_options:
+            options[opt.name] = opt
+        self.__options = options
+        return self.__options
 
     options = property(_get_options)
 
     def scan(self, multiple=False):
-        # TODO
-        pass
+        return ScanSession(self, multiple)
+
+    def __del__(self):
+        SaneAction(self._abstract_dev._del)
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"
@@ -163,5 +177,6 @@ class Scanner(object):
 
 
 def get_devices():
-    # TODO
-    pass
+    abs_devs = SaneAction(abstract.get_devices).wait()
+    abs_th_devs = [Scanner.build_from_abstract(abs_dev) for abs_dev in abs_devs]
+    return abs_th_devs

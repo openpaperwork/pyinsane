@@ -65,15 +65,15 @@ class ScannerOption(object):
                 opt_raw.constraint)
         return opt
 
-    def __get_value(self):
+    def _get_value(self):
         self.__scanner._open()
         return rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
 
-    def __set_value(self, new_value):
+    def _set_value(self, new_value):
         self.__scanner._open()
         rawapi.sane_set_option_value(sane_dev_handle[1], self.idx, new_value)
 
-    value = property(__get_value, __set_value)
+    value = property(_get_value, _set_value)
 
 
 class ImgUtil(object):
@@ -143,27 +143,27 @@ class SimpleScanSession(object):
         try:
             self.__parameters = \
                     rawapi.sane_get_parameters(sane_dev_handle[1])
-        except Exception, exc:
+        except Exception:
             rawapi.sane_cancel(sane_dev_handle[1])
-            raise exc
+            raise
 
     def read(self):
         try:
             self.__raw_output += rawapi.sane_read(sane_dev_handle[1])
-        except EOFError, exc:
+        except EOFError:
             rawapi.sane_cancel(sane_dev_handle[1])
             self.__is_scanning = False
             self.__img = ImgUtil.raw_to_img(self.__raw_output,
                                              self.__parameters)
-            raise exc
+            raise
 
     def get_nb_img(self):
         if self.__is_scanning:
             return 0
         return 1
 
-    def get_img(self, number=0):
-        if number != 0:
+    def get_img(self, idx=0):
+        if idx != 0:
             raise IndexError("No such image available")
         if self.__is_scanning:
             try:
@@ -173,9 +173,12 @@ class SimpleScanSession(object):
                 pass
         return self.__img
 
-    def __del__(self):
+    def _del(self):
         if self.__is_scanning:
             rawapi.sane_cancel(sane_dev_handle[1])
+
+    def __del__(self):
+        self._del()
 
 
 class MultiScanSession(object):
@@ -214,18 +217,21 @@ class MultiScanSession(object):
     def get_nb_img(self):
         return len(self.__imgs)
 
-    def get_img(self, number):
-        if number >= len(self.__imgs) and self.__must_clean:
+    def get_img(self, idx):
+        if idx >= len(self.__imgs) and self.__must_clean:
             try:
                 while True:
                     self.read()
             except EOFError, exc:
                 pass
-        return self.__imgs[number]
+        return self.__imgs[idx]
 
-    def __del__(self):
+    def _del(self):
         if self.__must_clean:
             rawapi.sane_cancel(sane_dev_handle[1])
+
+    def __del__(self):
+        self._del()
 
 
 class Scanner(object):
@@ -261,8 +267,11 @@ class Scanner(object):
         sane_exit()
         sane_dev_handle = ("", None)
 
-    def __del__(self):
+    def _del(self):
         self._force_close()
+
+    def __del__(self):
+        self._del()
 
     def __load_options(self):
         if self.__options != None:

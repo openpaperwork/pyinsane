@@ -13,11 +13,13 @@ if __name__ == '__main__':
     print "Don't forget to turn at least one scanner on !"
     print "---"
     print "=== RawAPI: ==="
-    unittest.TextTestRunner().run(tests_rawapi.get_all_tests())
+    unittest.TextTestRunner(verbosity=3).run(
+        tests_rawapi.get_all_tests())
     print "---"
     print "=== Abstract: ==="
-    unittest.TextTestRunner().run(tests_abstract.get_all_tests(abstract))
+    unittest.TextTestRunner(verbosity=3).run(
+        tests_abstract.get_all_tests(abstract))
     print "---"
     print "=== Abstract Threaded: ==="
-    unittest.TextTestRunner().run(tests_abstract.get_all_tests(abstract_th))
-
+    unittest.TextTestRunner(verbosity=3).run(
+        tests_abstract.get_all_tests(abstract_th))
