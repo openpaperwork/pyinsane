@@ -9,6 +9,7 @@ __all__ = [
 ]
 
 sane_is_init = 0
+sane_version = None
 
 # XXX(Jflesch): Never open more than one handle at the same time.
 # Some Sane backends don't support it. For instance, I have 2 HP scanners, and
@@ -18,9 +19,11 @@ sane_dev_handle = ("", None)
 
 def sane_init():
     global sane_is_init
+    global sane_version
     if sane_is_init <= 0:
-        rawapi.sane_init()
+        sane_version = rawapi.sane_init()
     sane_is_init += 1
+    return sane_version
 
 
 def sane_exit():
