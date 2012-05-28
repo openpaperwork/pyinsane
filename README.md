@@ -42,7 +42,7 @@ or if you already know its name/id:
 ### Simple scan
 
 	device.options['resolution'].value = 300
-	scan_instance = device.scan(multi=False)
+	scan_instance = device.scan(multiple=False)
 	try:
 		while True:
 			scan_instance.read()
@@ -57,6 +57,7 @@ or if you already know its name/id:
 		return
 
 	device.options['source'].value = "ADF"
+	scan_instance = device.scan(multiple=True)
 	try:
 		while True:
 			scan_instance.read()
@@ -78,4 +79,5 @@ or if you already know its name/id:
 ## Licence
 
 GPL v3
+2012(c) Jerome Flesch (<jflesch@gmail.com>)
 
