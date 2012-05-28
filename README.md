@@ -24,9 +24,9 @@ $ sudo python ./setup.py install
 
 ### Scanner detection
 
-	import pyinsane.abstract
+	import pyinsane.abstract as pyinsane
 
-	devices = pyinsance.abstract.get_devices()
+	devices = pyinsane.get_devices()
 	assert(len(devices) > 0)
 	device = devices[0]
 	print "I'm going to use the following scanner: %s" % (str(device))
@@ -34,9 +34,9 @@ $ sudo python ./setup.py install
 
 or if you already know its name/id:
 
-	import pyinsane.abstract
+	import pyinsane.abstract as pyinsane
 
-	device = pyinsane.abstract.Scanner(name="somethingsomething")
+	device = pyinsane.Scanner(name="somethingsomething")
 	print "I'm going to use the following scanner: %s" % (str(device))
 
 ### Simple scan
@@ -67,7 +67,7 @@ or if you already know its name/id:
 
 ### Abstract\_th
 
-	import pyinsane.abstract_th
+	import pyinsane.abstract_th as pyinsane
 
 	# When imported, it will start a new thread, dedicated to Sane.
 	# Its API is the same than for pyinsane.abstract. You can use it the
