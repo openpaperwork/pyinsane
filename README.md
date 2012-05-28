@@ -1,17 +1,15 @@
 # PyInsane
 
-
 ## Description
 
 Python implementation of the Sane API (using ctypes) and abstration layer.
 
-Why Ctype ?
-- To have a pure Python implementation (I don't like mixing languages)
-- To not lock the other Python threads or other C bindings like
-  python-imaging-sane tends to do (for instance it blocks the Gtk/Gobject
-  main loop)
-
-Beware: This implementation is not thread safe !
+The code is divided in 3 layers:
+- rawapi : Ctypes binding to the raw Sane API
+- abstract : An Object-Oriented layer that simplifies the use of the Sane API
+  and try to avoid possible misuse of the Sane API.
+- abstract\_th : The Sane API is absolutely not thread-safe. This layer solves
+  this problem but using a fully dedicated thread.
 
 ## Dependencies
 
@@ -65,6 +63,16 @@ or if you already know its name/id:
 		pass
 	for idx in range(0, scan_instance.get_nb_img())
 		image = scan_instance.get_img(idx)
+
+### Abstract\_th
+
+	import pyinsane.abstract_th
+
+	# When imported, it will start a new thread, dedicated to Sane.
+	# Its API is the same than for pyinsane.abstract. You can use it the
+	# same way.
+	# Note however that the Sane thread can only do one thing at a time,
+	# so some function call may be on hold on a semaphore for some times.
 
 ## Licence
 

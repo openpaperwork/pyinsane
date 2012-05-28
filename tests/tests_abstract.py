@@ -3,16 +3,18 @@ sys.path = ["src"] + sys.path
 
 import unittest
 
-import abstract
 import rawapi
 
 
 class TestSaneGetDevices(unittest.TestCase):
+    def set_module(self, module):
+        self.module = module
+
     def setUp(self):
         pass
 
     def test_get_devices(self):
-        devices = abstract.get_devices()
+        devices = self.module.get_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
@@ -20,8 +22,11 @@ class TestSaneGetDevices(unittest.TestCase):
 
 
 class TestSaneOptions(unittest.TestCase):
+    def set_module(self, module):
+        self.module = module
+
     def setUp(self):
-        self.devices = abstract.get_devices()
+        self.devices = self.module.get_devices()
         self.assertTrue(len(self.devices) > 0)
 
     def test_get_option(self):
@@ -52,8 +57,11 @@ class TestSaneOptions(unittest.TestCase):
 
 
 class TestSaneScan(unittest.TestCase):
+    def set_module(self, module):
+        self.module = module
+
     def setUp(self):
-        devices = abstract.get_devices()
+        devices = self.module.get_devices()
         self.assertTrue(len(devices) > 0)
         self.dev = devices[0]
 
@@ -109,27 +117,36 @@ class TestSaneScan(unittest.TestCase):
     def tearDown(self):
         del(self.dev)
 
-def get_all_tests():
+
+def get_all_tests(module):
     all_tests = unittest.TestSuite()
 
-    tests = unittest.TestSuite([TestSaneGetDevices("test_get_devices")])
-    all_tests.addTest(tests)
+    tests = [
+        TestSaneGetDevices("test_get_devices")
+    ]
+    for test in tests:
+        test.set_module(module)
+    all_tests.addTest(unittest.TestSuite(tests))
 
-    tests = unittest.TestSuite([
+    tests = [
         TestSaneOptions("test_get_option"),
         TestSaneOptions("test_set_option"),
         TestSaneOptions("test_set_inexisting_option"),
         TestSaneOptions("test_set_invalid_value"),
-    ])
-    all_tests.addTest(tests)
+    ]
+    for test in tests:
+        test.set_module(module)
+    all_tests.addTest(unittest.TestSuite(tests))
 
-    tests = unittest.TestSuite([
+    tests = [
         TestSaneScan("test_simple_scan_gray"),
         TestSaneScan("test_simple_scan_color"),
         TestSaneScan("test_multi_scan_on_flatbed"),
         TestSaneScan("test_multi_scan_on_adf"),
-    ])
-    all_tests.addTest(tests)
+    ]
+    for test in tests:
+        test.set_module(module)
+    all_tests.addTest(unittest.TestSuite(tests))
 
     return all_tests
 

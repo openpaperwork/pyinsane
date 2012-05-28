@@ -244,12 +244,12 @@ class Scanner(object):
         (devid, handle) = sane_dev_handle
         if devid == self.name:
             return
-        self.force_close()
+        self._force_close()
         sane_init()
         handle = rawapi.sane_open(self.name)
         sane_dev_handle = (self.name, handle)
 
-    def force_close(self):
+    def _force_close(self):
         global sane_dev_handle
         (devid, handle) = sane_dev_handle
         if handle == None:
@@ -259,7 +259,7 @@ class Scanner(object):
         sane_dev_handle = ("", None)
 
     def __del__(self):
-        self.force_close()
+        self._force_close()
 
     def __load_options(self):
         if self.__options != None:
@@ -274,11 +274,11 @@ class Scanner(object):
             opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)
             self.__options[opt.name] = opt
 
-    def __get_options(self):
+    def _get_options(self):
         self.__load_options()
         return self.__options
 
-    options = property(__get_options)
+    options = property(_get_options)
 
     def scan(self, multiple=False):
         if (not multiple) or self.options['source'].value != "ADF":
