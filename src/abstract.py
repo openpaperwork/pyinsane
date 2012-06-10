@@ -8,6 +8,8 @@ __all__ = [
     'get_devices',
 ]
 
+SANE_READ_BUFSIZE = 128*1024
+
 sane_is_init = 0
 sane_version = None
 
@@ -149,12 +151,13 @@ class SimpleScanSession(object):
 
     def read(self):
         try:
-            self.__raw_output += rawapi.sane_read(sane_dev_handle[1])
+            self.__raw_output += rawapi.sane_read(sane_dev_handle[1],
+                                                  SANE_READ_BUFSIZE)
         except EOFError:
             rawapi.sane_cancel(sane_dev_handle[1])
             self.__is_scanning = False
             self.__img = ImgUtil.raw_to_img(self.__raw_output,
-                                             self.__parameters)
+                                            self.__parameters)
             raise
 
     def get_nb_img(self):
@@ -203,7 +206,8 @@ class MultiScanSession(object):
                         rawapi.sane_get_parameters(sane_dev_handle[1])
                 return
             try:
-                self.__raw_output += rawapi.sane_read(sane_dev_handle[1])
+                self.__raw_output += rawapi.sane_read(sane_dev_handle[1],
+                                                      SANE_READ_BUFSIZE)
             except EOFError, exc:
                 self.__imgs.append(ImgUtil.raw_to_img(self.__raw_output,
                                                        self.__parameters))
