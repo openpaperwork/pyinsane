@@ -141,7 +141,7 @@ class TestSaneScan(unittest.TestCase):
 
         try:
             while True:
-                buf = rawapi.sane_read(self.dev_handle)
+                buf = rawapi.sane_read(self.dev_handle, 128*1024)
                 self.assertTrue(len(buf) > 0)
         except EOFError:
             pass
@@ -149,7 +149,7 @@ class TestSaneScan(unittest.TestCase):
 
     def test_cancelled_scan(self):
         rawapi.sane_start(self.dev_handle)
-        buf = rawapi.sane_read(self.dev_handle)
+        buf = rawapi.sane_read(self.dev_handle, 128*1024)
         self.assertTrue(len(buf) > 0)
         rawapi.sane_cancel(self.dev_handle)
 
