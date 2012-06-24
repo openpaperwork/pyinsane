@@ -73,9 +73,13 @@ or if you already know its name/id:
 	scan_instance = device.scan(multiple=True)
 	try:
 		while True:
-			scan_instance.read()
-	except EOFError:
-		pass
+			try:
+				scan_instance.read()
+			except EOFError:
+				print ("Got a page ! (current number of pages read: %d)"
+					   % (scan_instance.get_nb_img()))
+	except StopIteration:
+		print "Document feeder is now empty"
 	for idx in range(0, scan_instance.get_nb_img())
 		image = scan_instance.get_img(idx)
 
