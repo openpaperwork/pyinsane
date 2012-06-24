@@ -214,6 +214,7 @@ class MultiScanSession(object):
                 raw = b''.join(self.__raw_output)
                 self.__imgs.append(ImgUtil.raw_to_img(raw, self.__parameters))
                 self.__is_scanning = False
+                self.__raw_output = []
                 raise
         except StopIteration:
             rawapi.sane_cancel(sane_dev_handle[1])
