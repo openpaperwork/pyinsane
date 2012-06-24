@@ -210,15 +210,16 @@ class MultiScanSession(object):
             try:
                 self.__raw_output.append(rawapi.sane_read(sane_dev_handle[1],
                                                           SANE_READ_BUFSIZE))
-            except EOFError, exc:
+            except EOFError:
                 raw = b''.join(self.__raw_output)
                 self.__imgs.append(ImgUtil.raw_to_img(raw, self.__parameters))
                 self.__is_scanning = False
-        except StopIteration, exc:
+                raise
+        except StopIteration:
             rawapi.sane_cancel(sane_dev_handle[1])
             self.__must_clean = False
             self.__is_scanning = False
-            raise EOFError()
+            raise
 
     def get_nb_img(self):
         return len(self.__imgs)
