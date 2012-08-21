@@ -315,11 +315,11 @@ class Scanner(object):
                 % (self.name, self.vendor, self.model, self.dev_type))
 
 
-def get_devices():
+def get_devices(local_only=False):
     sane_init()
     try:
         return [Scanner.build_from_rawapi(device)
-                for device in rawapi.sane_get_devices()]
+                for device in rawapi.sane_get_devices(local_only)]
     finally:
         sane_exit()
 

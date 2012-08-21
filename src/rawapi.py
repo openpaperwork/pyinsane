@@ -516,14 +516,14 @@ def sane_exit():
     SANE_LIB.sane_exit()
 
 
-def sane_get_devices(remote=True):
+def sane_get_devices(local_only=False):
     global sane_available
     assert(sane_available)
 
     devices_ptr = ctypes.POINTER(ctypes.POINTER(SaneDevice))()
 
     status = SANE_LIB.sane_get_devices(ctypes.pointer(devices_ptr),
-                                       ctypes.c_int(remote))
+                                       ctypes.c_int(local_only))
     if status != SaneStatus.GOOD:
         raise SaneException(SaneStatus(status))
 

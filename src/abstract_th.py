@@ -176,7 +176,7 @@ class Scanner(object):
                 % (self.name, self.vendor, self.model, self.dev_type))
 
 
-def get_devices():
-    abs_devs = SaneAction(abstract.get_devices).wait()
+def get_devices(local_only=False):
+    abs_devs = SaneAction(abstract.get_devices, local_only=local_only).wait()
     abs_th_devs = [Scanner.build_from_abstract(abs_dev) for abs_dev in abs_devs]
     return abs_th_devs
