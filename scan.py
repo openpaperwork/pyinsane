@@ -28,7 +28,7 @@ if __name__ == "__main__":
         print "No scanner detected !"
         sys.exit(1)
     print "Devices detected:"
-    print "- " + "\n- ".join(devices)
+    print "- " + "\n- ".join([str(d) for d in devices])
 
     print ""
 
