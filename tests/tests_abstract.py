@@ -4,6 +4,7 @@ sys.path = ["src"] + sys.path
 import unittest
 
 import rawapi
+import src.rawapi
 
 
 class TestSaneGetDevices(unittest.TestCase):
@@ -48,7 +49,7 @@ class TestSaneOptions(unittest.TestCase):
         self.assertRaises(KeyError, self.__set_opt, 'xyz', "Gray")
 
     def test_set_invalid_value(self):
-        self.assertRaises(rawapi.SaneException, self.__set_opt, 'mode', "XYZ")
+        self.assertRaises(src.rawapi.SaneException, self.__set_opt, 'mode', "XYZ")
 
     def tearDown(self):
         for dev in self.devices:
@@ -64,6 +65,18 @@ class TestSaneScan(unittest.TestCase):
         devices = self.module.get_devices()
         self.assertTrue(len(devices) > 0)
         self.dev = devices[0]
+
+    def test_simple_scan_lineart(self):
+        self.assertTrue("Lineart" in self.dev.options['mode'].constraint)
+        self.dev.options['mode'].value = "Lineart"
+        scan = self.dev.scan(multiple=False)
+        try:
+            while True:
+                scan.read()
+        except EOFError:
+            pass
+        img = scan.get_img()
+        self.assertNotEqual(img, None)
 
     def test_simple_scan_gray(self):
         self.assertTrue("Gray" in self.dev.options['mode'].constraint)
@@ -109,8 +122,11 @@ class TestSaneScan(unittest.TestCase):
         scan = self.dev.scan(multiple=True)
         try:
             while True:
-                scan.read()
-        except EOFError:
+                try:
+                    scan.read()
+                except EOFError:
+                    pass
+        except StopIteration:
             pass
         self.assertEqual(scan.get_nb_img(), 0)
 
@@ -139,6 +155,7 @@ def get_all_tests(module):
     all_tests.addTest(unittest.TestSuite(tests))
 
     tests = [
+        TestSaneScan("test_simple_scan_lineart"),
         TestSaneScan("test_simple_scan_gray"),
         TestSaneScan("test_simple_scan_color"),
         TestSaneScan("test_multi_scan_on_flatbed"),

@@ -56,6 +56,8 @@ or if you already know its name/id:
 ### Simple scan
 
 	device.options['resolution'].value = 300
+	# Beware: Some scanner have "Lineart" or "Gray" as default mode
+	device.options['mode'].value = 'Color'
 	scan_instance = device.scan(multiple=False)
 	try:
 		while True:
@@ -71,6 +73,8 @@ or if you already know its name/id:
 		return
 
 	device.options['source'].value = "ADF"
+	# Beware: Some scanner have "Lineart" or "Gray" as default mode
+	device.options['mode'].value = 'Color'
 	scan_instance = device.scan(multiple=True)
 	try:
 		while True:

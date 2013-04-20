@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
     set_scanner_opt(device, 'resolution', 300)
     set_scanner_opt(device, 'source', 'Auto')
+    set_scanner_opt(device, 'mode', 'Color')
 
     print ""
 
