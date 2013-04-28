@@ -90,9 +90,9 @@ class ImgUtil(object):
             byte = ord(byte)
             for bit in range(7, -1, -1):
                 if ((byte & (1<<bit)) > 0):
-                    raw_unpacked += (chr(0xFF))
-                else:
                     raw_unpacked += (chr(0x00))
+                else:
+                    raw_unpacked += (chr(0xFF))
         assert(len(raw_packed) * 8 == len(raw_unpacked))
         return ImgUtil.__raw_8_to_img(raw_unpacked, mode, pixels_per_line)
 
