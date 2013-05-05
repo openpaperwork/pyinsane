@@ -58,6 +58,7 @@ if __name__ == "__main__":
     except EOFError:
         pass
 
+    print "\b "
     print "Writing output file ..."
     img = scan_src.get_img()
     img.save(output_file, "JPEG")
