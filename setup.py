@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name="pyinsane",
-      version="1.0-git",
+      version="1.0.1",
       description=("Python implementation of the Sane API (using ctypes) and"
                    "abstration layer"),
       author="Jerome Flesch",
