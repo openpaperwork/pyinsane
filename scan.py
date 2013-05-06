@@ -9,7 +9,7 @@ def set_scanner_opt(scanner, opt, value):
     print "Setting %s to %s" % (opt, str(value))
     try:
         scanner.options[opt].value = value
-    except rawapi.SaneException, exc:
+    except (KeyError, rawapi.SaneException), exc:
         print "Failed to set %s to %s: %s" % (opt, str(value), str(exc))
 
 
