@@ -5,7 +5,7 @@ from setuptools import setup
 setup(name="pyinsane",
       version="1.0.1-git",
       description=("Python implementation of the Sane API (using ctypes) and"
-                   "abstration layer"),
+                   " abstration layer"),
       author="Jerome Flesch",
       author_email="jflesch@gmail.com",
       packages=['pyinsane'],
