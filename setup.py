@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name="pyinsane",
       version="1.0.1-git",
@@ -12,5 +12,8 @@ setup(name="pyinsane",
       package_dir={ 'pyinsane': 'src' },
       data_files=[],
       scripts=[],
+      install_requires=[
+          "PIL",
+      ],
      )
 
