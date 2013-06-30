@@ -53,6 +53,11 @@ class SaneEnum(object):
     def __int__(self):
         return self.__value
 
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.__value == other
+        return self.__value == other.__value
+
     def __cmp__(self, other):
         return cmp(self.__value, other.__value)
 
