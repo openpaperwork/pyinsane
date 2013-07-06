@@ -303,7 +303,7 @@ class Scanner(object):
     def scan(self, multiple=False):
         if (not multiple
             or (not "ADF" in self.options['source'].value
-                and not "Feeder" in self.options['source'])):
+                and not "Feeder" in self.options['source'].value)):
             # XXX(Jflesch): We cannot use MultiScanSession() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
