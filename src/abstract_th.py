@@ -5,7 +5,26 @@ import threading
 import abstract
 import rawapi
 
+# import basic elements directly, so the caller
+# doesn't have to import rawapi if they need them.
+from rawapi import SaneCapabilities
+from rawapi import SaneConstraint
+from rawapi import SaneConstraintType
+from rawapi import SaneException
+from rawapi import SaneStatus
+from rawapi import SaneUnit
+from rawapi import SaneValueType
+
+
 __all__ = [
+    'SaneCapabilities',
+    'SaneConstraint',
+    'SaneConstraintType',
+    'SaneException',
+    'SaneStatus',
+    'SaneValueType',
+    'SaneUnit',
+
     'Scanner',
     'ScannerOption',
     'get_devices',
@@ -24,7 +43,7 @@ class SaneAction(object):
         global sane_action_queue
 
         if sane_thread == None or not sane_thread.is_alive():
-            raise rawapi.SaneException("Sane thread died unexpectidly !")
+            raise SaneException("Sane thread died unexpectidly !")
         sane_action_queue.put(self)
 
     def wait(self):
@@ -78,11 +97,11 @@ class ScannerOption(object):
     title = ""
     desc = ""
     val_type = rawapi.SaneValueType(rawapi.SaneValueType.INT)
-    unit = rawapi.SaneUnit(rawapi.SaneUnit.NONE)
+    unit = SaneUnit(SaneUnit.NONE)
     size = 4
-    capabilities = rawapi.SaneCapabilities(rawapi.SaneCapabilities.NONE)
+    capabilities = SaneCapabilities(SaneCapabilities.NONE)
 
-    constraint_type = rawapi.SaneConstraintType(rawapi.SaneConstraintType.NONE)
+    constraint_type = SaneConstraintType(SaneConstraintType.NONE)
     constraint = None
 
     def __init__(self, scanner, idx):

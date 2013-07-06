@@ -3,9 +3,6 @@ sys.path = ["src"] + sys.path
 
 import unittest
 
-import rawapi
-import src.rawapi
-
 
 class TestSaneGetDevices(unittest.TestCase):
     def set_module(self, module):
@@ -49,7 +46,7 @@ class TestSaneOptions(unittest.TestCase):
         self.assertRaises(KeyError, self.__set_opt, 'xyz', "Gray")
 
     def test_set_invalid_value(self):
-        self.assertRaises(src.rawapi.SaneException, self.__set_opt, 'mode', "XYZ")
+        self.assertRaises(self.module.SaneException, self.__set_opt, 'mode', "XYZ")
 
     def tearDown(self):
         for dev in self.devices:

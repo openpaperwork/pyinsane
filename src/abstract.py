@@ -2,7 +2,26 @@ from PIL import Image
 
 import rawapi
 
+# import basic elements directly, so the caller
+# doesn't have to import rawapi if they need them.
+from rawapi import SaneCapabilities
+from rawapi import SaneConstraint
+from rawapi import SaneConstraintType
+from rawapi import SaneException
+from rawapi import SaneStatus
+from rawapi import SaneUnit
+from rawapi import SaneValueType
+
+
 __all__ = [
+    'SaneCapabilities',
+    'SaneConstraint',
+    'SaneConstraintType',
+    'SaneException',
+    'SaneStatus',
+    'SaneValueType',
+    'SaneUnit',
+
     'Scanner',
     'ScannerOption',
     'get_devices',
@@ -41,12 +60,12 @@ class ScannerOption(object):
     name = ""
     title = ""
     desc = ""
-    val_type = rawapi.SaneValueType(rawapi.SaneValueType.INT)
-    unit = rawapi.SaneUnit(rawapi.SaneUnit.NONE)
+    val_type = SaneValueType(SaneValueType.INT)
+    unit = SaneUnit(SaneUnit.NONE)
     size = 4
-    capabilities = rawapi.SaneCapabilities(rawapi.SaneCapabilities.NONE)
+    capabilities = SaneCapabilities(SaneCapabilities.NONE)
 
-    constraint_type = rawapi.SaneConstraintType(rawapi.SaneConstraintType.NONE)
+    constraint_type = SaneConstraintType(SaneConstraintType.NONE)
     constraint = None
 
     def __init__(self, scanner, idx):
@@ -59,11 +78,11 @@ class ScannerOption(object):
         opt.name = opt_raw.name
         opt.title = opt_raw.title
         opt.desc = opt_raw.desc # TODO : multi-line
-        opt.val_type = rawapi.SaneValueType(opt_raw.type)
-        opt.unit = rawapi.SaneUnit(opt_raw.unit)
+        opt.val_type = SaneValueType(opt_raw.type)
+        opt.unit = SaneUnit(opt_raw.unit)
         opt.size = opt_raw.size
-        opt.capabilities = rawapi.SaneCapabilities(opt_raw.cap)
-        opt.constraint_type = rawapi.SaneConstraintType(opt_raw.constraint_type)
+        opt.capabilities = SaneCapabilities(opt_raw.cap)
+        opt.constraint_type = SaneConstraintType(opt_raw.constraint_type)
         opt.constraint = opt.constraint_type.get_pyobj_constraint(
                 opt_raw.constraint)
         return opt
@@ -289,7 +308,7 @@ class Scanner(object):
         self.__options = {}
         for opt_idx in range(1, nb_options):
             opt_desc = rawapi.sane_get_option_descriptor(sane_dev_handle[1], opt_idx)
-            if not rawapi.SaneValueType(opt_desc.type).can_getset_opt():
+            if not SaneValueType(opt_desc.type).can_getset_opt():
                 continue
             opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)
             self.__options[opt.name] = opt

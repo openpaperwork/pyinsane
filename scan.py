@@ -2,14 +2,13 @@
 
 import sys
 
-import src.abstract as abstract
-import src.rawapi as rawapi
+import src.abstract as pyinsane
 
 def set_scanner_opt(scanner, opt, value):
     print("Setting %s to %s" % (opt, str(value)))
     try:
         scanner.options[opt].value = value
-    except (KeyError, rawapi.SaneException), exc:
+    except (KeyError, pyinsane.SaneException), exc:
         print "Failed to set %s to %s: %s" % (opt, str(value), str(exc))
 
 
@@ -23,7 +22,7 @@ if __name__ == "__main__":
     print "Output file: %s" % output_file
 
     print "Looking for scanners ..."
-    devices = abstract.get_devices()
+    devices = pyinsane.get_devices()
     if (len(devices) <= 0):
         print "No scanner detected !"
         sys.exit(1)
@@ -41,7 +40,7 @@ if __name__ == "__main__":
     # beware: don't select a source that is not in the constraint,
     # with some drivers (Brother DCP-8025D for instance), it may segfault.
     if (device.options['source'].constraint_type
-        == rawapi.SaneConstraintType.STRING_LIST):
+        == pyinsane.SaneConstraintType.STRING_LIST):
         if 'Auto' in device.options['source'].constraint:
             source = 'Auto'
         elif 'FlatBed' in device.options['source'].constraint:

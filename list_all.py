@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-from src import abstract
-from src import rawapi
+import src.abstract as pyinsane
 
 if __name__ == "__main__":
-    for device in abstract.get_devices():
+    for device in pyinsane.get_devices():
         print "%s" % (str(device))
 
         for opt in device.options.values():
@@ -19,7 +18,7 @@ if __name__ == "__main__":
             print "    Constraint: %s" % (str(opt.constraint))
             try:
                 print "    Value: %s" % (str(opt.value))
-            except rawapi.SaneException, exc:
+            except pyinsane.SaneException, exc:
                 # Some scanner allow changing a value, but not reading it.
                 # For instance Canon Lide 110 allow setting the resolution,
                 # but not reading it
