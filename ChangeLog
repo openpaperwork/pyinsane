@@ -1,2 +1,18 @@
-v1.0.0 --> v1.0.1:
+2013-08-18 : v1.1.0 --> v1.2.0:
+- Python 3.x support
+
+2013-07-06 : v1.0.3 --> v1.1.0:
+- API cleanup : make some classes of rawapi available directly from the
+  abstract modules
+- Fix feeder support on scanners where the source is called
+  'Automatic Document Feeder' instead of 'ADF'
+
+2013-06-30 : v1.0.2 --> v1.0.3:
+- rawpi: SaneEnum: Add method __eq__ to make value comparisons easier
+- list_all.py / scan.py : Take into account some scanner specificities
+
+2013-05-19 : v1.0.1 --> v1.0.2:
+- Switch from PIL to Pillow
+
+2013-05-05 : v1.0.0 --> v1.0.1:
 - Fix "Lineart" / "Binary" mode support
