@@ -43,7 +43,7 @@ My current setup:
 	devices = pyinsane.get_devices()
 	assert(len(devices) > 0)
 	device = devices[0]
-	print "I'm going to use the following scanner: %s" % (str(device))
+	print("I'm going to use the following scanner: %s" % (str(device)))
 	scanner_id = device.name
 
 or if you already know its name/id:
@@ -51,7 +51,7 @@ or if you already know its name/id:
 	import pyinsane.abstract as pyinsane
 
 	device = pyinsane.Scanner(name="somethingsomething")
-	print "I'm going to use the following scanner: %s" % (str(device))
+	print("I'm going to use the following scanner: %s" % (str(device)))
 
 ### Simple scan
 
@@ -69,7 +69,7 @@ or if you already know its name/id:
 ### Multiple scans using an automatic document feeder (ADF)
 
 	if not "ADF" in device.options['source'].constraint:
-		print "No document feeder found"
+		print("No document feeder found")
 		return
 
 	device.options['source'].value = "ADF"
@@ -84,7 +84,7 @@ or if you already know its name/id:
 				print ("Got a page ! (current number of pages read: %d)"
 					   % (scan_instance.get_nb_img()))
 	except StopIteration:
-		print "Document feeder is now empty"
+		print("Document feeder is now empty")
 	for idx in range(0, scan_instance.get_nb_img())
 		image = scan_instance.get_img(idx)
 

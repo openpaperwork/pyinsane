@@ -2,39 +2,41 @@
 
 import sys
 
-import src.abstract as pyinsane
+sys.path += ['src']
+
+import abstract as pyinsane
 
 def set_scanner_opt(scanner, opt, value):
     print("Setting %s to %s" % (opt, str(value)))
     try:
         scanner.options[opt].value = value
-    except (KeyError, pyinsane.SaneException), exc:
-        print "Failed to set %s to %s: %s" % (opt, str(value), str(exc))
+    except (KeyError, pyinsane.SaneException) as exc:
+        print("Failed to set %s to %s: %s" % (opt, str(value), str(exc)))
 
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
-        print "Syntax:"
-        print "  %s <output file (JPG)>" % sys.argv[0]
+        print("Syntax:")
+        print("  %s <output file (JPG)>" % sys.argv[0])
         sys.exit(1)
 
     output_file = sys.argv[1]
-    print "Output file: %s" % output_file
+    print("Output file: %s" % output_file)
 
-    print "Looking for scanners ..."
+    print("Looking for scanners ...")
     devices = pyinsane.get_devices()
     if (len(devices) <= 0):
-        print "No scanner detected !"
+        print("No scanner detected !")
         sys.exit(1)
-    print "Devices detected:"
-    print "- " + "\n- ".join([str(d) for d in devices])
+    print("Devices detected:")
+    print("- " + "\n- ".join([str(d) for d in devices]))
 
-    print ""
+    print("")
 
     device = devices[0]
-    print "Will use: %s" % str(device)
+    print("Will use: %s" % str(device))
 
-    print ""
+    print("")
 
     source = 'Auto'
     # beware: don't select a source that is not in the constraint,
@@ -53,9 +55,9 @@ if __name__ == "__main__":
     set_scanner_opt(device, 'source', source)
     set_scanner_opt(device, 'mode', 'Color')
 
-    print ""
+    print("")
 
-    print "Scanning ...  "
+    print("Scanning ...  ")
     scan_src = device.scan(multiple=False)
     try:
         PROGRESSION_INDICATOR = ['|', '/', '-', '\\']
@@ -70,8 +72,8 @@ if __name__ == "__main__":
     except EOFError:
         pass
 
-    print "\b "
-    print "Writing output file ..."
+    print("\b ")
+    print("Writing output file ...")
     img = scan_src.get_img()
     img.save(output_file, "JPEG")
-    print "Done"
+    print("Done")
