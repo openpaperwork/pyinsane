@@ -193,7 +193,7 @@ class SimpleScanSession(object):
             try:
                 while True:
                     self.read()
-            except EOFError, exc:
+            except EOFError:
                 pass
         return self.__img
 
@@ -249,7 +249,7 @@ class MultiScanSession(object):
             try:
                 while True:
                     self.read()
-            except EOFError, exc:
+            except EOFError:
                 pass
         return self.__imgs[idx]
 
