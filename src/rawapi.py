@@ -544,6 +544,9 @@ def sane_open(dev_name):
     global sane_available
     assert(sane_available)
 
+    if isinstance(dev_name, str):
+        dev_name = dev_name.encode('utf-8')
+
     handle_ptr = ctypes.c_void_p()
 
     status = SANE_LIB.sane_open(ctypes.c_char_p(dev_name),
@@ -596,6 +599,9 @@ def sane_get_option_value(handle, option_idx):
 def sane_set_option_value(handle, option_idx, new_value):
     global sane_available
     assert(sane_available)
+
+    if isinstance(new_value, str):
+        new_value = new_value.encode('utf-8')
 
     # we need the descriptor first in order to allocate a buffer of the correct
     # size, then cast it to the correct type

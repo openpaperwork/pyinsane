@@ -75,9 +75,10 @@ class ScannerOption(object):
     @staticmethod
     def build_from_rawapi(scanner, opt_idx, opt_raw):
         opt = ScannerOption(scanner, opt_idx)
-        opt.name = opt_raw.name
-        opt.title = opt_raw.title
-        opt.desc = opt_raw.desc # TODO : multi-line
+        opt.name = opt_raw
+        opt.name = opt_raw.name.decode('utf-8')
+        opt.title = opt_raw.title.decode('utf-8')
+        opt.desc = opt_raw.desc.decode('utf-8')  # TODO : multi-line
         opt.val_type = SaneValueType(opt_raw.type)
         opt.unit = SaneUnit(opt_raw.unit)
         opt.size = opt_raw.size
@@ -126,7 +127,7 @@ class ImgUtil(object):
         }[mode]
         width = pixels_per_line
         height = (len(raw) / (width * nb_colors))
-        return Image.frombuffer(mode, (width, height), raw, "raw", mode, 0, 1)
+        return Image.frombuffer(mode, (int(width), int(height)), raw, "raw", mode, 0, 1)
 
     @staticmethod
     def __raw_16_to_img(raw, mode, pixels_per_line):
@@ -264,10 +265,10 @@ class MultiScanSession(object):
 class Scanner(object):
     def __init__(self, name, vendor="Unknown", model="Unknown",
                  dev_type="Unknown"):
-        self.name = name
-        self.vendor = vendor
-        self.model = model
-        self.dev_type = dev_type
+        self.name = name.decode('utf-8')
+        self.vendor = vendor.decode('utf-8')
+        self.model = model.decode('utf-8')
+        self.dev_type = dev_type.decode('utf-8')
         self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
