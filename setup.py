@@ -10,7 +10,7 @@ setup(name="pyinsane",
                         " ctypes). Include a thread-safe abstration layer"),
       keywords="sane scanner",
       url="https://github.com/jflesch/pyinsane",
-      download_url="https://github.com/jflesch/pyinsane/archive/v1.0.1.zip",
+      download_url="https://github.com/jflesch/pyinsane/archive/v1.2.0.zip",
       classifiers=[
           "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Developers",
