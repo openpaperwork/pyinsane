@@ -57,7 +57,7 @@ class SaneAction(object):
         try:
             sys.stdout.flush()
             self.result = self.func(**self.args)
-        except Exception:
+        except Exception as exc:
             self.exception = exc
         self.__sem.release()
 
