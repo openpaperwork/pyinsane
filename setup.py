@@ -3,14 +3,14 @@
 from setuptools import setup
 
 setup(name="pyinsane",
-      version="1.2.1-git",
+      version="1.2.2",
       description=("Pure Python implementation of the Sane API (using ctypes) and"
                    " abstration layer"),
       long_description=("Pure Python implementation of the Sane API (using"
                         " ctypes). Include a thread-safe abstration layer"),
       keywords="sane scanner",
       url="https://github.com/jflesch/pyinsane",
-      download_url="https://github.com/jflesch/pyinsane/archive/v1.2.1.zip",
+      download_url="https://github.com/jflesch/pyinsane/archive/v1.2.2.zip",
       classifiers=[
           "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Developers",
