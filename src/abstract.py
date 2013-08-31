@@ -75,10 +75,15 @@ class ScannerOption(object):
     @staticmethod
     def build_from_rawapi(scanner, opt_idx, opt_raw):
         opt = ScannerOption(scanner, opt_idx)
-        opt.name = opt_raw
-        opt.name = opt_raw.name.decode('utf-8')
-        opt.title = opt_raw.title.decode('utf-8')
-        opt.desc = opt_raw.desc.decode('utf-8')  # TODO : multi-line
+        opt.name = opt_raw.name
+        if opt.name is not None:
+            opt.name = opt.name.decode('utf-8')
+        opt.title = opt_raw.title
+        if opt.title is not None:
+            opt.title = opt.title.decode('utf-8')
+        opt.desc = opt_raw.desc
+        if opt.desc is not None:
+            opt.desc = opt.desc.decode('utf-8')  # TODO : multi-line
         opt.val_type = SaneValueType(opt_raw.type)
         opt.unit = SaneUnit(opt_raw.unit)
         opt.size = opt_raw.size
