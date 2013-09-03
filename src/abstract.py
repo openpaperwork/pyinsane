@@ -106,10 +106,10 @@ class ScannerOption(object):
 
 class ImgUtil(object):
     @staticmethod
-    def __raw_1_to_img(raw_packed, mode, pixels_per_line):
-        """
-        Sane uses 1 bit for each color, whereas PIL uses 1 byte (0x00 or 0xFF)
-        """
+    def unpack_1_to_8(raw_packed):
+        # Each color is on one bit. We unpack immediately so each color
+        # is on one byte.
+        # We do this so we can split the image line by line more easily
         raw_unpacked = b""
         for byte in raw_packed:
             byte = ord(byte)
@@ -119,7 +119,7 @@ class ImgUtil(object):
                 else:
                     raw_unpacked += (chr(0xFF))
         assert(len(raw_packed) * 8 == len(raw_unpacked))
-        return ImgUtil.__raw_8_to_img(raw_unpacked, mode, pixels_per_line)
+        return raw_unpacked
 
     @staticmethod
     def __raw_8_to_img(raw, mode, pixels_per_line):
@@ -150,9 +150,8 @@ class ImgUtil(object):
     @staticmethod
     def raw_to_img(raw, parameters):
         mode = rawapi.SaneFrame(parameters.format).get_pil_format()
-
         return {
-            1 : ImgUtil.__raw_1_to_img,
+            1 : ImgUtil.__raw_8_to_img,  # it was unpacked on-the-fly
             8 : ImgUtil.__raw_8_to_img,
             16 : ImgUtil.__raw_16_to_img,
         }[parameters.depth](raw, mode, parameters.pixels_per_line)
@@ -177,8 +176,7 @@ class SimpleScanSession(object):
 
     def read(self):
         try:
-            self.__raw_output.append(rawapi.sane_read(sane_dev_handle[1],
-                                                      SANE_READ_BUFSIZE))
+            read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
         except EOFError:
             rawapi.sane_cancel(sane_dev_handle[1])
             self.__is_scanning = False
@@ -186,6 +184,11 @@ class SimpleScanSession(object):
             raw = (b'').join(self.__raw_output)
             self.__img = ImgUtil.raw_to_img(raw, self.__parameters)
             raise
+
+        if self.__parameters.depth == 1:
+            read = ImgUtil.unpack_1_to_8(read)
+
+        self.__raw_output.append(read)
 
     def get_nb_img(self):
         if self.__is_scanning:
@@ -232,15 +235,20 @@ class MultiScanSession(object):
                 self.__parameters = \
                         rawapi.sane_get_parameters(sane_dev_handle[1])
                 return
+
             try:
-                self.__raw_output.append(rawapi.sane_read(sane_dev_handle[1],
-                                                          SANE_READ_BUFSIZE))
+                read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
             except EOFError:
                 raw = b''.join(self.__raw_output)
                 self.__imgs.append(ImgUtil.raw_to_img(raw, self.__parameters))
                 self.__is_scanning = False
                 self.__raw_output = []
                 raise
+
+            if self.__parameters.depth == 1:
+                read = ImgUtil.unpack_1_to_8(read)
+
+            self.__raw_output.append(read)
         except StopIteration:
             rawapi.sane_cancel(sane_dev_handle[1])
             self.__must_clean = False
