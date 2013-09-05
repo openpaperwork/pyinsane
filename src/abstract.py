@@ -105,6 +105,21 @@ class ScannerOption(object):
 
 
 class ImgUtil(object):
+    COLOR_BYTES = {
+        1 : {  # we expanded the bits to bytes on-the-fly
+            "L" : 1,
+            "RGB" : 3,
+        },
+        8 : {
+            "L" : 1,
+            "RGB" : 3,
+        },
+        16 : {
+            "L" : 2,
+            "RGB" : 6
+        }
+    }
+
     @staticmethod
     def unpack_1_to_8(raw_packed):
         # Each color is on one bit. We unpack immediately so each color
@@ -122,154 +137,159 @@ class ImgUtil(object):
         return raw_unpacked
 
     @staticmethod
-    def __raw_8_to_img(raw, mode, pixels_per_line):
-        """
-        Each color is on one byte --> Each pixel takes 3 bytes in RGB
-        """
-        nb_colors = {
-            "L" : 1,
-            "RGB" : 3,
-        }[mode]
-        width = pixels_per_line
-        height = (len(raw) / (width * nb_colors))
+    def raw_to_img(raw, parameters):
+        mode = rawapi.SaneFrame(parameters.format).get_pil_format()
+        color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
+        width = parameters.pixels_per_line
+        height = (len(raw) / (width * color_bytes))
         return Image.frombuffer(mode, (int(width), int(height)), raw, "raw", mode, 0, 1)
 
     @staticmethod
-    def __raw_16_to_img(raw, mode, pixels_per_line):
+    def get_line_size(parameters):
         """
-        Each color is on 2 bytes --> Each pixel takes 6 bytes in RGB
+        Returns:
+            A pixel line size, in bytes
         """
-        nb_colors = {
-            "L" : 2,
-            "RGB" : 6,
-        }[mode]
-        width = pixels_per_line
-        height = (len(raw) / (width*nb_colors))
-        return Image.frombuffer(mode, (width, height), raw, "raw", mode, 0, 1)
-
-    @staticmethod
-    def raw_to_img(raw, parameters):
         mode = rawapi.SaneFrame(parameters.format).get_pil_format()
-        return {
-            1 : ImgUtil.__raw_8_to_img,  # it was unpacked on-the-fly
-            8 : ImgUtil.__raw_8_to_img,
-            16 : ImgUtil.__raw_16_to_img,
-        }[parameters.depth](raw, mode, parameters.pixels_per_line)
+        color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
+        return parameters.pixels_per_line * color_bytes
 
 
-class SimpleScanSession(object):
+class Scan(object):
     def __init__(self, scanner):
-        self.__scanner = scanner
+        self.scanner = scanner
+        self.__session = None
+        self.__raw_lines = []
 
-        self.__is_scanning = True
-        self.__raw_output = []
-        self.__img = None
-
-        self.__scanner._open()
         rawapi.sane_start(sane_dev_handle[1])
+        scanner._open()
         try:
-            self.__parameters = \
-                    rawapi.sane_get_parameters(sane_dev_handle[1])
+            self.parameters = \
+                rawapi.sane_get_parameters(sane_dev_handle[1])
         except Exception:
             rawapi.sane_cancel(sane_dev_handle[1])
             raise
+
+        self.__total = 0
+
+    def _set_session(self, session):
+        self.__session = session
 
     def read(self):
         try:
             read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
         except EOFError:
-            rawapi.sane_cancel(sane_dev_handle[1])
-            self.__is_scanning = False
-
-            raw = (b'').join(self.__raw_output)
-            self.__img = ImgUtil.raw_to_img(raw, self.__parameters)
+            line_size = ImgUtil.get_line_size(self.parameters)
+            for line in self.__raw_lines:
+                if len(line) != line_size:
+                    print ("Warning: Unexpected line size: %d instead of %d" %
+                           (len(line), line_size))
+            raw = (b'').join(self.__raw_lines)
+            assert(len(raw) == self.__total)
+            self.__session.images.append(ImgUtil.raw_to_img(
+                    raw, self.parameters))
+            self.__raw_lines = []
             raise
 
-        if self.__parameters.depth == 1:
+        if self.parameters.depth == 1:
             read = ImgUtil.unpack_1_to_8(read)
 
-        self.__raw_output.append(read)
+        self.__total += len(read)
 
-    def get_nb_img(self):
-        if self.__is_scanning:
-            return 0
-        return 1
+        # cut what we just read, line by line
 
-    def get_img(self, idx=0):
-        if idx != 0:
-            raise IndexError("No such image available")
-        if self.__is_scanning:
-            try:
-                while True:
-                    self.read()
-            except EOFError:
-                pass
-        return self.__img
+        line_size = ImgUtil.get_line_size(self.parameters)
+
+        if (len(self.__raw_lines) > 0):
+            cut = line_size - len(self.__raw_lines[-1])
+            self.__raw_lines[-1] += read[:cut]
+            read = read[cut:]
+
+        for _ in xrange(0, len(read), line_size):
+            self.__raw_lines.append(read[:line_size])
+            read = read[line_size:]
+
+        if len(read) > 0:
+            self.__raw_lines.append(read)
+
+    def cancel(self):
+        rawapi.sane_cancel(sane_dev_handle[1])
 
     def _del(self):
-        if self.__is_scanning:
-            rawapi.sane_cancel(sane_dev_handle[1])
+        pass
 
     def __del__(self):
         self._del()
 
 
-class MultiScanSession(object):
+class SingleScan(Scan):
     def __init__(self, scanner):
-        self.__scanner = scanner
+        Scan.__init__(self, scanner)
 
         self.__is_scanning = True
-        self.__raw_output = []
-        self.__imgs = []
-
-        self.__scanner._open()
-        self.__must_clean = False
-        self.__is_scanning = False
+        self.__raw_lines = []
 
     def read(self):
         try:
-            if not self.__is_scanning:
-                rawapi.sane_start(sane_dev_handle[1])
-                self.__is_scanning = True
-                self.__must_clean = True
-                self.__parameters = \
-                        rawapi.sane_get_parameters(sane_dev_handle[1])
-                return
-
-            try:
-                read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
-            except EOFError:
-                raw = b''.join(self.__raw_output)
-                self.__imgs.append(ImgUtil.raw_to_img(raw, self.__parameters))
-                self.__is_scanning = False
-                self.__raw_output = []
-                raise
-
-            if self.__parameters.depth == 1:
-                read = ImgUtil.unpack_1_to_8(read)
-
-            self.__raw_output.append(read)
-        except StopIteration:
-            rawapi.sane_cancel(sane_dev_handle[1])
-            self.__must_clean = False
+            Scan.read(self)
+        except (EOFError, StopIteration):
+            self.cancel()
             self.__is_scanning = False
             raise
 
-    def get_nb_img(self):
-        return len(self.__imgs)
+    def _del(self):
+        if self.__is_scanning:
+            self.cancel()
+        Scan._del(self)
 
-    def get_img(self, idx):
-        if idx >= len(self.__imgs) and self.__must_clean:
-            try:
-                while True:
-                    self.read()
-            except EOFError:
-                pass
-        return self.__imgs[idx]
+
+class MultipleScan(Scan):
+    def __init__(self, scanner):
+        Scan.__init__(self, scanner)
+
+        self.__is_scanning = True
+        self.__raw_lines = []
+
+    def read(self):
+        try:
+            Scan.read(self)
+        except StopIteration:
+            self.cancel()
+            self.__is_scanning = False
+            raise
 
     def _del(self):
-        if self.__must_clean:
-            rawapi.sane_cancel(sane_dev_handle[1])
+        if self.__is_scanning:
+            self.cancel()
+        Scan._del(self)
+
+
+class ScanSession(object):
+    def __init__(self, scan):
+        self.images = []
+        self.scan = scan
+        self.scan._set_session(self)
+
+    def read(self):
+        """
+        Deprecated. Use scan_session.scan.read()
+        """
+        return self.scan.read()
+
+    def get_nb_img(self):
+        """
+        Deprecated. Use len(scan_session.images) directly
+        """
+        return len(self.images)
+
+    def get_img(self, idx=0):
+        """
+        Deprecated. Use scan_session.images[idx] directly
+        """
+        return self.images[idx]
+
+    def _del(self):
+        del(self.scan)
 
     def __del__(self):
         self._del()
@@ -337,13 +357,14 @@ class Scanner(object):
         if (not multiple
             or (not "ADF" in self.options['source'].value
                 and not "Feeder" in self.options['source'].value)):
-            # XXX(Jflesch): We cannot use MultiScanSession() with something
+            # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
             # loop forever
-            return SimpleScanSession(self)
+            scan = SingleScan(self)
         else:
-            return MultiScanSession(self)
+            scan = MultipleScan(self)
+        return ScanSession(scan)
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"

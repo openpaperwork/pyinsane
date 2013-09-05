@@ -58,7 +58,7 @@ if __name__ == "__main__":
     print("")
 
     print("Scanning ...  ")
-    scan_src = device.scan(multiple=False)
+    scan_session = device.scan(multiple=False)
     try:
         PROGRESSION_INDICATOR = ['|', '/', '-', '\\']
         i = -1
@@ -68,12 +68,12 @@ if __name__ == "__main__":
             sys.stdout.write("\b%s" % PROGRESSION_INDICATOR[i])
             sys.stdout.flush()
 
-            scan_src.read()
+            scan_session.scan.read()
     except EOFError:
         pass
 
     print("\b ")
     print("Writing output file ...")
-    img = scan_src.get_img()
+    img = scan_session.images[0]
     img.save(output_file, "JPEG")
     print("Done")
