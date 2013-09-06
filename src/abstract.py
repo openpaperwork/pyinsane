@@ -182,7 +182,7 @@ class Scan(object):
             line_size = ImgUtil.get_line_size(self.parameters)
             for line in self.__raw_lines:
                 if len(line) != line_size:
-                    print ("Warning: Unexpected line size: %d instead of %d" %
+                    print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
                            (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
             assert(len(raw) == self.__total)
@@ -212,10 +212,26 @@ class Scan(object):
         if len(read) > 0:
             self.__raw_lines.append(read)
 
+    def __get_available_lines(self):
+        line_size = ImgUtil.get_line_size(self.parameters)
+        r = len(self.__raw_lines)
+        if (r > 0 and len(self.__raw_lines[-1]) < line_size):
+            r -= 1;
+        return (0, r)
+
+    available_lines = property(__get_available_lines)
+
+    def get_image(self, start_line, end_line):
+        assert(end_line > start_line)
+        lines = self.__raw_lines[start_line:end_line]
+        lines = b"".join(lines)
+        return ImgUtil.raw_to_img(lines, self.parameters)
+
     def cancel(self):
         rawapi.sane_cancel(sane_dev_handle[1])
 
     def _del(self):
+        # inheriting classes must call self.cancel() if required
         pass
 
     def __del__(self):

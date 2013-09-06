@@ -15,12 +15,24 @@ def set_scanner_opt(scanner, opt, value):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
+    steps = False
+
+    args = sys.argv[1:]
+    if len(args) <= 0:
         print("Syntax:")
-        print("  %s <output file (JPG)>" % sys.argv[0])
+        print("  %s [-s] <output file (JPG)>" % sys.argv[0])
+        print("")
+        print("Options:")
+        print("  -s : Generate intermediate images (may generate a lot of"
+              " images !)")
         sys.exit(1)
 
-    output_file = sys.argv[1]
+    for arg in args[:]:
+        if arg == "-s":
+            steps = True
+            args.remove(arg)
+
+    output_file = args[0]
     print("Output file: %s" % output_file)
 
     print("Looking for scanners ...")
@@ -59,6 +71,10 @@ if __name__ == "__main__":
 
     print("Scanning ...  ")
     scan_session = device.scan(multiple=False)
+
+    if steps:
+        last_line = 0
+
     try:
         PROGRESSION_INDICATOR = ['|', '/', '-', '\\']
         i = -1
@@ -69,6 +85,12 @@ if __name__ == "__main__":
             sys.stdout.flush()
 
             scan_session.scan.read()
+
+            if steps:
+                next_line = scan_session.scan.available_lines[1]
+                if (next_line > last_line):
+                    img = scan_session.scan.get_image(last_line, next_line)
+                last_line = next_line
     except EOFError:
         pass
 
