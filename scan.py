@@ -2,6 +2,8 @@
 
 import sys
 
+from PIL import Image
+
 sys.path += ['src']
 
 import abstract as pyinsane
@@ -72,8 +74,19 @@ if __name__ == "__main__":
     print("Scanning ...  ")
     scan_session = device.scan(multiple=False)
 
+    if steps and scan_session.scan.expected_size[1] < 0:
+        print("Warning: requested step by step scan images, but"
+              " scanner didn't report the expected number of lines"
+              " in the final image --> can't do")
+        print("Step by step scan images won't be recorded")
+        steps = False
+
     if steps:
         last_line = 0
+        expected_size = scan_session.scan.expected_size
+        img = Image.new("RGB", expected_size, "#ff00ff")
+        sp = output_file.split(".")
+        steps_filename = (".".join(sp[:-1]), sp[-1])
 
     try:
         PROGRESSION_INDICATOR = ['|', '/', '-', '\\']
@@ -89,7 +102,10 @@ if __name__ == "__main__":
             if steps:
                 next_line = scan_session.scan.available_lines[1]
                 if (next_line > last_line):
-                    img = scan_session.scan.get_image(last_line, next_line)
+                    subimg = scan_session.scan.get_image(last_line, next_line)
+                    img.paste(subimg, (0, last_line))
+                    img.save("%s-%05d.%s" % (steps_filename[0], last_line,
+                                             steps_filename[1]), "JPEG")
                 last_line = next_line
     except EOFError:
         pass

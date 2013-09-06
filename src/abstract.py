@@ -144,16 +144,6 @@ class ImgUtil(object):
         height = (len(raw) / (width * color_bytes))
         return Image.frombuffer(mode, (int(width), int(height)), raw, "raw", mode, 0, 1)
 
-    @staticmethod
-    def get_line_size(parameters):
-        """
-        Returns:
-            A pixel line size, in bytes
-        """
-        mode = rawapi.SaneFrame(parameters.format).get_pil_format()
-        color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
-        return parameters.pixels_per_line * color_bytes
-
 
 class Scan(object):
     def __init__(self, scanner):
@@ -179,7 +169,7 @@ class Scan(object):
         try:
             read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
         except EOFError:
-            line_size = ImgUtil.get_line_size(self.parameters)
+            line_size = self.parameters.bytes_per_line
             for line in self.__raw_lines:
                 if len(line) != line_size:
                     print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
@@ -198,7 +188,7 @@ class Scan(object):
 
         # cut what we just read, line by line
 
-        line_size = ImgUtil.get_line_size(self.parameters)
+        line_size = self.parameters.bytes_per_line
 
         if (len(self.__raw_lines) > 0):
             cut = line_size - len(self.__raw_lines[-1])
@@ -213,13 +203,29 @@ class Scan(object):
             self.__raw_lines.append(read)
 
     def __get_available_lines(self):
-        line_size = ImgUtil.get_line_size(self.parameters)
+        line_size = self.parameters.bytes_per_line
         r = len(self.__raw_lines)
         if (r > 0 and len(self.__raw_lines[-1]) < line_size):
             r -= 1;
         return (0, r)
 
     available_lines = property(__get_available_lines)
+
+    def __get_expected_size(self):
+        """
+        Returns the expected size of the image (tuple: (w, h)).
+        Note that (afaik) Sane makes it mandatory for the driver
+        to indicates the length of the lines. However, it is not mandatory
+        for the driver to indicates the expected number of lines (for
+        instance, hand-held scanners can't know it before the end of
+        the scan). In that case, the expected height of the image
+        will -1 here.
+        """
+        width = self.parameters.pixels_per_line
+        height = self.parameters.lines
+        return (width, height)
+
+    expected_size = property(__get_expected_size)
 
     def get_image(self, start_line, end_line):
         assert(end_line > start_line)
