@@ -20,7 +20,7 @@ if __name__ == "__main__":
     steps = False
 
     args = sys.argv[1:]
-    if len(args) <= 0:
+    if len(args) <= 0 or args[0] == "-h" or args[0] == "--help":
         print("Syntax:")
         print("  %s [-s] <output file (JPG)>" % sys.argv[0])
         print("")
