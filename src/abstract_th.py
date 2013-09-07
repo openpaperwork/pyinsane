@@ -132,17 +132,61 @@ class ScannerOption(object):
     value = property(_get_value, _set_value)
 
 
+def Scan(object):
+    def __init__(self, real_scan):
+        self._scan = scan
+
+    def read(self):
+        return SaneAction(self._scan.read).wait()
+
+    def _get_available_lines(self):
+        return SaneAction(self._scan._get_available_lines).wait()
+
+    available_lines = property(_get_available_lines)
+
+    def _get_expected_size(self):
+        return SaneAction(self._scan._get_expected_size).wait()
+
+    expected_size = property(_get_expected_size)
+
+    def get_image(self, start_line, end_line):
+        return SaneAction(self._scan.get_image,
+                          start_line=start_line,
+                          end_line=end_line).wait()
+
+    def cancel(self):
+        SaneAction(self._scan.cancel).wait()
+
+    def __del__(self):
+        SaneAction(self._scan._del).wait()
+
+
 class ScanSession(object):
     def __init__(self, scanner, multiple):
         self._session = SaneAction(scanner._abstract_dev.scan, multiple=multiple).wait()
+        self.scan = Scan(self._session.scan)
+
+    def __get_img(self):
+        return self._session.images
+
+    images = property(__get_img)
 
     def read(self):
+        """
+        Deprecated
+        """
         SaneAction(self._session.read).wait()
 
     def get_nb_img(self):
+        """
+        Deprecated
+        """
         return SaneAction(self._session.get_nb_img).wait()
 
     def get_img(self, idx=0):
+        """
+        Deprecated
+        """
         return SaneAction(self._session.get_img, idx=idx).wait()
 
     def __del___(self):
