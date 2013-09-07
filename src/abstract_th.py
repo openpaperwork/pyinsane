@@ -132,9 +132,9 @@ class ScannerOption(object):
     value = property(_get_value, _set_value)
 
 
-def Scan(object):
+class Scan(object):
     def __init__(self, real_scan):
-        self._scan = scan
+        self._scan = real_scan
 
     def read(self):
         return SaneAction(self._scan.read).wait()

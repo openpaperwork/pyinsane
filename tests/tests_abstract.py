@@ -1,6 +1,8 @@
 import sys
 sys.path = ["src"] + sys.path
 
+import sys
+import traceback
 import unittest
 
 
@@ -66,66 +68,67 @@ class TestSaneScan(unittest.TestCase):
     def test_simple_scan_lineart(self):
         self.assertTrue("Lineart" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Lineart"
-        scan = self.dev.scan(multiple=False)
+        scan_session = self.dev.scan(multiple=False)
         try:
+            assert(scan_session.scan is not None)
             while True:
-                scan.read()
+                scan_session.scan.read()
         except EOFError:
             pass
-        img = scan.get_img()
+        img = scan_session.images[0]
         self.assertNotEqual(img, None)
 
     def test_simple_scan_gray(self):
         self.assertTrue("Gray" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Gray"
-        scan = self.dev.scan(multiple=False)
+        scan_session = self.dev.scan(multiple=False)
         try:
             while True:
-                scan.read()
+                scan_session.scan.read()
         except EOFError:
             pass
-        img = scan.get_img()
+        img = scan_session.images[0]
         self.assertNotEqual(img, None)
 
     def test_simple_scan_color(self):
         self.assertTrue("Color" in self.dev.options['mode'].constraint)
         self.dev.options['mode'].value = "Color"
-        scan = self.dev.scan(multiple=False)
+        scan_session = self.dev.scan(multiple=False)
         try:
             while True:
-                scan.read()
+                scan_session.scan.read()
         except EOFError:
             pass
-        img = scan.get_img()
+        img = scan_session.images[0]
         self.assertNotEqual(img, None)
 
     def test_multi_scan_on_flatbed(self):
         self.assertTrue("Flatbed" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "Flatbed"
         self.dev.options['mode'].value = "Color"
-        scan = self.dev.scan(multiple=True)
+        scan_session = self.dev.scan(multiple=True)
         try:
             while True:
-                scan.read()
+                scan_session.scan.read()
         except EOFError:
             pass
-        self.assertEqual(scan.get_nb_img(), 1)
-        self.assertNotEqual(scan.get_img(0), None)
+        self.assertEqual(len(scan_session.images), 1)
+        self.assertNotEqual(scan_session.images[0], None)
 
     def test_multi_scan_on_adf(self):
         self.assertTrue("ADF" in self.dev.options['source'].constraint)
         self.dev.options['source'].value = "ADF"
         self.dev.options['mode'].value = "Color"
-        scan = self.dev.scan(multiple=True)
+        scan_session = self.dev.scan(multiple=True)
         try:
             while True:
                 try:
-                    scan.read()
+                    scan_session.scan.read()
                 except EOFError:
                     pass
         except StopIteration:
             pass
-        self.assertEqual(scan.get_nb_img(), 0)
+        self.assertEqual(len(scan_session.images), 0)
 
     def tearDown(self):
         del(self.dev)

@@ -58,13 +58,13 @@ or if you already know its name/id:
 	device.options['resolution'].value = 300
 	# Beware: Some scanner have "Lineart" or "Gray" as default mode
 	device.options['mode'].value = 'Color'
-	scan_instance = device.scan(multiple=False)
+	scan_session = device.scan(multiple=False)
 	try:
 		while True:
-			scan_instance.read()
+			scan_session.scan.read()
 	except EOFError:
 		pass
-	image = scan_instance.get_img()
+	image = scan_session.images[0]
 
 ### Multiple scans using an automatic document feeder (ADF)
 
@@ -75,18 +75,18 @@ or if you already know its name/id:
 	device.options['source'].value = "ADF"
 	# Beware: Some scanner have "Lineart" or "Gray" as default mode
 	device.options['mode'].value = 'Color'
-	scan_instance = device.scan(multiple=True)
+	scan_session = device.scan(multiple=True)
 	try:
 		while True:
 			try:
-				scan_instance.read()
+				scan_session.scan.read()
 			except EOFError:
 				print ("Got a page ! (current number of pages read: %d)"
-					   % (scan_instance.get_nb_img()))
+					   % (len(scan_session.images)))
 	except StopIteration:
 		print("Document feeder is now empty")
-	for idx in range(0, scan_instance.get_nb_img())
-		image = scan_instance.get_img(idx)
+	for idx in range(0, len(scan_session.scan.images)):
+		image = scan_session.images[idx]
 
 ### Abstract\_th
 
