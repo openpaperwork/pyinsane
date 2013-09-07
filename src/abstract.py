@@ -176,7 +176,6 @@ class Scan(object):
             raw = (b'').join(self.__raw_lines)
             self.__session.images.append(ImgUtil.raw_to_img(
                     raw, self.parameters))
-            self.__raw_lines = []
             raise
 
         if self.parameters.depth == 1:
@@ -257,6 +256,11 @@ class SingleScan(Scan):
             self.is_scanning = False
             raise
 
+    def cancel(self):
+        if self.is_scanning:
+            self._cancel()
+            self.is_scanning = False
+
     def _del(self):
         if self.is_scanning:
             self.is_scanning = False
@@ -282,6 +286,11 @@ class MultipleScan(Scan):
             self._cancel()
             self.is_scanning = False
             raise
+
+    def cancel(self):
+        if self.is_scanning:
+            self._cancel()
+            self.is_scanning = False
 
     def _del(self):
         if self.is_scanning:
