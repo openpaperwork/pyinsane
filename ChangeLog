@@ -1,3 +1,8 @@
+2013-09-08 : v1.2.2 --> v1.3.0:
+- Changes made to the abstract API (previous functions are still available but
+  deprecated)
+- Add functions and info to get the scanned image as the scan goes
+
 2013-08-31 : v1.2.1 --> v1.2.2:
 - Abstract: Fix scanner options handling
 
