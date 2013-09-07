@@ -151,19 +151,18 @@ class Scan(object):
         self.__session = None
         self.__raw_lines = []
 
+    def _set_session(self, session):
+        self.__session = session
+
+    def _init(self):
+        self.scanner._open()
         rawapi.sane_start(sane_dev_handle[1])
-        scanner._open()
         try:
             self.parameters = \
                 rawapi.sane_get_parameters(sane_dev_handle[1])
         except Exception:
             rawapi.sane_cancel(sane_dev_handle[1])
             raise
-
-        self.__total = 0
-
-    def _set_session(self, session):
-        self.__session = session
 
     def read(self):
         try:
@@ -175,7 +174,6 @@ class Scan(object):
                     print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
                            (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
-            assert(len(raw) == self.__total)
             self.__session.images.append(ImgUtil.raw_to_img(
                     raw, self.parameters))
             self.__raw_lines = []
@@ -183,8 +181,6 @@ class Scan(object):
 
         if self.parameters.depth == 1:
             read = ImgUtil.unpack_1_to_8(read)
-
-        self.__total += len(read)
 
         # cut what we just read, line by line
 
@@ -202,16 +198,16 @@ class Scan(object):
         if len(read) > 0:
             self.__raw_lines.append(read)
 
-    def __get_available_lines(self):
+    def _get_available_lines(self):
         line_size = self.parameters.bytes_per_line
         r = len(self.__raw_lines)
         if (r > 0 and len(self.__raw_lines[-1]) < line_size):
             r -= 1;
         return (0, r)
 
-    available_lines = property(__get_available_lines)
+    available_lines = property(_get_available_lines)
 
-    def __get_expected_size(self):
+    def _get_expected_size(self):
         """
         Returns the expected size of the image (tuple: (w, h)).
         Note that (afaik) Sane makes it mandatory for the driver
@@ -225,7 +221,7 @@ class Scan(object):
         height = self.parameters.lines
         return (width, height)
 
-    expected_size = property(__get_expected_size)
+    expected_size = property(_get_expected_size)
 
     def get_image(self, start_line, end_line):
         assert(end_line > start_line)
@@ -233,7 +229,7 @@ class Scan(object):
         lines = b"".join(lines)
         return ImgUtil.raw_to_img(lines, self.parameters)
 
-    def cancel(self):
+    def _cancel(self):
         rawapi.sane_cancel(sane_dev_handle[1])
 
     def _del(self):
@@ -248,20 +244,23 @@ class SingleScan(Scan):
     def __init__(self, scanner):
         Scan.__init__(self, scanner)
 
-        self.__is_scanning = True
+        self.is_scanning = True
         self.__raw_lines = []
+
+        self._init()
 
     def read(self):
         try:
             Scan.read(self)
         except (EOFError, StopIteration):
-            self.cancel()
-            self.__is_scanning = False
+            self._cancel()
+            self.is_scanning = False
             raise
 
     def _del(self):
-        if self.__is_scanning:
-            self.cancel()
+        if self.is_scanning:
+            self.is_scanning = False
+            self._cancel()
         Scan._del(self)
 
 
@@ -269,20 +268,25 @@ class MultipleScan(Scan):
     def __init__(self, scanner):
         Scan.__init__(self, scanner)
 
-        self.__is_scanning = True
+        self.is_scanning = False
         self.__raw_lines = []
 
     def read(self):
+        if not self.is_scanning:
+            self.is_scanning = True
+            self._init()
+
         try:
             Scan.read(self)
         except StopIteration:
-            self.cancel()
-            self.__is_scanning = False
+            self._cancel()
+            self.is_scanning = False
             raise
 
     def _del(self):
-        if self.__is_scanning:
-            self.cancel()
+        if self.is_scanning:
+            self.is_scanning = False
+            self._cancel()
         Scan._del(self)
 
 
