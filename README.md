@@ -43,6 +43,7 @@ My current setup:
 	devices = pyinsane.get_devices()
 	assert(len(devices) > 0)
 	device = devices[0]
+
 	print("I'm going to use the following scanner: %s" % (str(device)))
 	scanner_id = device.name
 
@@ -97,6 +98,13 @@ or if you already know its name/id:
 	# same way.
 	# Note however that the Sane thread can only do one thing at a time,
 	# so some function call may be on hold on a semaphore for some times.
+
+
+### Other examples
+
+The scripts ./scan.py and ./list\_all.py contains more detailed examples.
+For instance, ./scan.py shows how to get pieces of a scan as it goes.
+
 
 ## Licence
 
