@@ -49,10 +49,15 @@ def sane_init():
 
 
 def sane_exit():
-    global sane_is_init
-    sane_is_init -= 1
-    if sane_is_init <= 0:
-        rawapi.sane_exit()
+    # TODO(Jflesch): This is a workaround
+    # In a multithreaded environment, for some unknown reason,
+    # calling sane_exit() will work but the program will crash
+    # when stopping. So we simply never call sane_exit() ...
+    pass
+    #global sane_is_init
+    #sane_is_init -= 1
+    #if sane_is_init <= 0:
+    #    rawapi.sane_exit()
 
 
 class ScannerOption(object):
