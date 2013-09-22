@@ -1,3 +1,7 @@
+2013-09-22 : v1.3.0 --> v1.3.1:
+- Add a workaround to prevent crash when multithreaded programs stop :
+  never call sane_exit().
+
 2013-09-08 : v1.2.2 --> v1.3.0:
 - Changes made to the abstract API (previous functions are still available but
   deprecated)
