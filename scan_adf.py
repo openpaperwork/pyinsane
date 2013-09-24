@@ -34,18 +34,17 @@ def main(args):
     scan_session = device.scan(multiple=True)
 
     try:
+        print("Scanning ...")
         while True:
             try:
                 scan_session.scan.read()
             except EOFError:
-                print ("Got a page ! (current number of pages read: %d)"  %
-                       (len(scan_session.images)))
+                print("Got page %d" % (len(scan_session.images)))
                 img = scan_session.images[-1]
                 imgpath = os.path.join(dstdir, "%d.jpg" %
                                        (len(scan_session.images)))
                 img.save(imgpath)
     except StopIteration:
-        print("Document feeder is now empty")
         print("Got %d pages" % len(scan_session.images))
 
 
