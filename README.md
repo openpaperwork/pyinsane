@@ -85,8 +85,9 @@ or if you already know its name/id:
 				print ("Got a page ! (current number of pages read: %d)"
 					   % (len(scan_session.images)))
 	except StopIteration:
-		print("Document feeder is now empty")
-	for idx in range(0, len(scan_session.scan.images)):
+		print("Document feeder is now empty. Got %d pages"
+		      % len(scan_session.images))
+	for idx in range(0, len(scan_session.images)):
 		image = scan_session.images[idx]
 
 ### Abstract\_th
