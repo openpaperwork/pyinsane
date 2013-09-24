@@ -276,29 +276,51 @@ class SingleScan(Scan):
 class MultipleScan(Scan):
     def __init__(self, scanner):
         Scan.__init__(self, scanner)
-
         self.is_scanning = False
         self.__raw_lines = []
+        self.is_finished = False
+        self.must_request_next_frame = False
 
     def read(self):
+        if self.is_finished:
+            raise StopIteration()
+
         if not self.is_scanning:
             self.is_scanning = True
+            self.must_request_next_frame = False
             self._init()
+
+        if self.must_request_next_frame:
+            try:
+                rawapi.sane_start(sane_dev_handle[1])
+            except StopIteration:
+                self._cancel()
+                self.is_finished = True
+                self.is_scanning = False
+                raise
+            self.must_request_next_frame = False
 
         try:
             Scan.read(self)
+        except EOFError:
+            self.must_request_next_frame = True
+            raise
         except StopIteration:
             self._cancel()
+            self.is_finished = True
             self.is_scanning = False
-            raise
+            # signal the last page first
+            raise EOFError()
 
     def cancel(self):
         if self.is_scanning:
             self._cancel()
+            self.is_finished = True
             self.is_scanning = False
 
     def _del(self):
         if self.is_scanning:
+            self.is_finished = True
             self.is_scanning = False
             self._cancel()
         Scan._del(self)
