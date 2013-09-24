@@ -155,6 +155,7 @@ class Scan(object):
         self.scanner = scanner
         self.__session = None
         self.__raw_lines = []
+        self.__img_finished = False
 
     def _set_session(self, session):
         self.__session = session
@@ -170,6 +171,11 @@ class Scan(object):
             raise
 
     def read(self):
+        if self.__img_finished:
+            # start a new one
+            self.__raw_lines = []
+            self.__img_finished = False
+
         try:
             read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
         except EOFError:
@@ -179,7 +185,9 @@ class Scan(object):
                     print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
                            (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
-            self.__raw_lines = []
+            # don't do purge the lines here. wait for the next call to read()
+            # because, in the meantime, the caller might use get_image()
+            self.__img_finished = True
             self.__session.images.append(ImgUtil.raw_to_img(
                     raw, self.parameters))
             raise
