@@ -179,6 +179,7 @@ class Scan(object):
                     print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
                            (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
+            self.__raw_lines = []
             self.__session.images.append(ImgUtil.raw_to_img(
                     raw, self.parameters))
             raise
@@ -249,7 +250,6 @@ class SingleScan(Scan):
         Scan.__init__(self, scanner)
 
         self.is_scanning = True
-        self.__raw_lines = []
 
         self._init()
 
@@ -277,7 +277,6 @@ class MultipleScan(Scan):
     def __init__(self, scanner):
         Scan.__init__(self, scanner)
         self.is_scanning = False
-        self.__raw_lines = []
         self.is_finished = False
         self.must_request_next_frame = False
 
