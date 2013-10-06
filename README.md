@@ -8,14 +8,15 @@ The code is divided in 3 layers:
 - rawapi : Ctypes binding to the raw Sane API
 - abstract : An Object-Oriented layer that simplifies the use of the Sane API
   and try to avoid possible misuse of the Sane API. When scanning, it also takes
-  care of returning a PIL image.
+  care of returning a Pillow image.
 - abstract\_th : The Sane API is not thread-safe and cannot be used in a
-  multi-threaded environment easily. This layer solves this problem but using
+  multi-threaded environment easily. This layer solves this problem by using
   a fully dedicated thread.
 
 ## Dependencies
 
 libsane
+[Pillow](https://github.com/python-imaging/Pillow#readme) (if the abstraction layer is used)
 
 ## Installation
 
