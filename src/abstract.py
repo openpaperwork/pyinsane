@@ -1,3 +1,5 @@
+import sys
+
 from PIL import Image
 
 import rawapi
@@ -204,7 +206,11 @@ class Scan(object):
             self.__raw_lines[-1] += read[:cut]
             read = read[cut:]
 
-        for _ in xrange(0, len(read), line_size):
+        range_func = range
+        if sys.version_info.major < 3:
+            range_func = xrange
+
+        for _ in range_func(0, len(read), line_size):
             self.__raw_lines.append(read[:line_size])
             read = read[line_size:]
 
