@@ -2,18 +2,18 @@ import Queue
 import sys
 import threading
 
-import abstract
-import rawapi
+from . import abstract
+from . import rawapi
 
 # import basic elements directly, so the caller
 # doesn't have to import rawapi if they need them.
-from rawapi import SaneCapabilities
-from rawapi import SaneConstraint
-from rawapi import SaneConstraintType
-from rawapi import SaneException
-from rawapi import SaneStatus
-from rawapi import SaneUnit
-from rawapi import SaneValueType
+from .rawapi import SaneCapabilities
+from .rawapi import SaneConstraint
+from .rawapi import SaneConstraintType
+from .rawapi import SaneException
+from .rawapi import SaneStatus
+from .rawapi import SaneUnit
+from .rawapi import SaneValueType
 
 
 __all__ = [
