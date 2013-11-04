@@ -1,4 +1,9 @@
-import Queue
+try:
+    # python 2.7
+    import Queue
+except ImportError:
+    # python 3
+    import queue as Queue
 import sys
 import threading
 
