@@ -1,3 +1,6 @@
+????-??-?? : v1.3.4 --> v1.3.5
+- Fix LineArt support
+
 2013-11-05 : v1.3.3 --> v1.3.4:
 - Fix Python 3 support (again): fix imports
 

@@ -128,27 +128,41 @@ class ImgUtil(object):
     }
 
     @staticmethod
-    def unpack_1_to_8(raw_packed):
+    def unpack_1_to_8(whole_raw_packed, pixels_per_line, bytes_per_line):
         # Each color is on one bit. We unpack immediately so each color
         # is on one byte.
-        # We do this so we can split the image line by line more easily
-        raw_unpacked = b""
-        for byte in raw_packed:
-            byte = ord(byte)
-            for bit in range(7, -1, -1):
-                if ((byte & (1<<bit)) > 0):
-                    raw_unpacked += (chr(0x00))
-                else:
-                    raw_unpacked += (chr(0xFF))
-        assert(len(raw_packed) * 8 == len(raw_unpacked))
-        return raw_unpacked
+        # We must take care of one thing : the last byte of each line
+        # contains unused bits. They must be dropped
+        whole_raw_unpacked = b""
+
+        for chunk in range(0, len(whole_raw_packed), bytes_per_line):
+            raw_packed = whole_raw_packed[:bytes_per_line]
+            whole_raw_packed = whole_raw_packed[bytes_per_line:]
+            raw_unpacked = b""
+
+            for byte in raw_packed:
+                byte = ord(byte)
+                for bit in range(7, -1, -1):
+                    if ((byte & (1<<bit)) > 0):
+                        raw_unpacked += (chr(0x00))
+                    else:
+                        raw_unpacked += (chr(0xFF))
+            assert(len(raw_packed) * 8 == len(raw_unpacked))
+
+            raw_unpacked = raw_unpacked[:pixels_per_line]
+            whole_raw_unpacked += raw_unpacked
+
+        return whole_raw_unpacked
 
     @staticmethod
     def raw_to_img(raw, parameters):
         mode = rawapi.SaneFrame(parameters.format).get_pil_format()
         color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
         width = parameters.pixels_per_line
-        height = (len(raw) / (width * color_bytes))
+        height = (len(raw) / parameters.bytes_per_line)
+        if parameters.depth == 1:
+            raw = ImgUtil.unpack_1_to_8(raw, width,
+                                        parameters.bytes_per_line)
         return Image.frombuffer(mode, (int(width), int(height)), raw, "raw", mode, 0, 1)
 
 
@@ -193,9 +207,6 @@ class Scan(object):
             self.__session.images.append(ImgUtil.raw_to_img(
                     raw, self.parameters))
             raise
-
-        if self.parameters.depth == 1:
-            read = ImgUtil.unpack_1_to_8(read)
 
         # cut what we just read, line by line
 
