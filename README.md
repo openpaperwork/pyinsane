@@ -104,8 +104,16 @@ or if you already know its name/id:
 
 ### Other examples
 
-The scripts ./scan.py and ./list\_all.py contains more detailed examples.
-For instance, ./scan.py shows how to get pieces of a scan as it goes.
+The folder 'examples' contains more detailed examples.
+For instance, examples/scan.py shows how to get pieces of a scan as it goes.
+
+To run one of these scripts, run:
+
+	python -m examples.[script] [args]
+
+For instance
+
+	python -m examples.scan toto.png
 
 
 ## Licence

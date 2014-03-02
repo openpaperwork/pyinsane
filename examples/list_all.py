@@ -2,9 +2,7 @@
 
 import sys
 
-sys.path += ['src']
-
-import abstract as pyinsane
+import src.abstract as pyinsane
 
 if __name__ == "__main__":
     for device in pyinsane.get_devices():
