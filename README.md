@@ -20,7 +20,14 @@ libsane
 
 ## Installation
 
+	$ sudo pip install pyinsane
+
+or
+
+	$ git clone https://github.com/jflesch/pyinsane.git
+	$ cd pyinsane
 	$ sudo python ./setup.py install
+
 
 ## Unit tests
 
