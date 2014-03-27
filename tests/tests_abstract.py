@@ -15,6 +15,11 @@ class TestSaneGetDevices(unittest.TestCase):
 
     def test_get_devices(self):
         devices = self.module.get_devices()
+        if len(devices) == 0:
+            # if there are no devices found, create a virtual device.
+            # see sane-test(5) and /etc/sane.d/test.conf
+            self.module.Scanner("test")._open()
+            devices = self.module.get_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):

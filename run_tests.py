@@ -10,7 +10,6 @@ from src import abstract
 from src import abstract_th
 
 if __name__ == '__main__':
-    print("Don't forget to turn at least one scanner on !")
     #print("---")
     #print("=== RawAPI: ===")
     #unittest.TextTestRunner(verbosity=3).run(

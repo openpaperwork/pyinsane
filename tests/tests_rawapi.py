@@ -6,6 +6,17 @@ import unittest
 import rawapi
 
 
+def get_test_devices():
+    '''Return SANE devices, perhaps after creating a test device.'''
+    devices = rawapi.sane_get_devices()
+    if len(devices) == 0:
+        # if there are no devices found, create a virtual device.
+        # see sane-test(5) and /etc/sane.d/test.conf
+        rawapi.sane_close(rawapi.sane_open("test"))
+        devices = rawapi.sane_get_devices()
+    return devices
+
+
 class TestSaneInit(unittest.TestCase):
     def setUp(self):
         pass
@@ -23,7 +34,7 @@ class TestSaneGetDevices(unittest.TestCase):
         rawapi.sane_init()
 
     def test_get_devices(self):
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
@@ -33,7 +44,7 @@ class TestSaneGetDevices(unittest.TestCase):
 class TestSaneOpen(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         self.dev_name = devices[0].name
 
@@ -51,7 +62,7 @@ class TestSaneOpen(unittest.TestCase):
 class TestSaneGetOptionDescriptor(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -85,7 +96,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
 class TestSaneControlOption(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -122,7 +133,7 @@ class TestSaneControlOption(unittest.TestCase):
 class TestSaneScan(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
