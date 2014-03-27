@@ -143,7 +143,10 @@ class TestSaneScan(unittest.TestCase):
         # with my scanner
         #rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
 
-        rawapi.sane_start(self.dev_handle)
+        try:
+            rawapi.sane_start(self.dev_handle)
+        except StopIteration:
+            self.skipTest("cannot scan, no document loaded")
 
         # XXX(Jflesch): get_select_fd() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
@@ -159,7 +162,10 @@ class TestSaneScan(unittest.TestCase):
         rawapi.sane_cancel(self.dev_handle)
 
     def test_cancelled_scan(self):
-        rawapi.sane_start(self.dev_handle)
+        try:
+            rawapi.sane_start(self.dev_handle)
+        except StopIteration:
+            self.skipTest("cannot scan, no document loaded")
         buf = rawapi.sane_read(self.dev_handle, 128*1024)
         self.assertTrue(len(buf) > 0)
         rawapi.sane_cancel(self.dev_handle)

@@ -60,7 +60,6 @@ class TestSaneOptions(unittest.TestCase):
             del(dev)
         del(self.devices)
 
-
 class TestSaneScan(unittest.TestCase):
     def set_module(self, module):
         self.module = module
@@ -71,8 +70,10 @@ class TestSaneScan(unittest.TestCase):
         self.dev = devices[0]
 
     def test_simple_scan_lineart(self):
-        self.assertTrue("Lineart" in self.dev.options['mode'].constraint)
-        self.dev.options['mode'].value = "Lineart"
+        try:
+            self.dev.options['mode'].value = "Lineart"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=False)
         try:
             assert(scan_session.scan is not None)
@@ -84,8 +85,10 @@ class TestSaneScan(unittest.TestCase):
         self.assertNotEqual(img, None)
 
     def test_simple_scan_gray(self):
-        self.assertTrue("Gray" in self.dev.options['mode'].constraint)
-        self.dev.options['mode'].value = "Gray"
+        try:
+            self.dev.options['mode'].value = "Gray"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=False)
         try:
             while True:
@@ -96,8 +99,10 @@ class TestSaneScan(unittest.TestCase):
         self.assertNotEqual(img, None)
 
     def test_simple_scan_color(self):
-        self.assertTrue("Color" in self.dev.options['mode'].constraint)
-        self.dev.options['mode'].value = "Color"
+        try:
+            self.dev.options['mode'].value = "Color"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=False)
         try:
             while True:
@@ -108,9 +113,11 @@ class TestSaneScan(unittest.TestCase):
         self.assertNotEqual(img, None)
 
     def test_multi_scan_on_flatbed(self):
-        self.assertTrue("Flatbed" in self.dev.options['source'].constraint)
-        self.dev.options['source'].value = "Flatbed"
-        self.dev.options['mode'].value = "Color"
+        try:
+            self.dev.options['source'].value = "Flatbed"
+            self.dev.options['mode'].value = "Color"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=True)
         try:
             while True:
@@ -121,9 +128,17 @@ class TestSaneScan(unittest.TestCase):
         self.assertNotEqual(scan_session.images[0], None)
 
     def test_multi_scan_on_adf(self):
-        self.assertTrue("ADF" in self.dev.options['source'].constraint)
-        self.dev.options['source'].value = "ADF"
-        self.dev.options['mode'].value = "Color"
+        # sane-test uses 'Automatic Document Feeder' instead of ADF
+        try:
+            if "ADF" in self.dev.options['source'].constraint:
+                self.dev.options['source'].value = "ADF"
+                pages = 0
+            elif "Automatic Document Feeder" in self.dev.options['source'].constraint:
+                self.dev.options['source'].value = "Automatic Document Feeder"
+                pages = 10 # sane-test scans give us 10 pages
+            self.dev.options['mode'].value = "Color"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=True)
         try:
             while True:
@@ -133,12 +148,14 @@ class TestSaneScan(unittest.TestCase):
                     pass
         except StopIteration:
             pass
-        self.assertEqual(len(scan_session.images), 0)
+        self.assertEqual(len(scan_session.images), pages)
 
     def test_expected_size(self):
-        self.assertTrue("ADF" in self.dev.options['source'].constraint)
-        self.dev.options['source'].value = "Flatbed"
-        self.dev.options['mode'].value = "Color"
+        try:
+            self.dev.options['source'].value = "Flatbed"
+            self.dev.options['mode'].value = "Color"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=False)
         scan_size = scan_session.scan.expected_size
         self.assertTrue(scan_size[0] > 100)
@@ -146,9 +163,11 @@ class TestSaneScan(unittest.TestCase):
         scan_session.scan.cancel()
 
     def test_get_progressive_scan(self):
-        self.assertTrue("ADF" in self.dev.options['source'].constraint)
-        self.dev.options['source'].value = "Flatbed"
-        self.dev.options['mode'].value = "Color"
+        try:
+            self.dev.options['source'].value = "Flatbed"
+            self.dev.options['mode'].value = "Color"
+        except self.module.SaneException:
+            self.skipTest("scanner does not support required option")
         scan_session = self.dev.scan(multiple=False)
         last_line = 0
         expected_size = scan_session.scan.expected_size
