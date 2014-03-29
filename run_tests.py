@@ -10,10 +10,10 @@ from src import abstract
 from src import abstract_th
 
 if __name__ == '__main__':
-    #print("---")
-    #print("=== RawAPI: ===")
-    #unittest.TextTestRunner(verbosity=3).run(
-    #    tests_rawapi.get_all_tests())
+    print("---")
+    print("=== RawAPI: ===")
+    unittest.TextTestRunner(verbosity=3).run(
+        tests_rawapi.get_all_tests())
     print("---")
     print("=== Abstract: ===")
     unittest.TextTestRunner(verbosity=3).run(
