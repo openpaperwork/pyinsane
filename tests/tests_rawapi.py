@@ -102,9 +102,6 @@ class TestSaneControlOption(unittest.TestCase):
         self.dev_handle = rawapi.sane_open(dev_name)
         self.nb_options = rawapi.sane_get_option_value(self.dev_handle, 0)
 
-    # This test fails because libsane gives us back some options that
-    # we can't do anything with --- including get their value
-    @unittest.expectedFailure
     def test_get_option_value(self):
         for opt_idx in range(0, self.nb_options):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
