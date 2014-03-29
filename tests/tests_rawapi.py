@@ -107,6 +107,8 @@ class TestSaneControlOption(unittest.TestCase):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
             if not rawapi.SaneValueType(desc.type).can_getset_opt():
                 continue
+            if desc.cap|rawapi.SaneCapabilities.INACTIVE == desc.cap:
+                continue
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertNotEqual(val, None)
 
