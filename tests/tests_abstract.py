@@ -36,8 +36,11 @@ class TestSaneOptions(unittest.TestCase):
 
     def test_get_option(self):
         for dev in self.devices:
-            val = dev.options['mode'].value
-            self.assertNotEqual(val, None)
+            for (k, v) in dev.options.items():
+                if v.capabilities.is_active():
+                    self.assertNotEqual(v.value, None)
+                else:
+                    self.assertRaises(self.module.SaneException, lambda: v.value)
 
     def test_set_option(self):
         for dev in self.devices:
@@ -45,15 +48,25 @@ class TestSaneOptions(unittest.TestCase):
             val = dev.options['mode'].value
             self.assertEqual(val, "Gray")
 
-    def __set_opt(self, opt_name, opt_val):
-        for dev in self.devices:
-            dev.options[opt_name].value = opt_val
+    def __set_opt(self, dev, opt_name, opt_val):
+        dev.options[opt_name].value = opt_val
 
     def test_set_inexisting_option(self):
-        self.assertRaises(KeyError, self.__set_opt, 'xyz', "Gray")
+        for dev in self.devices:
+            self.assertRaises(KeyError, self.__set_opt, dev, 'xyz', "Gray")
 
     def test_set_invalid_value(self):
-        self.assertRaises(self.module.SaneException, self.__set_opt, 'mode', "XYZ")
+        for dev in self.devices:
+            self.assertRaises(self.module.SaneException, self.__set_opt, dev, 'mode', "XYZ")
+
+    def test_set_inactive_option(self):
+        for dev in self.devices:
+            noncolor = [x for x in dev.options["mode"].constraint if x != "Color"]
+            if len(noncolor) == 0:
+                self.skipTest("scanner does not support required option")
+            dev.options["mode"].value = noncolor[0]
+            # three-pass mode is only active in color mode
+            self.assertRaises(self.module.SaneException, self.__set_opt, dev, 'three-pass', 1)
 
     def tearDown(self):
         for dev in self.devices:
@@ -214,6 +227,7 @@ def get_all_tests(module):
         TestSaneOptions("test_set_option"),
         TestSaneOptions("test_set_inexisting_option"),
         TestSaneOptions("test_set_invalid_value"),
+        TestSaneOptions("test_set_inactive_option"),
     ]
     for test in tests:
         test.set_module(module)
