@@ -13,6 +13,7 @@ from .rawapi import SaneException
 from .rawapi import SaneStatus
 from .rawapi import SaneUnit
 from .rawapi import SaneValueType
+from .rawapi import sane_init, sane_exit
 
 
 __all__ = [
@@ -32,34 +33,10 @@ __all__ = [
 # We use huge buffers to spend the maximum amount of time in non-Python code
 SANE_READ_BUFSIZE = 512*1024
 
-sane_is_init = 0
-sane_version = None
-
 # XXX(Jflesch): Never open more than one handle at the same time.
 # Some Sane backends don't support it. For instance, I have 2 HP scanners, and
 # if I try to access both from the same process, I get I/O errors.
 sane_dev_handle = ("", None)
-
-
-def sane_init():
-    global sane_is_init
-    global sane_version
-    if sane_is_init <= 0:
-        sane_version = rawapi.sane_init()
-    sane_is_init += 1
-    return sane_version
-
-
-def sane_exit():
-    # TODO(Jflesch): This is a workaround
-    # In a multithreaded environment, for some unknown reason,
-    # calling sane_exit() will work but the program will crash
-    # when stopping. So we simply never call sane_exit() ...
-    pass
-    #global sane_is_init
-    #sane_is_init -= 1
-    #if sane_is_init <= 0:
-    #    rawapi.sane_exit()
 
 
 class ScannerOption(object):
