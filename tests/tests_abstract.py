@@ -64,6 +64,8 @@ class TestSaneOptions(unittest.TestCase):
             noncolor = [x for x in dev.options["mode"].constraint if x != "Color"]
             if len(noncolor) == 0:
                 self.skipTest("scanner does not support required option")
+            if not "three-pass" in dev.options.keys():
+                self.skipTest("scanner does not support option 'three-pass'")
             dev.options["mode"].value = noncolor[0]
             # three-pass mode is only active in color mode
             self.assertRaises(self.module.SaneException, self.__set_opt, dev, 'three-pass', 1)
