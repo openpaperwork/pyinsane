@@ -79,7 +79,14 @@ class ScannerOption(object):
 
     def _get_value(self):
         self.__scanner._open()
-        return rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
+        val = rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
+        if not self.capabilities.is_active():
+            # XXX(Jflesch): if the option is not active, some backends still
+            # return a value, some don't and return an error instead.
+            # To avoid mistakes in user programs, we make the behavior here
+            # consistent and always raise an exception.
+            raise SaneException("Option is not active")
+        return val
 
     def _set_value(self, new_value):
         self.__scanner._open()
