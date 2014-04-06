@@ -69,7 +69,9 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
 
     def test_get_option_descriptor_0(self):
         opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
-        self.assertEqual(opt_desc.name, "")
+        # XXX(Jflesch): The name may vary: sometimes it's empty, sometimes it's
+        # "option-cnt"
+        #self.assertEqual(opt_desc.name, "")
         self.assertEqual(opt_desc.title, "Number of options")
         self.assertEqual(opt_desc.type, rawapi.SaneValueType.INT)
         self.assertEqual(opt_desc.unit, rawapi.SaneUnit.NONE)
