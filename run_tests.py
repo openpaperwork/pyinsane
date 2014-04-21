@@ -12,10 +12,10 @@ from src import abstract_th
 if __name__ == '__main__':
     test_set = ["rawapi", "abstract", "abstract_th"]
     if "-h" in sys.argv or "--help" in sys.argv:
-        print "%s [tests [tests [...]]]" % sys.argv[0]
-        print ""
-        print "Available tests: %s" % " ".join(test_set)
-        print "By default, all the tests are run"
+        print("%s [tests [tests [...]]]" % sys.argv[0])
+        print("")
+        print("Available tests: %s" % " ".join(test_set))
+        print("By default, all the tests are run")
         sys.exit(1)
     if len(sys.argv) >= 2:
         test_set = sys.argv[1:]
