@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name="pyinsane",
-      version="1.3.5-git",
+      version="1.3.6",
       description=("Pure Python implementation of the Sane API (using ctypes) and"
                    " abstration layer"),
       long_description=("Pure Python implementation of the Sane API (using"

@@ -1,3 +1,8 @@
+2014-05-01 : v1.3.5 --> v1.3.6
+- Keep the behavior of scanner.options[].value always consistent: if an option is not active, we should always raise an exception
+- Fix Python 3 support
+- Improve tests
+
 2014-03-05 : v1.3.4 --> v1.3.5
 - Fix Mode=LineArt support
 
