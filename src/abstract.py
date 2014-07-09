@@ -189,6 +189,7 @@ class Scan(object):
     def read(self):
         if self.__img_finished:
             # start a new one
+            del self.__raw_lines
             self.__raw_lines = []
             self.__img_finished = False
 
@@ -264,7 +265,8 @@ class Scan(object):
 
     def _del(self):
         # inheriting classes must call self.cancel() if required
-        pass
+        del self.__raw_lines
+        self.__raw_lines = []
 
     def __del__(self):
         self._del()
