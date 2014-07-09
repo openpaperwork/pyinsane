@@ -6,6 +6,17 @@ import unittest
 import rawapi
 
 
+def get_test_devices():
+    '''Return SANE devices, perhaps after creating a test device.'''
+    devices = rawapi.sane_get_devices()
+    if len(devices) == 0:
+        # if there are no devices found, create a virtual device.
+        # see sane-test(5) and /etc/sane.d/test.conf
+        rawapi.sane_close(rawapi.sane_open("test"))
+        devices = rawapi.sane_get_devices()
+    return devices
+
+
 class TestSaneInit(unittest.TestCase):
     def setUp(self):
         pass
@@ -23,7 +34,7 @@ class TestSaneGetDevices(unittest.TestCase):
         rawapi.sane_init()
 
     def test_get_devices(self):
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
@@ -33,7 +44,7 @@ class TestSaneGetDevices(unittest.TestCase):
 class TestSaneOpen(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         self.dev_name = devices[0].name
 
@@ -51,15 +62,17 @@ class TestSaneOpen(unittest.TestCase):
 class TestSaneGetOptionDescriptor(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
 
     def test_get_option_descriptor_0(self):
         opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
-        self.assertEqual(opt_desc.name, "")
-        self.assertEqual(opt_desc.title, "Number of options")
+        # XXX(Jflesch): The name may vary: sometimes it's empty, sometimes it's
+        # "option-cnt"
+        #self.assertEqual(opt_desc.name, "")
+        self.assertEqual(opt_desc.title, b"Number of options")
         self.assertEqual(opt_desc.type, rawapi.SaneValueType.INT)
         self.assertEqual(opt_desc.unit, rawapi.SaneUnit.NONE)
         self.assertEqual(opt_desc.size, 4)
@@ -85,7 +98,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
 class TestSaneControlOption(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -95,6 +108,8 @@ class TestSaneControlOption(unittest.TestCase):
         for opt_idx in range(0, self.nb_options):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
             if not rawapi.SaneValueType(desc.type).can_getset_opt():
+                continue
+            if desc.cap|rawapi.SaneCapabilities.INACTIVE == desc.cap:
                 continue
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertNotEqual(val, None)
@@ -122,7 +137,7 @@ class TestSaneControlOption(unittest.TestCase):
 class TestSaneScan(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = rawapi.sane_get_devices()
+        devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -132,7 +147,10 @@ class TestSaneScan(unittest.TestCase):
         # with my scanner
         #rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
 
-        rawapi.sane_start(self.dev_handle)
+        try:
+            rawapi.sane_start(self.dev_handle)
+        except StopIteration:
+            self.skipTest("cannot scan, no document loaded")
 
         # XXX(Jflesch): get_select_fd() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
@@ -148,7 +166,10 @@ class TestSaneScan(unittest.TestCase):
         rawapi.sane_cancel(self.dev_handle)
 
     def test_cancelled_scan(self):
-        rawapi.sane_start(self.dev_handle)
+        try:
+            rawapi.sane_start(self.dev_handle)
+        except StopIteration:
+            self.skipTest("cannot scan, no document loaded")
         buf = rawapi.sane_read(self.dev_handle, 128*1024)
         self.assertTrue(len(buf) > 0)
         rawapi.sane_cancel(self.dev_handle)

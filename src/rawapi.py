@@ -36,6 +36,8 @@ __all__ = [
     'sane_strstatus',
 ]
 
+sane_is_init = 0
+sane_version = None
 
 try:
     SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
@@ -497,9 +499,13 @@ def is_sane_available():
 
 
 def sane_init(auth_callback=__dummy_auth_callback):
-    global sane_available
+    global sane_available, sane_is_init, sane_version
     assert(sane_available)
 
+    if sane_is_init > 0:
+        return sane_version
+
+    sane_is_init += 1
     version_code = ctypes.c_int()
     wrap_func = __AuthCallbackWrapper(auth_callback).wrapper
     auth_callback = AUTH_CALLBACK_DEF(wrap_func)
@@ -511,14 +517,22 @@ def sane_init(auth_callback=__dummy_auth_callback):
     major = (version_code >> 24) & 0xFF
     minor = (version_code >> 16) & 0xFF
     build = (version_code >> 0) & 0xFFFF
-    return SaneVersion(major, minor, build)
+    sane_version = SaneVersion(major, minor, build)
+    return sane_version
 
 
 def sane_exit():
-    global sane_available
+    global sane_available, sane_is_init
     assert(sane_available)
 
-    SANE_LIB.sane_exit()
+    # TODO(Jflesch): This is a workaround
+    # In a multithreaded environment, for some unknown reason,
+    # calling sane_exit() will work but the program will crash
+    # when stopping. So we simply never call sane_exit() ...
+
+    # sane_is_init -= 1
+    # if sane_is_init <= 0:
+    #     SANE_LIB.sane_exit()
 
 
 def sane_get_devices(local_only=False):

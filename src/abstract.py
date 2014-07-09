@@ -13,6 +13,7 @@ from .rawapi import SaneException
 from .rawapi import SaneStatus
 from .rawapi import SaneUnit
 from .rawapi import SaneValueType
+from .rawapi import sane_init, sane_exit
 
 
 __all__ = [
@@ -32,34 +33,10 @@ __all__ = [
 # We use huge buffers to spend the maximum amount of time in non-Python code
 SANE_READ_BUFSIZE = 512*1024
 
-sane_is_init = 0
-sane_version = None
-
 # XXX(Jflesch): Never open more than one handle at the same time.
 # Some Sane backends don't support it. For instance, I have 2 HP scanners, and
 # if I try to access both from the same process, I get I/O errors.
 sane_dev_handle = ("", None)
-
-
-def sane_init():
-    global sane_is_init
-    global sane_version
-    if sane_is_init <= 0:
-        sane_version = rawapi.sane_init()
-    sane_is_init += 1
-    return sane_version
-
-
-def sane_exit():
-    # TODO(Jflesch): This is a workaround
-    # In a multithreaded environment, for some unknown reason,
-    # calling sane_exit() will work but the program will crash
-    # when stopping. So we simply never call sane_exit() ...
-    pass
-    #global sane_is_init
-    #sane_is_init -= 1
-    #if sane_is_init <= 0:
-    #    rawapi.sane_exit()
 
 
 class ScannerOption(object):
@@ -83,13 +60,13 @@ class ScannerOption(object):
     def build_from_rawapi(scanner, opt_idx, opt_raw):
         opt = ScannerOption(scanner, opt_idx)
         opt.name = opt_raw.name
-        if opt.name is not None:
+        if opt.name is not None and hasattr(opt.name, "decode"):
             opt.name = opt.name.decode('utf-8')
         opt.title = opt_raw.title
-        if opt.title is not None:
+        if opt.title is not None and hasattr(opt.title, "decode"):
             opt.title = opt.title.decode('utf-8')
         opt.desc = opt_raw.desc
-        if opt.desc is not None:
+        if opt.desc is not None and hasattr(opt.desc, "decode"):
             opt.desc = opt.desc.decode('utf-8')  # TODO : multi-line
         opt.val_type = SaneValueType(opt_raw.type)
         opt.unit = SaneUnit(opt_raw.unit)
@@ -102,7 +79,16 @@ class ScannerOption(object):
 
     def _get_value(self):
         self.__scanner._open()
-        return rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
+        val = rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
+        if not self.capabilities.is_active():
+            # XXX(Jflesch): if the option is not active, some backends still
+            # return a value, some don't and return an error instead.
+            # To avoid mistakes in user programs, we make the behavior here
+            # consistent and always raise an exception.
+            raise SaneException("Option is not active")
+        if hasattr(val, 'decode'):
+            val = val.decode("utf-8")
+        return val
 
     def _set_value(self, new_value):
         self.__scanner._open()
@@ -135,18 +121,26 @@ class ImgUtil(object):
         # contains unused bits. They must be dropped
         whole_raw_unpacked = b""
 
+        if sys.version_info < (3, ):
+            positive_bit = chr(0x00)
+            negative_bit = chr(0xFF)
+        else:
+            positive_bit = bytes([0x00])
+            negative_bit = bytes([0xFF])
+
         for chunk in range(0, len(whole_raw_packed), bytes_per_line):
             raw_packed = whole_raw_packed[:bytes_per_line]
             whole_raw_packed = whole_raw_packed[bytes_per_line:]
             raw_unpacked = b""
 
             for byte in raw_packed:
-                byte = ord(byte)
+                if type(byte) == str:
+                    byte = ord(byte)
                 for bit in range(7, -1, -1):
                     if ((byte & (1<<bit)) > 0):
-                        raw_unpacked += (chr(0x00))
+                        raw_unpacked += positive_bit
                     else:
-                        raw_unpacked += (chr(0xFF))
+                        raw_unpacked += negative_bit
             assert(len(raw_packed) * 8 == len(raw_unpacked))
 
             raw_unpacked = raw_unpacked[:pixels_per_line]
@@ -386,10 +380,19 @@ class ScanSession(object):
 class Scanner(object):
     def __init__(self, name, vendor="Unknown", model="Unknown",
                  dev_type="Unknown"):
-        self.name = name.decode('utf-8')
-        self.vendor = vendor.decode('utf-8')
-        self.model = model.decode('utf-8')
-        self.dev_type = dev_type.decode('utf-8')
+        if hasattr(name, "decode"):
+            name = name.decode('utf-8')
+        if hasattr(vendor, "decode"):
+            vendor = vendor.decode('utf-8')
+        if hasattr(model, "decode"):
+            model = model.decode('utf-8')
+        if hasattr(dev_type, "decode"):
+            dev_type = dev_type.decode('utf-8')
+
+        self.name = name
+        self.vendor = vendor
+        self.model = model
+        self.dev_type = dev_type
         self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
@@ -442,9 +445,11 @@ class Scanner(object):
     options = property(_get_options)
 
     def scan(self, multiple=False):
+        value = self.options['source'].value
+        if hasattr(value, 'decode'):
+            value = value.decode('utf-8')
         if (not multiple
-            or (not "ADF" in self.options['source'].value
-                and not "Feeder" in self.options['source'].value)):
+            or (not "ADF" in value and not "Feeder" in value)):
             # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
