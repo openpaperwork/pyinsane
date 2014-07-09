@@ -85,7 +85,7 @@ class ScannerOption(object):
             # return a value, some don't and return an error instead.
             # To avoid mistakes in user programs, we make the behavior here
             # consistent and always raise an exception.
-            raise SaneException("Option is not active")
+            raise SaneException("Option '%s' is not active" % self.name)
         if hasattr(val, 'decode'):
             val = val.decode("utf-8")
         return val
@@ -445,7 +445,11 @@ class Scanner(object):
     options = property(_get_options)
 
     def scan(self, multiple=False):
-        value = self.options['source'].value
+        if (not ('source' in self.options
+                 and self.options['source'].capabilities.is_active())):
+            value = ""
+        else:
+            value = self.options['source'].value
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
         if (not multiple
