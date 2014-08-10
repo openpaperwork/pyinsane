@@ -1,3 +1,6 @@
+2014-08-10 : v1.3.7 --> v1.3.8
+- Fix scan from feeder (multiscan)
+
 2014-07-09 : v1.3.6 --> v1.3.7
 - Fix: On some scanner, the option 'source' is not active and shouldn't be
   used (prevented scans)
