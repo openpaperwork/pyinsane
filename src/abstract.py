@@ -300,6 +300,7 @@ class MultipleScan(Scan):
         self.is_scanning = False
         self.is_finished = False
         self.must_request_next_frame = False
+        self._init()
 
     def read(self):
         if self.is_finished:
@@ -308,7 +309,6 @@ class MultipleScan(Scan):
         if not self.is_scanning:
             self.is_scanning = True
             self.must_request_next_frame = False
-            self._init()
 
         if self.must_request_next_frame:
             try:
