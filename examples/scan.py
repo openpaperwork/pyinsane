@@ -4,7 +4,11 @@ import sys
 
 from PIL import Image
 
-import src.abstract as pyinsane
+try:
+    import src.abstract as pyinsane
+except ImportError:
+    import pyinsane.abstract as pyinsane
+
 
 def set_scanner_opt(scanner, opt, value):
     print("Setting %s to %s" % (opt, str(value)))

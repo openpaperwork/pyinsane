@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import sys
-
-import src.abstract as pyinsane
+try:
+    import src.abstract as pyinsane
+except ImportError:
+    import pyinsane.abstract as pyinsane
 
 if __name__ == "__main__":
     for device in pyinsane.get_devices():

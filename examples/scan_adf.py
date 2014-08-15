@@ -3,7 +3,11 @@
 import os
 import sys
 
-import src.abstract as pyinsane
+try:
+    import src.abstract as pyinsane
+except ImportError:
+    import pyinsane.abstract as pyinsane
+
 
 def main(args):
     dstdir = args[0]
