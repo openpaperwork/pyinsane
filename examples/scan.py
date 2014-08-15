@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # beware: don't select a source that is not in the constraint,
     # with some drivers (Brother DCP-8025D for instance), it may segfault.
     if (device.options['source'].constraint_type
-        == pyinsane.SaneConstraintType.STRING_LIST):
+            == pyinsane.SaneConstraintType.STRING_LIST):
         if 'Auto' in device.options['source'].constraint:
             source = 'Auto'
         elif 'FlatBed' in device.options['source'].constraint:

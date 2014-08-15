@@ -16,8 +16,8 @@ def main(args):
     assert(len(devices) > 0)
     device = devices[0]
 
-    print("Will use the scanner [%s]" % (str(device)))
-    scanner_id = device.name
+    print("Will use the scanner [%s](%s)"
+          % (str(device), device.name))
 
     possible_srcs = device.options['source'].constraint
     adf_src = None
