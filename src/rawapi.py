@@ -424,9 +424,9 @@ class __AuthCallbackWrapper(object):
         (login, password) = self.__auth_callback(ressource_ptr.value)
         # TODO(Jflesch): Make sure the following works
         ctypes.memmove(login_ptr, ctypes.c_char_p(login),
-                       min(len(login)+1, MAX_USERNAME_LEN))
+                       min(len(login)+1, self.MAX_USERNAME_LEN))
         ctypes.memmove(passwd_ptr, ctypes.c_char_p(password),
-                       min(len(password)+1, MAX_USERNAME_LEN))
+                       min(len(password)+1, self.MAX_USERNAME_LEN))
 
 
 AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
