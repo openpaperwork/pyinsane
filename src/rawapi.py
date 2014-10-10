@@ -1,5 +1,4 @@
 import ctypes
-import sys
 
 __all__ = [
     'SaneCapabilities',
@@ -64,7 +63,7 @@ class SaneEnum(object):
         return cmp(self.__value, other.__value)
 
     def __str__(self):
-        if not self.__value in self.VALUE_TO_STR:
+        if self.__value not in self.VALUE_TO_STR:
             txt = "Unknown value (%d)" % (self.__value)
         else:
             txt = "%s (%d)" % (self.VALUE_TO_STR[self.__value], self.__value)
@@ -139,20 +138,20 @@ class SaneStatus(SaneEnum):
     HW_LOCKED = 13
 
     VALUE_TO_STR = {
-        GOOD :          "No error",
-        UNSUPPORTED :   "Operation is not supported",
-        CANCELLED :     "Operation was cancelled",
-        DEVICE_BUSY :   "Device is busy. Try again later",
-        INVAL :         "Data is invalid",
-        EOF :           "End-of-file : no more data available",
-        JAMMED :        "Document feeder jammed",
-        NO_DOCS :       "Document feeder out of documents",
-        COVER_OPEN :    "Scanner cover is open",
-        IO_ERROR :      "Error during device I/O",
-        NO_MEM :        "Out of memory",
-        ACCESS_DENIED : "Access to resource has been denied",
-        WARMING_UP :    "Lamp is not ready yet. Try again later",
-        HW_LOCKED :     "Scanner mechanism locked for transport",
+        GOOD:          "No error",
+        UNSUPPORTED:   "Operation is not supported",
+        CANCELLED:     "Operation was cancelled",
+        DEVICE_BUSY:   "Device is busy. Try again later",
+        INVAL:         "Data is invalid",
+        EOF:           "End-of-file : no more data available",
+        JAMMED:        "Document feeder jammed",
+        NO_DOCS:       "Document feeder out of documents",
+        COVER_OPEN:    "Scanner cover is open",
+        IO_ERROR:      "Error during device I/O",
+        NO_MEM:        "Out of memory",
+        ACCESS_DENIED: "Access to resource has been denied",
+        WARMING_UP:    "Lamp is not ready yet. Try again later",
+        HW_LOCKED:     "Scanner mechanism locked for transport",
     }
 
 
@@ -160,6 +159,7 @@ class SaneException(Exception):
     def __init__(self, status):
         Exception.__init__(self, str(status))
         self.status = status
+
 
 class SaneValueType(SaneEnum):
     BOOL = 0
@@ -170,19 +170,19 @@ class SaneValueType(SaneEnum):
     GROUP = 5
 
     VALUE_TO_STR = {
-        BOOL :      "Boolean",
-        INT :       "Integer",
-        FIXED :     "Fixed",
-        STRING :    "String",
-        BUTTON :    "Button",
-        GROUP :     "Group",
+        BOOL:      "Boolean",
+        INT:       "Integer",
+        FIXED:     "Fixed",
+        STRING:    "String",
+        BUTTON:    "Button",
+        GROUP:     "Group",
     }
 
     VALUE_TO_CLASS = {
-        BOOL :      ctypes.c_int,
-        INT :       ctypes.c_int,
-        FIXED :     ctypes.c_int,
-        STRING :    ctypes.c_buffer,
+        BOOL:      ctypes.c_int,
+        INT:       ctypes.c_int,
+        FIXED:     ctypes.c_int,
+        STRING:    ctypes.c_buffer,
     }
 
     def can_getset_opt(self):
@@ -209,13 +209,13 @@ class SaneUnit(SaneEnum):
     MICROSECOND = 6
 
     VALUE_TO_STR = {
-        NONE :          "None",
-        PIXEL :         "Pixel",
-        BIT :           "Bit",
-        MM :            "Mm",
-        DPI :           "Dpi",
-        PERCENT :       "Percent",
-        MICROSECOND :   "Microsecond",
+        NONE:          "None",
+        PIXEL:         "Pixel",
+        BIT:           "Bit",
+        MM:            "Mm",
+        DPI:           "Dpi",
+        PERCENT:       "Percent",
+        MICROSECOND:   "Microsecond",
     }
 
 
@@ -235,26 +235,26 @@ class SaneDevice(ctypes.Structure):
 class SaneCapabilities(SaneFlags):
     NONE = 0
 
-    SOFT_SELECT = (1<<0)
-    HARD_SELECT = (1<<1)
-    SOFT_DETECT = (1<<2)
-    EMULATED = (1<<3)
-    AUTOMATIC = (1<<4)
-    INACTIVE = (1<<5)
-    ADVANCED = (1<<6)
+    SOFT_SELECT = (1 << 0)
+    HARD_SELECT = (1 << 1)
+    SOFT_DETECT = (1 << 2)
+    EMULATED = (1 << 3)
+    AUTOMATIC = (1 << 4)
+    INACTIVE = (1 << 5)
+    ADVANCED = (1 << 6)
 
     FLAG_TO_STR = {
-        SOFT_SELECT :   "Soft_select",
-        HARD_SELECT :   "Hard_select",
-        SOFT_DETECT :   "Soft_detect",
-        EMULATED :      "Emulated",
-        AUTOMATIC :     "Automatic",
-        INACTIVE :      "Inactive",
-        ADVANCED :      "Advanced",
+        SOFT_SELECT:   "Soft_select",
+        HARD_SELECT:   "Hard_select",
+        SOFT_DETECT:   "Soft_detect",
+        EMULATED:      "Emulated",
+        AUTOMATIC:     "Automatic",
+        INACTIVE:      "Inactive",
+        ADVANCED:      "Advanced",
     }
 
     def is_active(self):
-        return not self.INACTIVE in self
+        return self.INACTIVE not in self
 
     def is_settable(self):
         return self.SOFT_SELECT in self
@@ -263,14 +263,14 @@ class SaneCapabilities(SaneFlags):
 class SaneInfo(SaneFlags):
     EMPTY = 0
 
-    INEXACT = (1<<0)
-    RELOAD_OPTIONS = (1<<1)
-    RELOAD_PARAMS = (1<<2)
+    INEXACT = (1 << 0)
+    RELOAD_OPTIONS = (1 << 1)
+    RELOAD_PARAMS = (1 << 2)
 
     FLAG_TO_STR = {
-        INEXACT :           "Inexact",
-        RELOAD_OPTIONS :    "Reload_options",
-        RELOAD_PARAMS :     "Reload_params",
+        INEXACT:           "Inexact",
+        RELOAD_OPTIONS:    "Reload_options",
+        RELOAD_PARAMS:     "Reload_params",
     }
 
 
@@ -281,10 +281,10 @@ class SaneConstraintType(SaneEnum):
     STRING_LIST = 3
 
     VALUE_TO_STR = {
-        NONE :          "None",
-        RANGE :         "Range",
-        WORD_LIST :     "Word list",
-        STRING_LIST :   "String list",
+        NONE:          "None",
+        RANGE:         "Range",
+        WORD_LIST:     "Word list",
+        STRING_LIST:   "String list",
     }
 
     @staticmethod
@@ -313,10 +313,10 @@ class SaneConstraintType(SaneEnum):
 
     def get_pyobj_constraint(self, sane_constraint):
         pyobj = {
-            self.NONE :         self.__constraint_none_to_pyobj,
-            self.RANGE :        self.__constraint_range_to_pyobj,
-            self.WORD_LIST :    self.__constraint_word_list_to_pyobj,
-            self.STRING_LIST :  self.__constraint_string_list_to_pyobj,
+            self.NONE:         self.__constraint_none_to_pyobj,
+            self.RANGE:        self.__constraint_range_to_pyobj,
+            self.WORD_LIST:    self.__constraint_word_list_to_pyobj,
+            self.STRING_LIST:  self.__constraint_string_list_to_pyobj,
         }[int(self)](sane_constraint)
         return pyobj
 
@@ -364,9 +364,9 @@ class SaneAction(SaneEnum):
     SET_AUTO = 3
 
     VALUE_TO_STR = {
-        GET_VALUE : "Get value",
-        SET_VALUE : "Set value",
-        SET_AUTO :  "Set auto",
+        GET_VALUE: "Get value",
+        SET_VALUE: "Set value",
+        SET_AUTO:  "Set auto",
     }
 
 
@@ -378,19 +378,19 @@ class SaneFrame(SaneEnum):
     BLUE = 4
 
     VALUE_TO_STR = {
-        GRAY :  "Gray",
-        RGB :   "RGB",
-        RED :   "Red",
-        GREEN : "Green",
-        BLUE :  "Blue",
+        GRAY:  "Gray",
+        RGB:   "RGB",
+        RED:   "Red",
+        GREEN: "Green",
+        BLUE:  "Blue",
     }
 
     VALUE_TO_PIL_FORMAT = {
-        GRAY : "L",
-        RGB : "RGB",
-        RED : "L",
-        GREEN : "L",
-        BLUE : "L",
+        GRAY: "L",
+        RGB: "RGB",
+        RED: "L",
+        GREEN: "L",
+        BLUE: "L",
     }
 
     def get_pil_format(self):
@@ -409,9 +409,11 @@ class SaneParameters(ctypes.Structure):
 
 
 def __dummy_auth_callback(sane_ressource_str):
-    return ("anonymous", # login
-            "" # password
-           )
+    return (
+        "anonymous",  # login
+        ""  # password
+    )
+
 
 class __AuthCallbackWrapper(object):
     MAX_USERNAME_LEN = 128
@@ -492,6 +494,7 @@ SANE_LIB.sane_set_io_mode.restype = ctypes.c_int
 SANE_LIB.sane_get_select_fd.argtypes = [ctypes.c_void_p,
                                         ctypes.POINTER(ctypes.c_int)]
 SANE_LIB.sane_get_select_fd.restype = ctypes.c_int
+
 
 def is_sane_available():
     global sane_available
@@ -583,7 +586,7 @@ def sane_get_option_descriptor(handle, option_idx):
     assert(sane_available)
 
     opt_desc_ptr = SANE_LIB.sane_get_option_descriptor(
-            handle, ctypes.c_int(option_idx))
+        handle, ctypes.c_int(option_idx))
     if not opt_desc_ptr:
         raise SaneException(SaneStatus(SaneStatus.INVAL))
     return opt_desc_ptr.contents
