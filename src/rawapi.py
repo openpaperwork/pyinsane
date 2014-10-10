@@ -1,4 +1,5 @@
 import ctypes
+import functools
 
 __all__ = [
     'SaneCapabilities',
@@ -45,6 +46,7 @@ except OSError:
     sane_available = False
 
 
+@functools.total_ordering
 class SaneEnum(object):
     VALUE_TO_STR = {}
 
@@ -59,8 +61,10 @@ class SaneEnum(object):
             return self.__value == other
         return self.__value == other.__value
 
-    def __cmp__(self, other):
-        return cmp(self.__value, other.__value)
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self.__value < other
+        return self.__value < other.__value
 
     def __str__(self):
         if self.__value not in self.VALUE_TO_STR:
