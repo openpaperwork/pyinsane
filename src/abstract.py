@@ -74,7 +74,7 @@ class ScannerOption(object):
         opt.capabilities = SaneCapabilities(opt_raw.cap)
         opt.constraint_type = SaneConstraintType(opt_raw.constraint_type)
         opt.constraint = opt.constraint_type.get_pyobj_constraint(
-                opt_raw.constraint)
+            opt_raw.constraint)
         return opt
 
     def _get_value(self):
@@ -99,17 +99,17 @@ class ScannerOption(object):
 
 class ImgUtil(object):
     COLOR_BYTES = {
-        1 : {  # we expanded the bits to bytes on-the-fly
-            "L" : 1,
-            "RGB" : 3,
+        1: {  # we expanded the bits to bytes on-the-fly
+            "L": 1,
+            "RGB": 3,
         },
-        8 : {
-            "L" : 1,
-            "RGB" : 3,
+        8: {
+            "L": 1,
+            "RGB": 3,
         },
-        16 : {
-            "L" : 2,
-            "RGB" : 6
+        16: {
+            "L": 2,
+            "RGB": 6
         }
     }
 
@@ -137,7 +137,7 @@ class ImgUtil(object):
                 if type(byte) == str:
                     byte = ord(byte)
                 for bit in range(7, -1, -1):
-                    if ((byte & (1<<bit)) > 0):
+                    if ((byte & (1 << bit)) > 0):
                         raw_unpacked += positive_bit
                     else:
                         raw_unpacked += negative_bit
@@ -151,13 +151,14 @@ class ImgUtil(object):
     @staticmethod
     def raw_to_img(raw, parameters):
         mode = rawapi.SaneFrame(parameters.format).get_pil_format()
-        color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
+        # color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
         width = parameters.pixels_per_line
         height = (len(raw) / parameters.bytes_per_line)
         if parameters.depth == 1:
             raw = ImgUtil.unpack_1_to_8(raw, width,
                                         parameters.bytes_per_line)
-        return Image.frombuffer(mode, (int(width), int(height)), raw, "raw", mode, 0, 1)
+        return Image.frombuffer(mode, (int(width), int(height)), raw, "raw",
+                                mode, 0, 1)
 
 
 class Scan(object):
@@ -193,14 +194,14 @@ class Scan(object):
             line_size = self.parameters.bytes_per_line
             for line in self.__raw_lines:
                 if len(line) != line_size:
-                    print ("Pyinsane: Warning: Unexpected line size: %d instead of %d" %
-                           (len(line), line_size))
+                    print (("Pyinsane: Warning: Unexpected line size: %d"
+                            + " instead of %d") % (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
             # don't do purge the lines here. wait for the next call to read()
             # because, in the meantime, the caller might use get_image()
             self.__img_finished = True
             self.__session.images.append(ImgUtil.raw_to_img(
-                    raw, self.parameters))
+                raw, self.parameters))
             raise
 
         # cut what we just read, line by line
@@ -227,7 +228,7 @@ class Scan(object):
         line_size = self.parameters.bytes_per_line
         r = len(self.__raw_lines)
         if (r > 0 and len(self.__raw_lines[-1]) < line_size):
-            r -= 1;
+            r -= 1
         return (0, r)
 
     available_lines = property(_get_available_lines)
@@ -413,7 +414,7 @@ class Scanner(object):
     def _force_close(self):
         global sane_dev_handle
         (devid, handle) = sane_dev_handle
-        if handle == None:
+        if handle is None:
             return
         rawapi.sane_close(handle)
         sane_exit()
@@ -426,13 +427,14 @@ class Scanner(object):
         self._del()
 
     def __load_options(self):
-        if self.__options != None:
+        if self.__options is not None:
             return
         self._open()
         nb_options = rawapi.sane_get_option_value(sane_dev_handle[1], 0)
         self.__options = {}
         for opt_idx in range(1, nb_options):
-            opt_desc = rawapi.sane_get_option_descriptor(sane_dev_handle[1], opt_idx)
+            opt_desc = rawapi.sane_get_option_descriptor(
+                sane_dev_handle[1], opt_idx)
             if not SaneValueType(opt_desc.type).can_getset_opt():
                 continue
             opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)
@@ -453,7 +455,7 @@ class Scanner(object):
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
         if (not multiple
-            or (not "ADF" in value and not "Feeder" in value)):
+                or ("ADF" not in value and "Feeder" not in value)):
             # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
@@ -475,4 +477,3 @@ def get_devices(local_only=False):
                 for device in rawapi.sane_get_devices(local_only)]
     finally:
         sane_exit()
-

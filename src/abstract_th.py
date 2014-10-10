@@ -35,6 +35,7 @@ __all__ = [
     'get_devices',
 ]
 
+
 class SaneAction(object):
     def __init__(self, func, **kwargs):
         self.func = func
@@ -47,14 +48,14 @@ class SaneAction(object):
         global sane_thread
         global sane_action_queue
 
-        if sane_thread == None or not sane_thread.is_alive():
+        if sane_thread is None or not sane_thread.is_alive():
             raise SaneException("Sane thread died unexpectidly !")
         sane_action_queue.put(self)
 
     def wait(self):
         self.start()
         self.__sem.acquire()
-        if self.exception != None:
+        if self.exception is not None:
             raise self.exception
         return self.result
 
@@ -168,7 +169,9 @@ class Scan(object):
 
 class ScanSession(object):
     def __init__(self, scanner, multiple):
-        self._session = SaneAction(scanner._abstract_dev.scan, multiple=multiple).wait()
+        self._session = SaneAction(
+            scanner._abstract_dev.scan, multiple=multiple
+        ).wait()
         self.scan = Scan(self._session.scan)
 
     def __get_img(self):
@@ -202,7 +205,7 @@ class Scanner(object):
     def __init__(self, name=None,
                  vendor="Unknown", model="Unknown", dev_type="Unknown",
                  abstract_dev=None):
-        if abstract_dev == None:
+        if abstract_dev is None:
             abstract_dev = abstract.Scanner(name)
         else:
             vendor = abstract_dev.vendor
@@ -213,14 +216,14 @@ class Scanner(object):
         self.vendor = vendor
         self.model = model
         self.dev_type = dev_type
-        self.__options = None # { "name" : ScannerOption }
+        self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
     def build_from_abstract(abstract_dev):
         return Scanner(abstract_dev.name, abstract_dev=abstract_dev)
 
     def _get_options(self):
-        if self.__options != None:
+        if self.__options is not None:
             return self.__options
         options = SaneAction(self._abstract_dev._get_options).wait()
         ar_options = [ScannerOption.build_from_abstract(self, opt)
