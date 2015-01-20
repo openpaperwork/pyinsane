@@ -36,15 +36,6 @@ __all__ = [
     'sane_strstatus',
 ]
 
-sane_is_init = 0
-sane_version = None
-
-try:
-    SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
-    sane_available = True
-except OSError:
-    sane_available = False
-
 
 @functools.total_ordering
 class SaneEnum(object):
@@ -435,69 +426,78 @@ class __AuthCallbackWrapper(object):
                        min(len(password)+1, self.MAX_USERNAME_LEN))
 
 
-AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
-                                     ctypes.c_char_p)
-SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF]
-SANE_LIB.sane_init.restype = ctypes.c_int
+sane_is_init = 0
+sane_version = None
 
-SANE_LIB.sane_exit.argtypes = []
-SANE_LIB.sane_exit.restype = None
+try:
+    SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
+    sane_available = True
 
-SANE_LIB.sane_get_devices.argtypes = [
-    ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(SaneDevice))),
-    ctypes.c_int
-]
-SANE_LIB.sane_get_devices.restype = ctypes.c_int
+    AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
+                                        ctypes.c_char_p)
+    SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF]
+    SANE_LIB.sane_init.restype = ctypes.c_int
 
-SANE_LIB.sane_open.argtypes = [
-    ctypes.c_char_p,
-    ctypes.POINTER(ctypes.c_void_p),
-]
-SANE_LIB.sane_open.restype = ctypes.c_int
+    SANE_LIB.sane_exit.argtypes = []
+    SANE_LIB.sane_exit.restype = None
 
-SANE_LIB.sane_close.argtypes = [ctypes.c_void_p]
-SANE_LIB.sane_close.restype = None
+    SANE_LIB.sane_get_devices.argtypes = [
+        ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(SaneDevice))),
+        ctypes.c_int
+    ]
+    SANE_LIB.sane_get_devices.restype = ctypes.c_int
 
-SANE_LIB.sane_get_option_descriptor.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_int
-]
-SANE_LIB.sane_get_option_descriptor.restype = \
-    ctypes.POINTER(SaneOptionDescriptor)
+    SANE_LIB.sane_open.argtypes = [
+        ctypes.c_char_p,
+        ctypes.POINTER(ctypes.c_void_p),
+    ]
+    SANE_LIB.sane_open.restype = ctypes.c_int
 
-SANE_LIB.sane_control_option.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.POINTER(ctypes.c_int)
-]
-SANE_LIB.sane_control_option.restype = ctypes.c_int
+    SANE_LIB.sane_close.argtypes = [ctypes.c_void_p]
+    SANE_LIB.sane_close.restype = None
 
-SANE_LIB.sane_get_parameters.argtypes = [
-    ctypes.c_void_p,
-    ctypes.POINTER(SaneParameters),
-]
-SANE_LIB.sane_get_parameters.restype = ctypes.c_int
+    SANE_LIB.sane_get_option_descriptor.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_int
+    ]
+    SANE_LIB.sane_get_option_descriptor.restype = \
+        ctypes.POINTER(SaneOptionDescriptor)
 
-SANE_LIB.sane_start.argtypes = [ctypes.c_void_p]
-SANE_LIB.sane_start.restype = ctypes.c_int
+    SANE_LIB.sane_control_option.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_int)
+    ]
+    SANE_LIB.sane_control_option.restype = ctypes.c_int
 
-SANE_LIB.sane_read.argtypes = [ctypes.c_void_p,
-                               ctypes.c_void_p,
-                               ctypes.c_int,
-                               ctypes.POINTER(ctypes.c_int)]
-SANE_LIB.sane_read.restype = ctypes.c_int
+    SANE_LIB.sane_get_parameters.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(SaneParameters),
+    ]
+    SANE_LIB.sane_get_parameters.restype = ctypes.c_int
 
-SANE_LIB.sane_cancel.argtypes = [ctypes.c_void_p]
-SANE_LIB.sane_cancel.restype = None
+    SANE_LIB.sane_start.argtypes = [ctypes.c_void_p]
+    SANE_LIB.sane_start.restype = ctypes.c_int
 
-SANE_LIB.sane_set_io_mode.argtypes = [ctypes.c_void_p, ctypes.c_int]
-SANE_LIB.sane_set_io_mode.restype = ctypes.c_int
+    SANE_LIB.sane_read.argtypes = [ctypes.c_void_p,
+                                ctypes.c_void_p,
+                                ctypes.c_int,
+                                ctypes.POINTER(ctypes.c_int)]
+    SANE_LIB.sane_read.restype = ctypes.c_int
 
-SANE_LIB.sane_get_select_fd.argtypes = [ctypes.c_void_p,
-                                        ctypes.POINTER(ctypes.c_int)]
-SANE_LIB.sane_get_select_fd.restype = ctypes.c_int
+    SANE_LIB.sane_cancel.argtypes = [ctypes.c_void_p]
+    SANE_LIB.sane_cancel.restype = None
+
+    SANE_LIB.sane_set_io_mode.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    SANE_LIB.sane_set_io_mode.restype = ctypes.c_int
+
+    SANE_LIB.sane_get_select_fd.argtypes = [ctypes.c_void_p,
+                                            ctypes.POINTER(ctypes.c_int)]
+    SANE_LIB.sane_get_select_fd.restype = ctypes.c_int
+except OSError:
+    sane_available = False
 
 
 def is_sane_available():
