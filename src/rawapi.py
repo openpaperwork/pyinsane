@@ -429,10 +429,17 @@ class __AuthCallbackWrapper(object):
 sane_is_init = 0
 sane_version = None
 
-try:
-    SANE_LIB = ctypes.cdll.LoadLibrary("libsane.so.1")
-    sane_available = True
+sane_available = False
 
+for libname in ["libsane.so.1", "libsane.1.dylib"]:
+    try:
+        SANE_LIB = ctypes.cdll.LoadLibrary(libname)
+        sane_available = True
+        break
+    except OSError:
+        pass
+
+if sane_available:
     AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
                                         ctypes.c_char_p)
     SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF]
@@ -496,8 +503,6 @@ try:
     SANE_LIB.sane_get_select_fd.argtypes = [ctypes.c_void_p,
                                             ctypes.POINTER(ctypes.c_int)]
     SANE_LIB.sane_get_select_fd.restype = ctypes.c_int
-except OSError:
-    sane_available = False
 
 
 def is_sane_available():
