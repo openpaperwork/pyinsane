@@ -57,15 +57,16 @@ if __name__ == "__main__":
     source = 'Auto'
     # beware: don't select a source that is not in the constraint,
     # with some drivers (Brother DCP-8025D for instance), it may segfault.
-    if (device.options['source'].constraint_type
-            == pyinsane.SaneConstraintType.STRING_LIST):
-        if 'Auto' in device.options['source'].constraint:
-            source = 'Auto'
-        elif 'FlatBed' in device.options['source'].constraint:
-            source = 'FlatBed'
-    else:
-        print("Warning: Unknown constraint type on the source: %d"
-              % device.options['source'].constraint_type)
+    if 'source' in device.options:
+        if (device.options['source'].constraint_type
+                == pyinsane.SaneConstraintType.STRING_LIST):
+            if 'Auto' in device.options['source'].constraint:
+                source = 'Auto'
+            elif 'FlatBed' in device.options['source'].constraint:
+                source = 'FlatBed'
+        else:
+            print("Warning: Unknown constraint type on the source: %d"
+                % device.options['source'].constraint_type)
 
     set_scanner_opt(device, 'resolution', 300)
     set_scanner_opt(device, 'source', source)
