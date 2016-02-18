@@ -2,7 +2,9 @@
 
 ## Description
 
-Python implementation of the Sane API (using ctypes) and abstration layer.
+Pure python implementation of the libsane (using ctypes) and abstration layers.
+
+[Libsane (part of the Sane)](http://www.sane-project.org/) provides drivers for scanners under GNU/Linux and *BSD systems.
 
 The code is divided in 3 layers:
 - rawapi : Ctypes binding to the raw Sane API
