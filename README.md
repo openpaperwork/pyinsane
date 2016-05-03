@@ -4,6 +4,11 @@
 
 Pure python implementation of the libsane (using ctypes) and abstration layers.
 
+It supports:
+- Flatbed
+- Automatic Document Feeder
+- While scanning, can provide chunks of the image for on-the-fly preview (see [Paperwork](https://github.com/jflesch/paperwork/) for instance
+
 [Libsane (part of the Sane)](http://www.sane-project.org/) provides drivers for scanners under GNU/Linux and *BSD systems.
 
 The code is divided in 3 layers:
