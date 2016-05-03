@@ -22,8 +22,8 @@ The code is divided in 3 layers:
 
 ## Dependencies
 
-libsane
-[Pillow](https://github.com/python-imaging/Pillow#readme) (if the abstraction layer is used)
+- libsane
+- [Pillow](https://github.com/python-imaging/Pillow#readme) (if the abstraction layer is used)
 
 ## Installation
 
