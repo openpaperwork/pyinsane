@@ -109,8 +109,8 @@ class SaneVersion(object):
         self.build = build
 
     def is_current(self):
-        return ((self.major == self.SANE_CURRENT_MAJOR)
-                and (self.minor == self.SANE_CURRENT_MINOR))
+        return ((self.major == self.SANE_CURRENT_MAJOR) and
+                (self.minor == self.SANE_CURRENT_MINOR))
 
     def __str__(self):
         return "Sane version: %d.%d.%d" % (self.major, self.minor, self.build)
@@ -441,8 +441,10 @@ for libname in ["libsane.so.1", "libsane.1.dylib"]:
 
 if sane_available:
     AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
-                                        ctypes.c_char_p)
-    SANE_LIB.sane_init.argtypes = [ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF]
+                                         ctypes.c_char_p)
+    SANE_LIB.sane_init.argtypes = [
+        ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF
+    ]
     SANE_LIB.sane_init.restype = ctypes.c_int
 
     SANE_LIB.sane_exit.argtypes = []
@@ -488,10 +490,12 @@ if sane_available:
     SANE_LIB.sane_start.argtypes = [ctypes.c_void_p]
     SANE_LIB.sane_start.restype = ctypes.c_int
 
-    SANE_LIB.sane_read.argtypes = [ctypes.c_void_p,
-                                ctypes.c_void_p,
-                                ctypes.c_int,
-                                ctypes.POINTER(ctypes.c_int)]
+    SANE_LIB.sane_read.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int)
+    ]
     SANE_LIB.sane_read.restype = ctypes.c_int
 
     SANE_LIB.sane_cancel.argtypes = [ctypes.c_void_p]

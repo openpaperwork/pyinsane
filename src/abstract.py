@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 # We use huge buffers to spend the maximum amount of time in non-Python code
-SANE_READ_BUFSIZE = 512*1024
+SANE_READ_BUFSIZE = 512 * 1024
 
 # XXX(Jflesch): Never open more than one handle at the same time.
 # Some Sane backends don't support it. For instance, I have 2 HP scanners, and
@@ -195,7 +195,7 @@ class Scan(object):
             for line in self.__raw_lines:
                 if len(line) != line_size:
                     print (("Pyinsane: Warning: Unexpected line size: %d"
-                            + " instead of %d") % (len(line), line_size))
+                            " instead of %d") % (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
             # don't do purge the lines here. wait for the next call to read()
             # because, in the meantime, the caller might use get_image()
@@ -447,15 +447,14 @@ class Scanner(object):
     options = property(_get_options)
 
     def scan(self, multiple=False):
-        if (not ('source' in self.options
-                 and self.options['source'].capabilities.is_active())):
+        if (not ('source' in self.options and
+                 self.options['source'].capabilities.is_active())):
             value = ""
         else:
             value = self.options['source'].value
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
-        if (not multiple
-                or ("ADF" not in value and "Feeder" not in value)):
+        if (not multiple or ("ADF" not in value and "Feeder" not in value)):
             # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
