@@ -48,8 +48,12 @@ class SaneAction(object):
         global sane_thread
         global sane_action_queue
 
-        if sane_thread is None or not sane_thread.is_alive():
-            raise SaneException("Sane thread died unexpectidly !")
+        if sane_thread is None:
+            raise SaneException("Sane thread died unexpectedly !"
+                                " (thread = None)")
+        if not sane_thread.is_alive():
+            raise SaneException("Sane thread died unexpectedly !"
+                                " (!thread.is_alive())")
         sane_action_queue.put(self)
 
     def wait(self):
@@ -199,6 +203,7 @@ class ScanSession(object):
 
     def __del___(self):
         SaneAction(self._session._del).start()
+        del self.scan
 
 
 class Scanner(object):
