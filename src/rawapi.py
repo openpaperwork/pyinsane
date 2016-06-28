@@ -302,7 +302,10 @@ class SaneConstraintType(SaneEnum):
         string_list = []
         idx = 0
         while sane_constraint.string_list[idx]:
-            string_list.append(sane_constraint.string_list[idx])
+            string = sane_constraint.string_list[idx]
+            if hasattr(string, 'decode'):
+                string = string.decode("utf-8")
+            string_list.append(string)
             idx += 1
         return string_list
 
