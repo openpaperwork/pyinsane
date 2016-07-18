@@ -163,9 +163,6 @@ class Scan(object):
     def cancel(self):
         SaneAction(self._scan.cancel).wait()
 
-    def __del__(self):
-        SaneAction(self._scan._del).wait()
-
 
 class ScanSession(object):
     def __init__(self, scanner, multiple):
@@ -196,9 +193,6 @@ class ScanSession(object):
         Deprecated
         """
         return SaneAction(self._session.get_img, idx=idx).wait()
-
-    def __del___(self):
-        SaneAction(self._session._del).start()
 
 
 class Scanner(object):
@@ -238,9 +232,6 @@ class Scanner(object):
 
     def scan(self, multiple=False):
         return ScanSession(self, multiple)
-
-    def __del__(self):
-        SaneAction(self._abstract_dev._del)
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"

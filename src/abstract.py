@@ -184,7 +184,6 @@ class Scan(object):
     def read(self):
         if self.__img_finished:
             # start a new one
-            del self.__raw_lines
             self.__raw_lines = []
             self.__img_finished = False
 
@@ -258,14 +257,6 @@ class Scan(object):
     def _cancel(self):
         rawapi.sane_cancel(sane_dev_handle[1])
 
-    def _del(self):
-        # inheriting classes must call self.cancel() if required
-        del self.__raw_lines
-        self.__raw_lines = []
-
-    def __del__(self):
-        self._del()
-
 
 class SingleScan(Scan):
     def __init__(self, scanner):
@@ -287,12 +278,6 @@ class SingleScan(Scan):
         if self.is_scanning:
             self._cancel()
             self.is_scanning = False
-
-    def _del(self):
-        if self.is_scanning:
-            self.is_scanning = False
-            self._cancel()
-        Scan._del(self)
 
 
 class MultipleScan(Scan):
@@ -339,13 +324,6 @@ class MultipleScan(Scan):
             self.is_finished = True
             self.is_scanning = False
 
-    def _del(self):
-        if self.is_scanning:
-            self.is_finished = True
-            self.is_scanning = False
-            self._cancel()
-        Scan._del(self)
-
 
 class ScanSession(object):
     def __init__(self, scan):
@@ -370,12 +348,6 @@ class ScanSession(object):
         Deprecated. Use scan_session.images[idx] directly
         """
         return self.images[idx]
-
-    def _del(self):
-        del(self.scan)
-
-    def __del__(self):
-        self._del()
 
 
 class Scanner(object):
@@ -419,12 +391,6 @@ class Scanner(object):
         rawapi.sane_close(handle)
         sane_exit()
         sane_dev_handle = ("", None)
-
-    def _del(self):
-        self._force_close()
-
-    def __del__(self):
-        self._del()
 
     def __load_options(self):
         if self.__options is not None:
