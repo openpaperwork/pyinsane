@@ -12,12 +12,27 @@ import pyinsane.abstract as pyinsane
 logger = logging.getLogger(__name__)
 
 
+device_cache = {}
+
+
 def get_devices(local_only):
-    return pyinsane.get_devices(local_only)
+    global device_cache
+
+    devices = pyinsane.get_devices(local_only)
+    device_cache = {}
+    for device in devices:
+        device_cache[device.name] = device
+    return devices
+
+
+def get_options(scanner_name):
+    global device_cache
+    return device_cache[scanner_name].options
 
 
 COMMANDS = {
     "get_devices": get_devices,
+    "get_options": get_options,
 }
 
 

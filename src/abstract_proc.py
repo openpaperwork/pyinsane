@@ -5,6 +5,7 @@ import tempfile
 
 # import basic elements directly, so the caller
 # doesn't have to import rawapi if they need them.
+from . import abstract
 from .abstract_th import ScannerOption
 from .rawapi import SaneCapabilities
 from .rawapi import SaneConstraint
@@ -79,50 +80,119 @@ def remote_do(command, *args, **kwargs):
     return result
 
 
-class Scan(object):
-    def __init__(self, scanner):
+def sane_init():
+    return SaneAction(abstract.sane_init).wait()
+
+
+def sane_exit():
+    return SaneAction(abstract.sane_exit).wait()
+
+
+class ScannerOption(object):
+    _abstract_opt = None
+
+    idx = 0
+    name = ""
+    title = ""
+    desc = ""
+    val_type = SaneValueType(SaneValueType.INT)
+    unit = SaneUnit(SaneUnit.NONE)
+    size = 4
+    capabilities = SaneCapabilities(SaneCapabilities.NONE)
+
+    constraint_type = SaneConstraintType(SaneConstraintType.NONE)
+    constraint = None
+
+    def __init__(self, scanner, idx):
+        self.idx = idx
+        self._abstract_opt = abstract.ScannerOption(scanner._abstract_dev, idx)
+
+    @staticmethod
+    def build_from_abstract(scanner, abstract_opt):
+        opt = ScannerOption(scanner, abstract_opt.idx)
+        opt._abstract_opt = abstract_opt
+        opt.name = abstract_opt.name
+        opt.title = abstract_opt.title
+        opt.desc = abstract_opt.desc
+        opt.val_type = abstract_opt.val_type
+        opt.unit = abstract_opt.unit
+        opt.size = abstract_opt.size
+        opt.capabilities = abstract_opt.capabilities
+        opt.constraint_type = abstract_opt.constraint_type
+        opt.constraint = abstract_opt.constraint
+        return opt
+
+    def _get_value(self):
         # TODO
-        self.scanner = scanner
-        self.is_scanning = True
+        return
+
+    def _set_value(self, new_value):
+        # TODO
+        return
+
+    value = property(_get_value, _set_value)
+
+
+class Scan(object):
+    def __init__(self, real_scan):
+        self._scan = real_scan
 
     def read(self):
         # TODO
-        pass
+        return
 
     def _get_available_lines(self):
         # TODO
-        pass
+        return
 
     available_lines = property(_get_available_lines)
 
     def _get_expected_size(self):
         # TODO
-        pass
+        return
 
     expected_size = property(_get_expected_size)
 
     def get_image(self, start_line, end_line):
         # TODO
-        pass
+        return
 
     def cancel(self):
         # TODO
-        pass
+        return
 
 
 class ScanSession(object):
-    def __init__(self, scan, multiple=False):
-        self.scan = scan
+    def __init__(self, scanner, multiple=False):
         # TODO
-        return
+        pass
+
+    def __get_img(self):
+        # TODO
+        pass
+
+    images = property(__get_img)
+
+    def read(self):
+        """
+        Deprecated
+        """
+        # TODO
+        pass
 
     def get_nb_img(self):
+        """
+        Deprecated
+        """
         # TODO
-        return
+        pass
 
     def get_img(self, idx=0):
+        """
+        Deprecated
+        """
         # TODO
-        return
+        pass
 
 
 class Scanner(object):
@@ -140,15 +210,17 @@ class Scanner(object):
         self.vendor = vendor
         self.model = model
         self.dev_type = dev_type
-        self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
     def build_from_abstract(abstract_dev):
         return Scanner(abstract_dev.name, abstract_dev=abstract_dev)
 
     def _get_options(self):
-        # TODO
-        return []
+        options = remote_do("get_options", self.name)
+        return {
+            x.name: ScannerOption.build_from_abstract(self, x)
+            for x in options.values()
+        }
 
     options = property(_get_options)
 
