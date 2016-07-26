@@ -56,10 +56,16 @@ fifo_s2c = os.open(pipe_path_s2c, os.O_RDONLY)
 logger.info("Connected to Pyinsane subprocess")
 
 
-def remote_do(command):
+def remote_do(command, *args, **kwargs):
     global length_size
     global fifo_s2c
     global fifo_c2s
+
+    cmd = {
+        'command': command,
+        'args': args,
+        'kwargs': kwargs,
+    }
 
     cmd = pickle.dumps(cmd)
     length = pickle.pack("i", len(cmd))
@@ -105,7 +111,7 @@ class Scan(object):
 
 
 class ScanSession(object):
-    def __init__(self, scan):
+    def __init__(self, scan, multiple=False):
         self.scan = scan
         # TODO
         return
@@ -120,26 +126,42 @@ class ScanSession(object):
 
 
 class Scanner(object):
-    def __init__(self, name, vendor="Unknown", model="Unknown",
-                 dev_type="Unknown"):
-        # TODO
-        return
+    def __init__(self, name=None,
+                 vendor="Unknown", model="Unknown", dev_type="Unknown",
+                 abstract_dev=None):
+        if abstract_dev is None:
+            abstract_dev = abstract.Scanner(name)
+        else:
+            vendor = abstract_dev.vendor
+            model = abstract_dev.model
+            dev_type = abstract_dev.dev_type
+        self._abstract_dev = abstract_dev
+        self.name = name
+        self.vendor = vendor
+        self.model = model
+        self.dev_type = dev_type
+        self.__options = None  # { "name" : ScannerOption }
+
+    @staticmethod
+    def build_from_abstract(abstract_dev):
+        return Scanner(abstract_dev.name, abstract_dev=abstract_dev)
 
     def _get_options(self):
         # TODO
-        return
+        return []
 
     options = property(_get_options)
 
     def scan(self, multiple=False):
-        # TODO
-        return
+        return ScanSession(self, multiple)
 
     def __str__(self):
-        # TODO
-        return
+        return ("Scanner '%s' (%s, %s, %s)"
+                % (self.name, self.vendor, self.model, self.dev_type))
 
 
 def get_devices(local_only=False):
-    # TODO
-    return
+    return [
+        Scanner.build_from_abstract(x)
+        for x in remote_do('get_devices', local_only)
+    ]
