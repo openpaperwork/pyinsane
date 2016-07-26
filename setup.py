@@ -32,8 +32,11 @@ setup(
     packages=['pyinsane'],
     package_dir={'pyinsane': 'src'},
     data_files=[],
-    scripts=[],
+    scripts=[
+        'scripts/pyinsane-daemon',
+    ],
     install_requires=[
         "Pillow",
+        "pickle",
     ],
 )
