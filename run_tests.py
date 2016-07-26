@@ -7,10 +7,12 @@ from tests import tests_rawapi
 from tests import tests_abstract
 
 from src import abstract
+from src import abstract_proc
 from src import abstract_th
 
+
 if __name__ == '__main__':
-    test_set = ["rawapi", "abstract", "abstract_th"]
+    test_set = ["rawapi", "abstract", "abstract_th", "abstract_proc"]
     if "-h" in sys.argv or "--help" in sys.argv:
         print("%s [tests [tests [...]]]" % sys.argv[0])
         print("")
@@ -34,3 +36,7 @@ if __name__ == '__main__':
         print("=== Abstract Threaded: ===")
         unittest.TextTestRunner(verbosity=3).run(
             tests_abstract.get_all_tests(abstract_th))
+    if "abstract_proc" in test_set:
+        print("=== Abstract Separate Process: ===")
+        unittest.TextTestRunner(verbosity=3).run(
+            tests_abstract.get_all_tests(abstract_proc))

@@ -3,6 +3,7 @@
 import logging
 import os
 import pickle
+import shutil
 import sys
 
 import pyinsane.abstract as pyinsane
@@ -15,23 +16,27 @@ def execute(command):
     return "plop"
 
 
-def main_loop(fifo_filepaths):
+def main_loop(fifo_dir, fifo_filepaths):
     length_size = len(pickle.pack("i", 0))
-    fifo_s2c = os.open(fifo_filepaths[0], os.O_WRONLY)
-    fifo_c2s = os.open(fifo_filepaths[1], os.O_RDONLY)
+    fifo_c2s = os.open(fifo_filepaths[0], os.O_RDONLY)
+    fifo_s2c = os.open(fifo_filepaths[1], os.O_WRONLY)
 
     try:
         logger.info("Ready")
 
         while True:
             length = os.read(fifo_c2s, length_size)
+            if length == b'':
+                break
             length = pickle.unpack("i", length)[0]
             cmd = os.read(fifo_c2s, length)
+            if cmd == b'':
+                break
             cmd = pickle.loads(cmd)
 
-            print("> {}".format(cmd['command']))
+            logger.debug("> {}".format(cmd['command']))
             result = execute(cmd)
-            print("< {}".format(result))
+            logger.debug("< {}".format(result))
 
             result = pickle.dumps(result)
             length = len(result)
@@ -42,6 +47,9 @@ def main_loop(fifo_filepaths):
         os.close(fifo_s2c)
         os.close(fifo_c2s)
 
+    shutil.rmtree(fifo_dir)
+    logger.info("Daemon stopped")
+
 
 if __name__ == "__main__":
-    main_loop(sys.argv[1:3])
+    main_loop(sys.argv[1], sys.argv[2:4])
