@@ -3,6 +3,8 @@ import os
 import pickle
 import tempfile
 
+import PIL.Image
+
 # import basic elements directly, so the caller
 # doesn't have to import rawapi if they need them.
 from . import abstract
@@ -76,8 +78,12 @@ def remote_do(command, *args, **kwargs):
     length = os.read(fifo_s2c, length_size)
     length = pickle.unpack("i", length)[0]
     result = os.read(fifo_s2c, length)
+    assert(len(result) == length)
     result = pickle.loads(result)
-    return result
+    if 'exception' in result:
+        exc_class = eval(result['exception'])
+        raise exc_class(*result['exception_args'])
+    return result['out']
 
 
 def sane_init():
@@ -90,6 +96,7 @@ def sane_exit():
 
 class ScannerOption(object):
     _abstract_opt = None
+    _scanner_name = None
 
     idx = 0
     name = ""
@@ -110,6 +117,7 @@ class ScannerOption(object):
     @staticmethod
     def build_from_abstract(scanner, abstract_opt):
         opt = ScannerOption(scanner, abstract_opt.idx)
+        opt._scanner_name = scanner.name
         opt._abstract_opt = abstract_opt
         opt.name = abstract_opt.name
         opt.title = abstract_opt.title
@@ -123,76 +131,71 @@ class ScannerOption(object):
         return opt
 
     def _get_value(self):
-        # TODO
-        return
+        return remote_do('get_option_value', self._scanner_name, self.name)
 
     def _set_value(self, new_value):
-        # TODO
-        return
+        remote_do('set_option_value', self._scanner_name, self.name, new_value)
 
     value = property(_get_value, _set_value)
 
 
 class Scan(object):
-    def __init__(self, real_scan):
-        self._scan = real_scan
+    def __init__(self, scanner_name):
+        self._scanner_name = scanner_name
 
     def read(self):
-        # TODO
-        return
+        return remote_do('scan_read', self._scanner_name)
 
     def _get_available_lines(self):
-        # TODO
-        return
+        return remote_do('scan_get_available_lines', self._scanner_name)
 
     available_lines = property(_get_available_lines)
 
     def _get_expected_size(self):
-        # TODO
-        return
+        return remote_do('scan_get_expected_size', self._scanner_name)
 
     expected_size = property(_get_expected_size)
 
     def get_image(self, start_line, end_line):
-        # TODO
-        return
+        img = remote_do(
+            'scan_get_image', self._scanner_name, start_line, end_line
+        )
+        return PIL.Image.frombytes(*img)
 
     def cancel(self):
-        # TODO
-        return
+        return remote_do('scan_cancel', self._scanner_name)
 
 
 class ScanSession(object):
     def __init__(self, scanner, multiple=False):
-        # TODO
-        pass
+        self._scanner = scanner.name
+        self._remote_session = remote_do('scan', scanner.name, multiple)
+        self.scan = Scan(scanner.name)
 
-    def __get_img(self):
-        # TODO
-        pass
+    def __get_imgs(self):
+        imgs = remote_do('get_images', self._scanner)
+        imgs = [PIL.Image.frombytes(*img) for img in imgs]
+        return imgs
 
-    images = property(__get_img)
+    images = property(__get_imgs)
 
     def read(self):
         """
         Deprecated
         """
-        # TODO
-        pass
+        self.scan.read()
 
     def get_nb_img(self):
         """
         Deprecated
         """
-        # TODO
-        pass
+        return len(self.images)
 
     def get_img(self, idx=0):
         """
         Deprecated
         """
-        # TODO
-        pass
+        return self.imags[idx]
 
 
 class Scanner(object):

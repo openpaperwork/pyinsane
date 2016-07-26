@@ -218,7 +218,7 @@ def get_all_tests(module):
     all_tests = unittest.TestSuite()
 
     tests = [
-        TestSaneGetDevices("test_get_devices")
+        #TestSaneGetDevices("test_get_devices")
     ]
     for test in tests:
         test.set_module(module)

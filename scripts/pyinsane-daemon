@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 device_cache = {}
+scan_sessions = {}
 
 
 def get_devices(local_only):
@@ -30,9 +31,70 @@ def get_options(scanner_name):
     return device_cache[scanner_name].options
 
 
+def get_option_value(scanner_name, option_name):
+    global device_cache
+    return device_cache[scanner_name].options[option_name].value
+
+
+def set_option_value(scanner_name, option_name, option_value):
+    global device_cache
+    device_cache[scanner_name].options[option_name].value = option_value
+
+
+def make_scan_session(scanner_name, multiple=False):
+    global device_cache
+    global scan_sessions
+
+    scan_session = device_cache[scanner_name].scan(multiple)
+    scan_sessions[scanner_name] = scan_session
+    return scan_session
+
+
+def get_images(scanner_name):
+    global scan_sessions
+    imgs = scan_sessions[scanner_name].images
+    imgs = [(img.mode, img.size, img.tobytes()) for img in imgs]
+    return imgs
+
+
+def scan_read(scanner_name):
+    global scan_sessions
+    return scan_sessions[scanner_name].scan.read()
+
+
+def get_available_lines(scanner_name):
+    global scan_sessions
+    return scan_sessions[scanner_name].scan.available_lines
+
+
+def get_expected_size(scanner_name):
+    global scan_sessions
+    return scan_sessions[scanner_name].scan.expected_size
+
+
+def get_image(scanner_name, start_line, end_line):
+    global scan_sessions
+    img = scan_sessions[scanner_name].scan.get_image(start_line, end_line)
+    return (img.mode, img.size, img.tobytes())
+
+
+def cancel(scanner_name):
+    global scan_sessions
+    return scan_sessions[scanner_name].scan.cancel()
+
+
 COMMANDS = {
     "get_devices": get_devices,
     "get_options": get_options,
+    "get_option_value": get_option_value,
+    "set_option_value": set_option_value,
+    "scan": make_scan_session,
+    "get_images": get_images,
+    "scan_read": scan_read,
+    "scan_get_available_lines": get_available_lines,
+    "scan_get_expected_size": get_expected_size,
+    "scan_get_image": get_image,
+    "scan_cancel": cancel,
 }
 
 
@@ -54,11 +116,17 @@ def main_loop(fifo_dir, fifo_filepaths):
             cmd = os.read(fifo_c2s, length)
             if cmd == b'':
                 break
+            assert(len(cmd) == length)
             cmd = pickle.loads(cmd)
 
             logger.debug("> {}".format(cmd['command']))
             f = COMMANDS[cmd['command']]
-            result = f(*cmd['args'], **cmd['kwargs'])
+            result = {}
+            try:
+                result['out'] = f(*cmd['args'], **cmd['kwargs'])
+            except Exception as exc:
+                result['exception'] = str(exc.__class__.__name__)
+                result['exception_args'] = exc.args
             logger.debug("< {}".format(result))
 
             result = pickle.dumps(result)
