@@ -26,26 +26,31 @@ def get_devices(local_only):
     return devices
 
 
-def get_options(scanner_name):
+def get_device(scanner_name):
     global device_cache
-    return device_cache[scanner_name].options
+    if scanner_name in device_cache:
+        return device_cache[scanner_name]
+    scanner = pyinsane.Scanner(scanner_name)
+    device_cache[scanner_name] = scanner
+    return scanner
+
+
+def get_options(scanner_name):
+    return get_device(scanner_name).options
 
 
 def get_option_value(scanner_name, option_name):
-    global device_cache
-    return device_cache[scanner_name].options[option_name].value
+    return get_device(scanner_name).options[option_name].value
 
 
 def set_option_value(scanner_name, option_name, option_value):
-    global device_cache
-    device_cache[scanner_name].options[option_name].value = option_value
+    get_device(scanner_name).options[option_name].value = option_value
 
 
 def make_scan_session(scanner_name, multiple=False):
-    global device_cache
     global scan_sessions
 
-    scan_session = device_cache[scanner_name].scan(multiple)
+    scan_session = get_device(scanner_name).scan(multiple)
     scan_sessions[scanner_name] = scan_session
     return scan_session
 
