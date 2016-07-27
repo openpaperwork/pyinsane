@@ -8,22 +8,33 @@ It supports:
 - Flatbed
 - Automatic Document Feeder
 - While scanning, can provide chunks of the image for on-the-fly preview (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
+- Python 2.7 and Python 3
 
 [Libsane (part of the Sane)](http://www.sane-project.org/) provides drivers for scanners under GNU/Linux and *BSD systems.
 
-The code is divided in 3 layers:
+The code is divided in 2 layers:
 - rawapi : Ctypes binding to the raw Sane API
 - abstract : An Object-Oriented layer that simplifies the use of the Sane API
   and try to avoid possible misuse of the Sane API. When scanning, it also takes
   care of returning a Pillow image.
+
+Two workaround are provided:
 - abstract\_th : The Sane API is not thread-safe and cannot be used in a
   multi-threaded environment easily. This layer solves this problem by using
-  a fully dedicated thread.
+  a fully dedicated thread. It provides the very same API than 'abstract'
+- abstract\_proc : Some Sane drivers corrupts memory or return uninitalized bytes.
+  (sometimes they even segfault). They usually work well in simple programs but
+  can make bugs on more complex ones (see below). This module, when imported,
+  fork() + exec() a small daemon in charge of doing the scans and return them
+  to the main program using Unix pipes (FIFO). It provides the very same API than
+  'abstract'.
+
 
 ## Dependencies
 
 - libsane
 - [Pillow](https://github.com/python-imaging/Pillow#readme) (if the abstraction layer is used)
+
 
 ## Installation
 
@@ -33,12 +44,12 @@ or
 
 	$ git clone https://github.com/jflesch/pyinsane.git
 	$ cd pyinsane
-	$ sudo python ./setup.py install
+	$ sudo python3 ./setup.py install
 
 
 ## Unit tests
 
-	$ python ./run_tests.py
+	$ python3 ./run_tests.py
 
 Unit tests require at least one scanner with a flatbed and an ADF (Automatic
 Document Feeder).
@@ -48,6 +59,7 @@ If possible, they should be run with at least 2 scanners connected. The first th
 My current setup:
 - HP Officejet 4500 G510g (Flatbed + ADF)
 - HP Deskjet 2050 J510 series (Flatbed)
+
 
 ## Usage
 
@@ -73,6 +85,7 @@ device = pyinsane.Scanner(name="somethingsomething")
 print("I'm going to use the following scanner: %s" % (str(device)))
 ```
 
+
 ### Simple scan
 
 ```py
@@ -87,6 +100,7 @@ except EOFError:
 	pass
 image = scan_session.images[0]
 ```
+
 
 ### Multiple scans using an automatic document feeder (ADF)
 
@@ -113,6 +127,7 @@ for idx in range(0, len(scan_session.images)):
 	image = scan_session.images[idx]
 ```
 
+
 ### Abstract\_th
 
 ```py
@@ -124,6 +139,38 @@ import pyinsane.abstract_th as pyinsane
 # Note however that the Sane thread can only do one thing at a time,
 # so some function call may be on hold on a semaphore for some times.
 ```
+
+
+### Abstract\_proc
+
+Some issues with some Sane drivers can become obvious in complex programs
+(uninitialized memory bytes, segfault, etc).
+
+This module work around issues like the following by using a dedicated
+process for scanning:
+
+<table border="0">
+	<tr>
+		<td>
+			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" />
+		</td>
+		<td>
+			--&gt;
+		</td>
+		<td>
+			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_proc_workaround.png" alt="scan fine" />
+		</td>
+	</tr>
+</table>
+
+(see [this comment for details](https://github.com/jflesch/paperwork/issues/486#issuecomment-233925642))
+
+Usage:
+
+```py
+import pyinsane.abstract_th as pyinsane
+```
+
 
 ### Other examples
 
@@ -137,6 +184,7 @@ To run one of these scripts, run:
 For instance
 
 	python -m examples.scan toto.png
+
 
 ## Licence
 
