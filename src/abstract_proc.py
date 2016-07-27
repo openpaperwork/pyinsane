@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import struct
+import sys
 import tempfile
 
 import PIL.Image
@@ -48,7 +49,8 @@ logger.info("Pyinsane pipes: {} | {}".format(pipe_path_c2s, pipe_path_s2c))
 
 if os.fork() == 0:
     os.execlp(
-        "pyinsane-daemon", "pyinsane-daemon",
+        sys.executable, sys.executable,
+        "-m", "pyinsane.daemon",
         pipe_dirpath,
         pipe_path_c2s, pipe_path_s2c
     )
