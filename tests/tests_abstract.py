@@ -88,7 +88,8 @@ class TestSaneScan(unittest.TestCase):
         try:
             self.dev.options['mode'].value = "Lineart"
         except self.module.SaneException:
-            self.skipTest("scanner does not support required option")
+            self.dev.options['mode'].value = "Gray"
+            self.dev.options['depth'].value = 1
         scan_session = self.dev.scan(multiple=False)
         try:
             assert(scan_session.scan is not None)
