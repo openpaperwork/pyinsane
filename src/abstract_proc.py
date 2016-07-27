@@ -198,7 +198,7 @@ class ScanSession(object):
         """
         Deprecated
         """
-        return self.imags[idx]
+        return self.images[idx]
 
 
 class Scanner(object):
