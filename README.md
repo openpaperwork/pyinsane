@@ -152,13 +152,13 @@ process for scanning:
 <table border="0">
 	<tr>
 		<td>
-			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" />
+			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" width="359" height="300" />
 		</td>
 		<td>
 			--&gt;
 		</td>
 		<td>
-			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_proc_workaround.png" alt="scan fine" />
+			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/master/doc/sane_proc_workaround.png" alt="scan fine" width="352" height="308" />
 		</td>
 	</tr>
 </table>
@@ -171,6 +171,9 @@ Usage:
 import pyinsane.abstract_th as pyinsane
 ```
 
+when imported, it will create 2 Unix pipes (FIFO) in your temporary directory
+and a dedicated process. To avoid forking useless extra file descriptors, you
+should import this module as soon as possible in your program.
 
 ### Other examples
 
