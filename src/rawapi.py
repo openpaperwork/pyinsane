@@ -521,10 +521,10 @@ def sane_init(auth_callback=__dummy_auth_callback):
     global sane_available, sane_is_init, sane_version
     assert(sane_available)
 
-    if sane_is_init > 0:
+    sane_is_init += 1
+    if sane_is_init > 1:
         return sane_version
 
-    sane_is_init += 1
     version_code = ctypes.c_int()
     wrap_func = __AuthCallbackWrapper(auth_callback).wrapper
     auth_callback = AUTH_CALLBACK_DEF(wrap_func)
