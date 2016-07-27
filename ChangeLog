@@ -1,3 +1,11 @@
+2016-07-27 : v1.3.8 --> 1.4.0
+- Add a workaround for Sane driver crashes and memory corruptions ('abstract_proc')
+- Python 3 support: Constraints must be str() objects, not bytes()
+- OS X support
+- Rawapi: Fix: When Sane is not available, 'import pyinsane.rawapi' should actually work, but pyinsane.rawapi.is_sane_available() should return False
+- RawApi: Fix mistake preventing authentication
+- Methods '__del__' removed on Pyinsane's objects
+
 2014-08-10 : v1.3.7 --> v1.3.8
 - Fix scan from feeder (multiscan)
 
