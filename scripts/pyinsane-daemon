@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import shutil
+import struct
 import sys
 
 import pyinsane.abstract as pyinsane
@@ -106,7 +107,7 @@ COMMANDS = {
 def main_loop(fifo_dir, fifo_filepaths):
     global COMMANDS
 
-    length_size = len(pickle.pack("i", 0))
+    length_size = len(struct.pack("i", 0))
     fifo_c2s = os.open(fifo_filepaths[0], os.O_RDONLY)
     fifo_s2c = os.open(fifo_filepaths[1], os.O_WRONLY)
 
@@ -117,7 +118,7 @@ def main_loop(fifo_dir, fifo_filepaths):
             length = os.read(fifo_c2s, length_size)
             if length == b'':
                 break
-            length = pickle.unpack("i", length)[0]
+            length = struct.unpack("i", length)[0]
             cmd = os.read(fifo_c2s, length)
             if cmd == b'':
                 break
@@ -136,7 +137,7 @@ def main_loop(fifo_dir, fifo_filepaths):
 
             result = pickle.dumps(result)
             length = len(result)
-            length = pickle.pack("i", length)
+            length = struct.pack("i", length)
             os.write(fifo_s2c, length)
             os.write(fifo_s2c, result)
     finally:

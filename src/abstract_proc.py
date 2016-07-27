@@ -1,6 +1,7 @@
 import logging
 import os
 import pickle
+import struct
 import tempfile
 
 import PIL.Image
@@ -52,7 +53,7 @@ if os.fork() == 0:
         pipe_path_c2s, pipe_path_s2c
     )
 
-length_size = len(pickle.pack("i", 0))
+length_size = len(struct.pack("i", 0))
 fifo_c2s = os.open(pipe_path_c2s, os.O_WRONLY)
 fifo_s2c = os.open(pipe_path_s2c, os.O_RDONLY)
 
@@ -71,12 +72,12 @@ def remote_do(command, *args, **kwargs):
     }
 
     cmd = pickle.dumps(cmd)
-    length = pickle.pack("i", len(cmd))
+    length = struct.pack("i", len(cmd))
     os.write(fifo_c2s, length)
     os.write(fifo_c2s, cmd)
 
     length = os.read(fifo_s2c, length_size)
-    length = pickle.unpack("i", length)[0]
+    length = struct.unpack("i", length)[0]
     result = os.read(fifo_s2c, length)
     assert(len(result) == length)
     result = pickle.loads(result)
