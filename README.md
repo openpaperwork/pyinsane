@@ -146,7 +146,7 @@ import pyinsane.abstract_th as pyinsane
 Some issues with some Sane drivers can become obvious in complex programs
 (uninitialized memory bytes, segfault, etc).
 
-This module work around issues like the following one by using a dedicated
+This module works around issues like the following one by using a dedicated
 process for scanning:
 
 <table border="0">
