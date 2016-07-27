@@ -146,7 +146,7 @@ import pyinsane.abstract_th as pyinsane
 Some issues with some Sane drivers can become obvious in complex programs
 (uninitialized memory bytes, segfault, etc).
 
-This module work around issues like the following by using a dedicated
+This module work around issues like the following one by using a dedicated
 process for scanning:
 
 <table border="0">
@@ -171,7 +171,7 @@ Usage:
 import pyinsane.abstract_th as pyinsane
 ```
 
-when imported, it will create 2 Unix pipes (FIFO) in your temporary directory
+When imported, it will create 2 Unix pipes (FIFO) in your temporary directory
 and a dedicated process. To avoid forking useless extra file descriptors, you
 should import this module as soon as possible in your program.
 
