@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
 
 try:
-    import src.abstract as pyinsane
+    import src as pyinsane
 except ImportError:
-    import pyinsane.abstract as pyinsane
+    import pyinsane
 
 
 def main(args):

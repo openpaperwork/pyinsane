@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
 from PIL import Image
 
 try:
-    import src.abstract as pyinsane
+    import src as pyinsane
 except ImportError:
-    import pyinsane.abstract as pyinsane
+    import pyinsane
 
 
 def set_scanner_opt(scanner, opt, value):

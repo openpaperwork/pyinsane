@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="pyinsane",
-    version="1.4.0-git",
+    version="2.0.0-git",
     description=("Pure Python implementation of the Sane API (using ctypes)"
                  " and abstration layer"),
     long_description=("Pure Python implementation of the Sane API (using"
@@ -23,14 +23,22 @@ setup(
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Multimedia :: Graphics :: Capture :: Scanners",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     license="GPLv3+",
     author="Jerome Flesch",
     author_email="jflesch@gmail.com",
-    packages=['pyinsane'],
-    package_dir={'pyinsane': 'src'},
+    packages=[
+        'pyinsane',
+        'pyinsane.sane',
+    ],
+    package_dir={
+        'pyinsane': 'src',
+        'pyinsane.sane': 'src/sane',
+    },
     data_files=[],
     scripts=[],
     install_requires=[

@@ -7,7 +7,7 @@ import shutil
 import struct
 import sys
 
-import pyinsane.abstract as pyinsane
+import pyinsane.sane.abstract as pyinsane
 
 
 logger = logging.getLogger(__name__)

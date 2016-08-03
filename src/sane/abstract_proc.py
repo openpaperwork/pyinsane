@@ -8,16 +8,16 @@ import tempfile
 import PIL.Image
 
 # import basic elements directly, so the caller
-# doesn't have to import saneapi if they need them.
+# doesn't have to import rawapi if they need them.
 from . import abstract
 from .abstract_th import ScannerOption
-from .saneapi import SaneCapabilities
-from .saneapi import SaneConstraint
-from .saneapi import SaneConstraintType
-from .saneapi import SaneException
-from .saneapi import SaneStatus
-from .saneapi import SaneUnit
-from .saneapi import SaneValueType
+from .rawapi import SaneCapabilities
+from .rawapi import SaneConstraint
+from .rawapi import SaneConstraintType
+from .rawapi import SaneException
+from .rawapi import SaneStatus
+from .rawapi import SaneUnit
+from .rawapi import SaneValueType
 
 
 __all__ = [
@@ -37,29 +37,36 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-logger.info("Starting Pyinsane subprocess")
+start_daemon = os.getenv('PYINSANE_DAEMON', '1')
+start_daemon = True if int(start_daemon) > 0 else False
 
-pipe_dirpath = tempfile.mkdtemp(prefix="pyinsane_")
-pipe_path_c2s = os.path.join(pipe_dirpath, "pipe_c2s")
-os.mkfifo(pipe_path_c2s)
-pipe_path_s2c = os.path.join(pipe_dirpath, "pipe_s2c")
-os.mkfifo(pipe_path_s2c)
+if start_daemon:
+    logger.info("Starting Pyinsane subprocess")
 
-logger.info("Pyinsane pipes: {} | {}".format(pipe_path_c2s, pipe_path_s2c))
+    pipe_dirpath = tempfile.mkdtemp(prefix="pyinsane_")
+    pipe_path_c2s = os.path.join(pipe_dirpath, "pipe_c2s")
+    os.mkfifo(pipe_path_c2s)
+    pipe_path_s2c = os.path.join(pipe_dirpath, "pipe_s2c")
+    os.mkfifo(pipe_path_s2c)
 
-if os.fork() == 0:
-    os.execlp(
-        sys.executable, sys.executable,
-        "-m", "pyinsane.daemon",
-        pipe_dirpath,
-        pipe_path_c2s, pipe_path_s2c
-    )
+    logger.info("Pyinsane pipes: {} | {}".format(pipe_path_c2s, pipe_path_s2c))
 
-length_size = len(struct.pack("i", 0))
-fifo_c2s = os.open(pipe_path_c2s, os.O_WRONLY)
-fifo_s2c = os.open(pipe_path_s2c, os.O_RDONLY)
+    if os.fork() == 0:
+        # prevent the daemon from starting itself (due to the way
+        # imports behave)
+        os.putenv('PYINSANE_DAEMON', '0')
+        os.execlp(
+            sys.executable, sys.executable,
+            "-m", "pyinsane.sane.daemon",
+            pipe_dirpath,
+            pipe_path_c2s, pipe_path_s2c
+        )
 
-logger.info("Connected to Pyinsane subprocess")
+    length_size = len(struct.pack("i", 0))
+    fifo_c2s = os.open(pipe_path_c2s, os.O_WRONLY)
+    fifo_s2c = os.open(pipe_path_s2c, os.O_RDONLY)
+
+    logger.info("Connected to Pyinsane subprocess")
 
 
 def remote_do(command, *args, **kwargs):

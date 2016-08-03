@@ -8,17 +8,17 @@ import sys
 import threading
 
 from . import abstract
-from . import saneapi
+from . import rawapi
 
 # import basic elements directly, so the caller
-# doesn't have to import saneapi if they need them.
-from .saneapi import SaneCapabilities
-from .saneapi import SaneConstraint
-from .saneapi import SaneConstraintType
-from .saneapi import SaneException
-from .saneapi import SaneStatus
-from .saneapi import SaneUnit
-from .saneapi import SaneValueType
+# doesn't have to import rawapi if they need them.
+from .rawapi import SaneCapabilities
+from .rawapi import SaneConstraint
+from .rawapi import SaneConstraintType
+from .rawapi import SaneException
+from .rawapi import SaneStatus
+from .rawapi import SaneUnit
+from .rawapi import SaneValueType
 
 
 __all__ = [
@@ -102,7 +102,7 @@ class ScannerOption(object):
     name = ""
     title = ""
     desc = ""
-    val_type = saneapi.SaneValueType(saneapi.SaneValueType.INT)
+    val_type = rawapi.SaneValueType(rawapi.SaneValueType.INT)
     unit = SaneUnit(SaneUnit.NONE)
     size = 4
     capabilities = SaneCapabilities(SaneCapabilities.NONE)

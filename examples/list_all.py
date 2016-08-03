@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 try:
-    import src.abstract as pyinsane
+    import src as pyinsane
 except ImportError:
-    import pyinsane.abstract as pyinsane
+    import pyinsane
 
 if __name__ == "__main__":
     for device in pyinsane.get_devices():

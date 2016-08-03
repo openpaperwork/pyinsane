@@ -2,8 +2,8 @@
 
 import sys
 
-from .saneapi import *
+from .sane.rawapi import *
 
 sys.stderr.write(
-    "[WARNING] pyinsane.rawapi is deprecated. Use pyinsane.saneapi instead"
+    "[WARNING] pyinsane.rawapi is deprecated. Use pyinsane.sane.rawapi instead"
 )

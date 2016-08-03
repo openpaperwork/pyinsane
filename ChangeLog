@@ -1,5 +1,5 @@
-xxxx-xx-xx : v1.4.0 --> 1.5.0
-- module 'rawapi' has been renamed 'saneapi'
+xxxx-xx-xx : v1.4.0 --> v2.0.0
+- API has been redesigned so it can handle backends other than libsane
 
 2016-07-27 : v1.3.8 --> 1.4.0
 - Add a workaround for Sane driver crashes and memory corruptions ('abstract_proc')

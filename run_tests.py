@@ -6,13 +6,18 @@ import unittest
 from tests import tests_saneapi
 from tests import tests_abstract
 
-from src import abstract
-from src import abstract_proc
-from src import abstract_th
+from src.sane import abstract as sane_abstract
+from src.sane import abstract_proc as sane_abstract_proc
+from src.sane import abstract_th as sane_abstract_th
 
 
 if __name__ == '__main__':
-    test_set = ["saneapi", "abstract", "abstract_th", "abstract_proc"]
+    test_set = [
+        "sane_rawapi",
+        "sane_abstract",
+        "sane_abstract_th",
+        "sane_abstract_proc"
+    ]
     if "-h" in sys.argv or "--help" in sys.argv:
         print("%s [tests [tests [...]]]" % sys.argv[0])
         print("")
@@ -22,21 +27,21 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         test_set = sys.argv[1:]
 
-    if "saneapi" in test_set:
-        print("=== SaneAPI: ===")
+    if "sane_rawapi" in test_set:
+        print("=== Sane API: ===")
         unittest.TextTestRunner(verbosity=3).run(
            tests_saneapi.get_all_tests())
         print("---")
-    if "abstract" in test_set:
-        print("=== Abstract: ===")
+    if "sane_abstract" in test_set:
+        print("=== Sane Abstract: ===")
         unittest.TextTestRunner(verbosity=3).run(
-            tests_abstract.get_all_tests(abstract))
+            tests_abstract.get_all_tests(sane_abstract))
         print("---")
-    if "abstract_th" in test_set:
-        print("=== Abstract Threaded: ===")
+    if "sane_abstract_th" in test_set:
+        print("=== Sane Abstract Threaded: ===")
         unittest.TextTestRunner(verbosity=3).run(
-            tests_abstract.get_all_tests(abstract_th))
-    if "abstract_proc" in test_set:
-        print("=== Abstract Separate Process: ===")
+            tests_abstract.get_all_tests(sane_abstract_th))
+    if "sane_abstract_proc" in test_set:
+        print("=== Sane Abstract Separate Process: ===")
         unittest.TextTestRunner(verbosity=3).run(
-            tests_abstract.get_all_tests(abstract_proc))
+            tests_abstract.get_all_tests(sane_abstract_proc))
