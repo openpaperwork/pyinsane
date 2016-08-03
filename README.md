@@ -2,7 +2,7 @@
 
 ## Description
 
-Python library to access scanner.
+Python library to access and use scanner devices.
 
 Currently, it only support the Sane API (available on GNU/Linux, *BSD, MacOSX, etc). Windows APIs (twain and WIA) are not supported yet.
 
