@@ -5,10 +5,8 @@ from setuptools import setup
 setup(
     name="pyinsane",
     version="2.0.0-git",
-    description=("Pure Python implementation of the Sane API (using ctypes)"
-                 " and abstration layer"),
-    long_description=("Pure Python implementation of the Sane API (using"
-                      " ctypes). Include a thread-safe abstraction layer"),
+    description=("Python library to access and use scanner devices"),
+    long_description=("Python library to access and use scanner devices"),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
     download_url="https://github.com/jflesch/pyinsane/archive/v1.4.0.zip",
