@@ -6,5 +6,5 @@ from .sane.abstract_th import *
 
 sys.stderr.write(
     "[WARNING] pyinsane.abstract_th is deprecated."
-    " Use pyinsane.sane.abstract_th instead"
+    " Use pyinsane.sane.abstract_th instead\n"
 )
