@@ -3,17 +3,17 @@ sys.path = ["src"] + sys.path
 
 import unittest
 
-import rawapi
+import saneapi
 
 
 def get_test_devices():
     '''Return SANE devices, perhaps after creating a test device.'''
-    devices = rawapi.sane_get_devices()
+    devices = saneapi.sane_get_devices()
     if len(devices) == 0:
         # if there are no devices found, create a virtual device.
         # see sane-test(5) and /etc/sane.d/test.conf
-        rawapi.sane_close(rawapi.sane_open("test"))
-        devices = rawapi.sane_get_devices()
+        saneapi.sane_close(saneapi.sane_open("test"))
+        devices = saneapi.sane_get_devices()
     return devices
 
 
@@ -22,107 +22,108 @@ class TestSaneInit(unittest.TestCase):
         pass
 
     def test_init(self):
-        version = rawapi.sane_init()
+        version = saneapi.sane_init()
         self.assertTrue(version.is_current())
-        rawapi.sane_exit()
+        saneapi.sane_exit()
 
     def tearDown(self):
         pass
 
+
 class TestSaneGetDevices(unittest.TestCase):
     def setUp(self):
-        rawapi.sane_init()
+        saneapi.sane_init()
 
     def test_get_devices(self):
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
-        rawapi.sane_exit()
+        saneapi.sane_exit()
 
 
 class TestSaneOpen(unittest.TestCase):
     def setUp(self):
-        rawapi.sane_init()
+        saneapi.sane_init()
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         self.dev_name = devices[0].name
 
     def test_open_invalid(self):
-        self.assertRaises(rawapi.SaneException, rawapi.sane_open, "whatever")
+        self.assertRaises(saneapi.SaneException, saneapi.sane_open, "whatever")
 
     def test_open_valid(self):
-        dev_handle = rawapi.sane_open(self.dev_name)
-        rawapi.sane_close(dev_handle)
+        dev_handle = saneapi.sane_open(self.dev_name)
+        saneapi.sane_close(dev_handle)
 
     def tearDown(self):
-        rawapi.sane_exit()
+        saneapi.sane_exit()
 
 
 class TestSaneGetOptionDescriptor(unittest.TestCase):
     def setUp(self):
-        rawapi.sane_init()
+        saneapi.sane_init()
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
-        self.dev_handle = rawapi.sane_open(dev_name)
+        self.dev_handle = saneapi.sane_open(dev_name)
 
     def test_get_option_descriptor_0(self):
-        opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
+        opt_desc = saneapi.sane_get_option_descriptor(self.dev_handle, 0)
         # XXX(Jflesch): The name may vary: sometimes it's empty, sometimes it's
         # "option-cnt"
         #self.assertEqual(opt_desc.name, "")
         self.assertEqual(opt_desc.title, b"Number of options")
-        self.assertEqual(opt_desc.type, rawapi.SaneValueType.INT)
-        self.assertEqual(opt_desc.unit, rawapi.SaneUnit.NONE)
+        self.assertEqual(opt_desc.type, saneapi.SaneValueType.INT)
+        self.assertEqual(opt_desc.unit, saneapi.SaneUnit.NONE)
         self.assertEqual(opt_desc.size, 4)
-        self.assertEqual(opt_desc.cap, rawapi.SaneCapabilities.SOFT_DETECT)
+        self.assertEqual(opt_desc.cap, saneapi.SaneCapabilities.SOFT_DETECT)
         self.assertEqual(opt_desc.constraint_type,
-                         rawapi.SaneConstraintType.NONE)
+                         saneapi.SaneConstraintType.NONE)
 
     def test_get_option_descriptor_out_of_bounds(self):
         # XXX(Jflesch): Sane's documentation says get_option_descriptor()
         # should return NULL if the index value is invalid. It seems the actual
         # implementation prefers to segfault.
 
-        #self.assertRaises(rawapi.SaneException,
-        #                  rawapi.sane_get_option_descriptor, self.dev_handle,
+        #self.assertRaises(saneapi.SaneException,
+        #                  saneapi.sane_get_option_descriptor, self.dev_handle,
         #                  999999)
         pass
 
     def tearDown(self):
-        rawapi.sane_close(self.dev_handle)
-        rawapi.sane_exit()
+        saneapi.sane_close(self.dev_handle)
+        saneapi.sane_exit()
 
 
 class TestSaneControlOption(unittest.TestCase):
     def setUp(self):
-        rawapi.sane_init()
+        saneapi.sane_init()
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
-        self.dev_handle = rawapi.sane_open(dev_name)
-        self.nb_options = rawapi.sane_get_option_value(self.dev_handle, 0)
+        self.dev_handle = saneapi.sane_open(dev_name)
+        self.nb_options = saneapi.sane_get_option_value(self.dev_handle, 0)
 
     def test_get_option_value(self):
         for opt_idx in range(0, self.nb_options):
-            desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
-            if not rawapi.SaneValueType(desc.type).can_getset_opt():
+            desc = saneapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
+            if not saneapi.SaneValueType(desc.type).can_getset_opt():
                 continue
-            if desc.cap|rawapi.SaneCapabilities.INACTIVE == desc.cap:
+            if desc.cap|saneapi.SaneCapabilities.INACTIVE == desc.cap:
                 continue
-            val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
+            val = saneapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertNotEqual(val, None)
 
     def test_set_option_value(self):
         for opt_idx in range(0, self.nb_options):
-            desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
+            desc = saneapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
             if (desc.name != "mode"
-                or not rawapi.SaneValueType(desc.type).can_getset_opt()):
+                or not saneapi.SaneValueType(desc.type).can_getset_opt()):
                 continue
-            info = rawapi.sane_set_option_value(self.dev_handle, opt_idx, "Gray")
-            self.assertFalse(rawapi.SaneInfo.INEXACT in info)
-            val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
+            info = saneapi.sane_set_option_value(self.dev_handle, opt_idx, "Gray")
+            self.assertFalse(saneapi.SaneInfo.INEXACT in info)
+            val = saneapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertEqual(val, "Gray")
 
     def test_set_option_auto(self):
@@ -130,53 +131,53 @@ class TestSaneControlOption(unittest.TestCase):
         pass
 
     def tearDown(self):
-        rawapi.sane_close(self.dev_handle)
-        rawapi.sane_exit()
+        saneapi.sane_close(self.dev_handle)
+        saneapi.sane_exit()
 
 
 class TestSaneScan(unittest.TestCase):
     def setUp(self):
-        rawapi.sane_init()
+        saneapi.sane_init()
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
-        self.dev_handle = rawapi.sane_open(dev_name)
+        self.dev_handle = saneapi.sane_open(dev_name)
 
     def test_simple_scan(self):
         # XXX(Jflesch): set_io_mode() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
-        #rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
+        #saneapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
 
         try:
-            rawapi.sane_start(self.dev_handle)
+            saneapi.sane_start(self.dev_handle)
         except StopIteration:
             self.skipTest("cannot scan, no document loaded")
 
         # XXX(Jflesch): get_select_fd() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
-        #fd = rawapi.sane_get_select_fd(self.dev_handle)
+        #fd = saneapi.sane_get_select_fd(self.dev_handle)
         #self.assertTrue(fd > 0)
 
         try:
             while True:
-                buf = rawapi.sane_read(self.dev_handle, 128*1024)
+                buf = saneapi.sane_read(self.dev_handle, 128*1024)
                 self.assertTrue(len(buf) > 0)
         except EOFError:
             pass
-        rawapi.sane_cancel(self.dev_handle)
+        saneapi.sane_cancel(self.dev_handle)
 
     def test_cancelled_scan(self):
         try:
-            rawapi.sane_start(self.dev_handle)
+            saneapi.sane_start(self.dev_handle)
         except StopIteration:
             self.skipTest("cannot scan, no document loaded")
-        buf = rawapi.sane_read(self.dev_handle, 128*1024)
+        buf = saneapi.sane_read(self.dev_handle, 128*1024)
         self.assertTrue(len(buf) > 0)
-        rawapi.sane_cancel(self.dev_handle)
+        saneapi.sane_cancel(self.dev_handle)
 
     def tearDown(self):
-        rawapi.sane_close(self.dev_handle)
-        rawapi.sane_exit()
+        saneapi.sane_close(self.dev_handle)
+        saneapi.sane_exit()
 
 
 def get_all_tests():

@@ -2,18 +2,18 @@ import sys
 
 from PIL import Image
 
-from . import rawapi
+from . import saneapi
 
 # import basic elements directly, so the caller
-# doesn't have to import rawapi if they need them.
-from .rawapi import SaneCapabilities
-from .rawapi import SaneConstraint
-from .rawapi import SaneConstraintType
-from .rawapi import SaneException
-from .rawapi import SaneStatus
-from .rawapi import SaneUnit
-from .rawapi import SaneValueType
-from .rawapi import sane_init, sane_exit
+# doesn't have to import saneapi if they need them.
+from .saneapi import SaneCapabilities
+from .saneapi import SaneConstraint
+from .saneapi import SaneConstraintType
+from .saneapi import SaneException
+from .saneapi import SaneStatus
+from .saneapi import SaneUnit
+from .saneapi import SaneValueType
+from .saneapi import sane_init, sane_exit
 
 
 __all__ = [
@@ -57,7 +57,7 @@ class ScannerOption(object):
         self.idx = idx
 
     @staticmethod
-    def build_from_rawapi(scanner, opt_idx, opt_raw):
+    def build_from_saneapi(scanner, opt_idx, opt_raw):
         opt = ScannerOption(scanner, opt_idx)
         opt.name = opt_raw.name
         if opt.name is not None and hasattr(opt.name, "decode"):
@@ -79,7 +79,7 @@ class ScannerOption(object):
 
     def _get_value(self):
         self.__scanner._open()
-        val = rawapi.sane_get_option_value(sane_dev_handle[1], self.idx)
+        val = saneapi.sane_get_option_value(sane_dev_handle[1], self.idx)
         if not self.capabilities.is_active():
             # XXX(Jflesch): if the option is not active, some backends still
             # return a value, some don't and return an error instead.
@@ -92,7 +92,7 @@ class ScannerOption(object):
 
     def _set_value(self, new_value):
         self.__scanner._open()
-        rawapi.sane_set_option_value(sane_dev_handle[1], self.idx, new_value)
+        saneapi.sane_set_option_value(sane_dev_handle[1], self.idx, new_value)
 
     value = property(_get_value, _set_value)
 
@@ -150,7 +150,7 @@ class ImgUtil(object):
 
     @staticmethod
     def raw_to_img(raw, parameters):
-        mode = rawapi.SaneFrame(parameters.format).get_pil_format()
+        mode = saneapi.SaneFrame(parameters.format).get_pil_format()
         # color_bytes = ImgUtil.COLOR_BYTES[parameters.depth][mode]
         width = parameters.pixels_per_line
         height = (len(raw) / parameters.bytes_per_line)
@@ -173,12 +173,12 @@ class Scan(object):
 
     def _init(self):
         self.scanner._open()
-        rawapi.sane_start(sane_dev_handle[1])
+        saneapi.sane_start(sane_dev_handle[1])
         try:
             self.parameters = \
-                rawapi.sane_get_parameters(sane_dev_handle[1])
+                saneapi.sane_get_parameters(sane_dev_handle[1])
         except Exception:
-            rawapi.sane_cancel(sane_dev_handle[1])
+            saneapi.sane_cancel(sane_dev_handle[1])
             raise
 
     def read(self):
@@ -188,7 +188,7 @@ class Scan(object):
             self.__img_finished = False
 
         try:
-            read = rawapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
+            read = saneapi.sane_read(sane_dev_handle[1], SANE_READ_BUFSIZE)
         except EOFError:
             line_size = self.parameters.bytes_per_line
             for line in self.__raw_lines:
@@ -255,7 +255,7 @@ class Scan(object):
         return ImgUtil.raw_to_img(lines, self.parameters)
 
     def _cancel(self):
-        rawapi.sane_cancel(sane_dev_handle[1])
+        saneapi.sane_cancel(sane_dev_handle[1])
 
 
 class SingleScan(Scan):
@@ -298,7 +298,7 @@ class MultipleScan(Scan):
 
         if self.must_request_next_frame:
             try:
-                rawapi.sane_start(sane_dev_handle[1])
+                saneapi.sane_start(sane_dev_handle[1])
             except StopIteration:
                 self._cancel()
                 self.is_finished = True
@@ -369,7 +369,7 @@ class Scanner(object):
         self.__options = None  # { "name" : ScannerOption }
 
     @staticmethod
-    def build_from_rawapi(sane_device):
+    def build_from_saneapi(sane_device):
         return Scanner(sane_device.name, sane_device.vendor, sane_device.model,
                        sane_device.type)
 
@@ -380,7 +380,7 @@ class Scanner(object):
             return
         self._force_close()
         sane_init()
-        handle = rawapi.sane_open(self.name)
+        handle = saneapi.sane_open(self.name)
         sane_dev_handle = (self.name, handle)
 
     def _force_close(self):
@@ -388,7 +388,7 @@ class Scanner(object):
         (devid, handle) = sane_dev_handle
         if handle is None:
             return
-        rawapi.sane_close(handle)
+        saneapi.sane_close(handle)
         sane_exit()
         sane_dev_handle = ("", None)
 
@@ -396,14 +396,14 @@ class Scanner(object):
         if self.__options is not None:
             return
         self._open()
-        nb_options = rawapi.sane_get_option_value(sane_dev_handle[1], 0)
+        nb_options = saneapi.sane_get_option_value(sane_dev_handle[1], 0)
         self.__options = {}
         for opt_idx in range(1, nb_options):
-            opt_desc = rawapi.sane_get_option_descriptor(
+            opt_desc = saneapi.sane_get_option_descriptor(
                 sane_dev_handle[1], opt_idx)
             if not SaneValueType(opt_desc.type).can_getset_opt():
                 continue
-            opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)
+            opt = ScannerOption.build_from_saneapi(self, opt_idx, opt_desc)
             self.__options[opt.name] = opt
 
     def _get_options(self):
@@ -438,7 +438,7 @@ class Scanner(object):
 def get_devices(local_only=False):
     sane_init()
     try:
-        return [Scanner.build_from_rawapi(device)
-                for device in rawapi.sane_get_devices(local_only)]
+        return [Scanner.build_from_saneapi(device)
+                for device in saneapi.sane_get_devices(local_only)]
     finally:
         sane_exit()

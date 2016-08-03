@@ -8,16 +8,16 @@ import tempfile
 import PIL.Image
 
 # import basic elements directly, so the caller
-# doesn't have to import rawapi if they need them.
+# doesn't have to import saneapi if they need them.
 from . import abstract
 from .abstract_th import ScannerOption
-from .rawapi import SaneCapabilities
-from .rawapi import SaneConstraint
-from .rawapi import SaneConstraintType
-from .rawapi import SaneException
-from .rawapi import SaneStatus
-from .rawapi import SaneUnit
-from .rawapi import SaneValueType
+from .saneapi import SaneCapabilities
+from .saneapi import SaneConstraint
+from .saneapi import SaneConstraintType
+from .saneapi import SaneException
+from .saneapi import SaneStatus
+from .saneapi import SaneUnit
+from .saneapi import SaneValueType
 
 
 __all__ = [

@@ -3,7 +3,7 @@
 import sys
 import unittest
 
-from tests import tests_rawapi
+from tests import tests_saneapi
 from tests import tests_abstract
 
 from src import abstract
@@ -12,7 +12,7 @@ from src import abstract_th
 
 
 if __name__ == '__main__':
-    test_set = ["rawapi", "abstract", "abstract_th", "abstract_proc"]
+    test_set = ["saneapi", "abstract", "abstract_th", "abstract_proc"]
     if "-h" in sys.argv or "--help" in sys.argv:
         print("%s [tests [tests [...]]]" % sys.argv[0])
         print("")
@@ -22,10 +22,10 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         test_set = sys.argv[1:]
 
-    if "rawapi" in test_set:
-        print("=== RawAPI: ===")
+    if "saneapi" in test_set:
+        print("=== SaneAPI: ===")
         unittest.TextTestRunner(verbosity=3).run(
-           tests_rawapi.get_all_tests())
+           tests_saneapi.get_all_tests())
         print("---")
     if "abstract" in test_set:
         print("=== Abstract: ===")

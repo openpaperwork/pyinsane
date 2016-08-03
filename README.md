@@ -13,7 +13,7 @@ It supports:
 [Libsane (part of the Sane)](http://www.sane-project.org/) provides drivers for scanners under GNU/Linux and *BSD systems.
 
 The code is divided in 2 layers:
-- rawapi : Ctypes binding to the raw Sane API
+- saneapi : Ctypes binding to the raw Sane API
 - abstract : An Object-Oriented layer that simplifies the use of the Sane API
   and try to avoid possible misuse of the Sane API. When scanning, it also takes
   care of returning a Pillow image.
