@@ -5,8 +5,8 @@ from setuptools import setup
 setup(
     name="pyinsane",
     version="2.0.0-git",
-    description=("Python library to access and use scanner devices"),
-    long_description=("Python library to access and use scanner devices"),
+    description=("Python library to access and use image scanners"),
+    long_description=("Python library to access and use image scanners (devices)"),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
     download_url="https://github.com/jflesch/pyinsane/archive/v1.4.0.zip",

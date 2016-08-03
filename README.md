@@ -2,7 +2,7 @@
 
 ## Description
 
-Python library to access and use scanner devices.
+Python library to access and use image scanners.
 
 Currently, it only support the Sane API (available on GNU/Linux, *BSD, MacOSX, etc). Windows APIs (twain and WIA) are not supported yet.
 
@@ -11,6 +11,9 @@ It supports:
 - Automatic Document Feeder
 - While scanning, can provide chunks of the image for on-the-fly preview (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
 - Python 2.7 and Python 3
+
+Not tested but should work too:
+- Handheld image scanners
 
 
 ## Dependencies
