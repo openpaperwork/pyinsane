@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path = ["src"] + sys.path
 
@@ -13,6 +14,7 @@ class TestSaneGetDevices(unittest.TestCase):
     def setUp(self):
         pass
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_devices(self):
         devices = self.module.get_devices()
         if len(devices) == 0:
@@ -74,6 +76,7 @@ class TestSaneOptions(unittest.TestCase):
         for dev in self.devices:
             del(dev)
         del(self.devices)
+
 
 class TestSaneScan(unittest.TestCase):
     def set_module(self, module):
