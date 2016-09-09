@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 
+from setuptools import Extension
 from setuptools import setup
+
+extensions = [
+    Extension(
+        'pyinsane.wia._rawapi', [
+            'src/wia/rawapi.c',
+        ],
+        include_dirs=[],
+        libraries=[],
+        extra_compile_args=[],
+        undef_macros=['NDEBUG'],
+    ),
+]
 
 setup(
     name="pyinsane",
@@ -32,14 +45,17 @@ setup(
     packages=[
         'pyinsane',
         'pyinsane.sane',
+        'pyinsane.wia',
     ],
     package_dir={
         'pyinsane': 'src',
         'pyinsane.sane': 'src/sane',
+        'pyinsane.wia': 'src/wia',
     },
     data_files=[],
     scripts=[],
     install_requires=[
         "Pillow",
     ],
+    ext_modules=extensions
 )
