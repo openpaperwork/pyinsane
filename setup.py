@@ -6,10 +6,13 @@ from setuptools import setup
 extensions = [
     Extension(
         'pyinsane.wia._rawapi', [
-            'src/wia/rawapi.c',
+            'src/wia/rawapi.cpp',
         ],
         include_dirs=[],
-        libraries=[],
+        libraries=[
+            "ole32",
+            "wiaguid",
+        ],
         extra_compile_args=[],
         undef_macros=['NDEBUG'],
     ),
@@ -57,5 +60,6 @@ setup(
     install_requires=[
         "Pillow",
     ],
-    ext_modules=extensions
+    ext_modules=extensions,
+    setup_requires=['nose>=1.0'],
 )
