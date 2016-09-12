@@ -6,4 +6,4 @@ def init():
 
 
 def get_devices():
-    _rawapi.get_devices()
+    return _rawapi.get_devices()

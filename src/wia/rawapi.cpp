@@ -19,7 +19,7 @@ PyObject *init(PyObject *self, PyObject* args)
 
     hr = CoInitialize(NULL);
     if (FAILED(hr)) {
-        fprintf(stderr, "Pyinsane: WARNING: CoInitialize() failed !\n");
+        PyErr_WarnEx(NULL, "Pyinsane: WARNING: CoInitialize() failed !", 1);
         Py_RETURN_NONE;
     }
 
@@ -29,45 +29,95 @@ PyObject *init(PyObject *self, PyObject* args)
 	Py_RETURN_NONE;
 }
 
+static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
+    PyObject **out_tuple)
+{
+    PyObject *devid, *devname;
+    PROPSPEC input[2] = {0};
+    PROPVARIANT output[2] = {0};
+
+    *devid = NULL;
+    *devname = NULL;
+
+    input[0].ulKind = PRSPEC_PROPID;
+    input[0].propid = WIA_DIP_DEV_ID;
+    input[1].ulKind = PRSPEC_PROPID;
+    input[1].propid = WIA_DIP_DEV_NAME;
+
+    HRESULT hr = properties->ReadMultiple(2 /* nb_properties */, input, output);
+    if (FAILED(hr)) {
+        PyErr_WarnEx(NULL, "Pyinsane: WiaPropertyStorage->ReadMultiple() failed", 1);
+        return hr;
+    }
+
+    assert(output[0].vt == VT_BSTR);
+    assert(output[1].vt == VT_BSTR);
+
+    devid = PyUnicode_FromWideChar(output[0].bstrVal, -1);
+    devname = PyUnicode_FromWideChar(output[1].bstrVal, -1);
+
+    *out_tuple = PyTuple_Pack(2, devid, devname);
+
+    FreePropVariantArray(2, output);
+
+    return S_OK;
+}
+
 PyObject *get_devices(PyObject *self, PyObject* args)
 {
     HRESULT hr;
-    CComPtr<IWiaDevMgr> pWiaDevMgr;
-    CComPtr<IEnumWIA_DEV_INFO> pIEnumWIA_DEV_INFO;
+    CComPtr<IWiaDevMgr2> wia_dev_manager;
+    CComPtr<IEnumWIA_DEV_INFO> wia_dev_info_enum;
     unsigned long nb_devices;
+    PyObject *dev_infos;
+    PyObject *all_devs;
 
 	if (!PyArg_ParseTuple(args, "")) {
 		return NULL;
 	}
 
     // Create a connection to the local WIA device manager
-    hr = pWiaDevMgr.CoCreateInstance(CLSID_WiaDevMgr);
+    hr = wia_dev_manager.CoCreateInstance(CLSID_WiaDevMgr2);
     if (FAILED(hr)) {
-        fprintf(stderr, "Pyinsane: WARNING: CoCreateInstance failed\n");
+        PyErr_WarnEx(NULL, "Pyinsane: WARNING: CoCreateInstance failed", 1);
         Py_RETURN_NONE;
     }
 
-    hr = pWiaDevMgr->EnumDeviceInfo(0, &pIEnumWIA_DEV_INFO);
-    if (FAILED(hr))
-    {
-        fprintf(stderr, "Pyinsane: WARNING: WiaDevMgr->EnumDviceInfo() failed\n");
+    hr = wia_dev_manager->EnumDeviceInfo(WIA_DEVINFO_ENUM_LOCAL, &wia_dev_info_enum);
+    if (FAILED(hr)) {
+        PyErr_WarnEx(NULL, "Pyinsane: WARNING: WiaDevMgr->EnumDviceInfo() failed", 1);
         Py_RETURN_NONE;
     }
 
-    // Get the number of WIA devices
+    // Get the numeber of WIA devices
 
-    hr = pIEnumWIA_DEV_INFO->GetCount(&nb_devices);
-    if (FAILED(hr))
-    {
-        fprintf(stderr, "PyInsane: WARNING: GetCount() failed !\n");
+    hr = wia_dev_info_enum->GetCount(&nb_devices);
+    if (FAILED(hr)) {
+        PyErr_WarnEx(NULL, "PyInsane: WARNING: GetCount() failed !", 1);
         Py_RETURN_NONE;
     }
 
     fprintf(stderr, "NB devices: %d\n", nb_devices);
 
-	//Py_BEGIN_ALLOW_THREADS;
-	//Py_END_ALLOW_THREADS;
+    all_devs = PyList_New(0);
 
+    while (S_OK == hr) {
+        IWiaPropertyStorage *properties = NULL;
+        hr = wia_dev_info_enum->Next(1, &properties, NULL);
+        if (hr != S_OK || properties == NULL)
+            break;
+
+        hr = get_device_basic_infos(properties, &dev_infos);
+        if (FAILED(hr)) {
+            Py_RETURN_NONE;
+        }
+
+        properties->Release();
+
+        PyList_Append(all_devs, dev_infos);
+    }
+
+    // wia_dev_info_enum->Release(); // TODO(Jflesch) ?
 	Py_RETURN_NONE;
 }
 
