@@ -23,8 +23,16 @@ PyObject *init(PyObject *self, PyObject* args)
         Py_RETURN_NONE;
     }
 
-	//Py_BEGIN_ALLOW_THREADS;
-	//Py_END_ALLOW_THREADS;
+	Py_RETURN_NONE;
+}
+
+PyObject *exit(PyObject *self, PyObject* args)
+{
+    if (!PyArg_ParseTuple(args, "")) {
+		return NULL;
+	}
+
+    CoUninitialize();
 
 	Py_RETURN_NONE;
 }
@@ -36,8 +44,7 @@ static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
     PROPSPEC input[2] = {0};
     PROPVARIANT output[2] = {0};
 
-    *devid = NULL;
-    *devname = NULL;
+    *out_tuple = NULL;
 
     input[0].ulKind = PRSPEC_PROPID;
     input[0].propid = WIA_DIP_DEV_ID;
@@ -118,12 +125,13 @@ PyObject *get_devices(PyObject *self, PyObject* args)
     }
 
     // wia_dev_info_enum->Release(); // TODO(Jflesch) ?
-	Py_RETURN_NONE;
+    return all_devs;
 }
 
 
 static PyMethodDef rawapi_methods[] = {
 	{"init", init, METH_VARARGS, NULL},
+	{"exit", exit, METH_VARARGS, NULL},
 	{"get_devices", get_devices, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL},
 };
