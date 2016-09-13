@@ -1,22 +1,25 @@
 #!/usr/bin/env python
 
+import os
+
 from setuptools import Extension
 from setuptools import setup
 
-extensions = [
-    Extension(
-        'pyinsane.wia._rawapi', [
-            'src/wia/rawapi.cpp',
-        ],
-        include_dirs=[],
-        libraries=[
-            "ole32",
-            "wiaguid",
-        ],
-        extra_compile_args=[],
-        undef_macros=['NDEBUG'],
-    ),
-]
+if os.name == "nt":
+    extensions = [
+        Extension(
+            'pyinsane.wia._rawapi', [
+                'src/wia/rawapi.cpp',
+            ],
+            include_dirs=[],
+            libraries=[
+                "ole32",
+                "wiaguid",
+            ],
+            extra_compile_args=['/W4'],
+            undef_macros=['NDEBUG'],
+        ),
+    ]
 
 setup(
     name="pyinsane",
