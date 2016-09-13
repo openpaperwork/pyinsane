@@ -5,6 +5,10 @@ def init():
     _rawapi.init()
 
 
+def open(devid):
+    return _rawapi.open(devid)
+
+
 def exit():
     _rawapi.exit()
 

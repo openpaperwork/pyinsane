@@ -9,7 +9,14 @@
 
 #include <Python.h>
 
-PyObject *init(PyObject *self, PyObject* args)
+#define WIA_PYCAPSULE_NAME "WIA device"
+
+struct wia_device {
+    IWiaDevMgr2 *dev_manager;
+    IWiaItem2 *device;
+};
+
+static PyObject *init(PyObject *, PyObject* args)
 {
     HRESULT hr;
 
@@ -26,16 +33,6 @@ PyObject *init(PyObject *self, PyObject* args)
 	Py_RETURN_NONE;
 }
 
-PyObject *exit(PyObject *self, PyObject* args)
-{
-    if (!PyArg_ParseTuple(args, "")) {
-		return NULL;
-	}
-
-    CoUninitialize();
-
-	Py_RETURN_NONE;
-}
 
 static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
     PyObject **out_tuple)
@@ -70,7 +67,8 @@ static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
     return S_OK;
 }
 
-PyObject *get_devices(PyObject *self, PyObject* args)
+
+static PyObject *get_devices(PyObject *, PyObject* args)
 {
     HRESULT hr;
     CComPtr<IWiaDevMgr2> wia_dev_manager;
@@ -104,11 +102,9 @@ PyObject *get_devices(PyObject *self, PyObject* args)
         Py_RETURN_NONE;
     }
 
-    fprintf(stderr, "NB devices: %d\n", nb_devices);
-
     all_devs = PyList_New(0);
 
-    while (S_OK == hr) {
+    while (hr == S_OK) {
         IWiaPropertyStorage *properties = NULL;
         hr = wia_dev_info_enum->Next(1, &properties, NULL);
         if (hr != S_OK || properties == NULL)
@@ -128,11 +124,66 @@ PyObject *get_devices(PyObject *self, PyObject* args)
     return all_devs;
 }
 
+static void free_device(PyObject *device)
+{
+    struct wia_device *wia_dev;
+
+    wia_dev = (struct wia_device *)PyCapsule_GetPointer(device, WIA_PYCAPSULE_NAME);
+    // TODO
+    free(wia_dev);
+}
+
+static PyObject *open_device(PyObject *, PyObject *args)
+{
+    char *devid;
+    CComPtr<IWiaDevMgr2> wia_dev_manager;
+    struct wia_device *dev;
+    BSTR bstr_devid;
+    HRESULT hr;
+    USES_CONVERSION;
+
+    if (!PyArg_ParseTuple(args, "s", &devid)) {
+        return NULL;
+    }
+
+    hr = wia_dev_manager.CoCreateInstance(CLSID_WiaDevMgr2);
+    if (FAILED(hr)) {
+        PyErr_WarnEx(NULL, "Pyinsane: WARNING: CoCreateInstance failed", 1);
+        Py_RETURN_NONE;
+    }
+
+    dev = (struct wia_device *)calloc(1, sizeof(struct wia_device));
+    dev->dev_manager = wia_dev_manager;
+
+    bstr_devid = SysAllocString(A2W(devid)); // TODO(Jflesch): Does any of this allocate anything ? oO
+    hr = wia_dev_manager->CreateDevice(0, bstr_devid, &dev->device);
+    if (FAILED(hr)) {
+        PyErr_WarnEx(NULL, "Pyinsane: WARNING: WiaDevMgr->CreateDevice() failed", 1);
+        free(dev);
+        Py_RETURN_NONE;
+    }
+
+    return PyCapsule_New(dev, WIA_PYCAPSULE_NAME, free_device);
+}
+
+
+static PyObject *exit(PyObject *, PyObject* args)
+{
+    if (!PyArg_ParseTuple(args, "")) {
+		return NULL;
+	}
+
+    CoUninitialize();
+
+	Py_RETURN_NONE;
+}
+
 
 static PyMethodDef rawapi_methods[] = {
 	{"init", init, METH_VARARGS, NULL},
-	{"exit", exit, METH_VARARGS, NULL},
 	{"get_devices", get_devices, METH_VARARGS, NULL},
+	{"open", open_device, METH_VARARGS, NULL},
+	{"exit", exit, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL},
 };
 

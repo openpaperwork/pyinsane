@@ -23,7 +23,8 @@ class TestInit(unittest.TestCase):
 
 class TestGetDevices(unittest.TestCase):
     def setUp(self):
-        rawapi.init()
+        if os.name == "nt":
+            rawapi.init()
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_get_devices(self):
@@ -31,4 +32,25 @@ class TestGetDevices(unittest.TestCase):
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
-        rawapi.exit()
+        if os.name == "nt":
+            rawapi.exit()
+
+
+class TestOpenDevice(unittest.TestCase):
+    def setUp(selfself):
+        if os.name == "nt":
+            rawapi.init()
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_open_device(self):
+        devices = rawapi.get_devices()
+        self.assertTrue(len(devices) > 0)
+        devid = devices[0][0]
+        dev = rawapi.open(devid)
+        self.assertNotEqual(dev, None)
+        del dev
+        dev = None
+
+    def tearDown(self):
+        if os.name == "nt":
+            rawapi.exit()
