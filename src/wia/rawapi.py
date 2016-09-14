@@ -12,14 +12,14 @@ def init():
 
 def open(devid):
     out = _rawapi.open(devid)
-    if not out:
+    if out is None:
         raise WIAException("Failed to open {}".format(devid))
     return out
 
 
 def get_sources(dev):
     sources = _rawapi.get_sources(dev)
-    if not sources:
+    if sources is None:
         raise WIAException("Failed to get sources")
     return sources
 
@@ -30,6 +30,6 @@ def exit():
 
 def get_devices():
     devices = _rawapi.get_devices()
-    if not devices:
+    if devices is None:
         raise WIAException("Failed to get device list")
     return devices
