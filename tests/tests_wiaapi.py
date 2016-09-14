@@ -54,3 +54,23 @@ class TestOpenDevice(unittest.TestCase):
     def tearDown(self):
         if os.name == "nt":
             rawapi.exit()
+
+
+class TestGetSources(unittest.TestCase):
+    def setUp(selfself):
+        if os.name == "nt":
+            rawapi.init()
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_get_sources(self):
+        devices = rawapi.get_devices()
+        self.assertTrue(len(devices) > 0)
+        devid = devices[0][0]
+        dev = rawapi.open(devid)
+        self.assertNotEqual(dev, None)
+        sources = rawapi.get_sources(dev)
+        self.assertTrue(len(sources) > 0)
+
+    def tearDown(self):
+        if os.name == "nt":
+            rawapi.exit()
