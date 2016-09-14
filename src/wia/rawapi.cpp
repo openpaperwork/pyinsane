@@ -400,6 +400,7 @@ static const struct wia_prop_int g_possible_segmentation[] = {
 
 struct wia_property {
     PROPID id;
+    VARTYPE vartype;
     const char *name;
     int rw;
     const void *possible_values;
@@ -408,389 +409,394 @@ struct wia_property {
 static const struct wia_property g_all_properties[] =
 {
     {
-        WIA_DPA_CONNECT_STATUS, "connect_status", 0, g_possible_connect_status,
+        WIA_DPA_CONNECT_STATUS, VT_I4, "connect_status", 0, g_possible_connect_status,
     },
     {
-        WIA_DPA_DEVICE_TIME, "device_time", 0, NULL,
+        WIA_DPA_DEVICE_TIME, VT_VECTOR | VT_UI2, "device_time", 0, NULL,
     },
     {
-        WIA_DPA_FIRMWARE_VERSION, "firmware version", 0, NULL,
+        WIA_DPA_FIRMWARE_VERSION, VT_BSTR, "firmware version", 0, NULL,
     },
     {
-        WIA_IPA_ACCESS_RIGHTS, "access_rights", 1,
-        g_possible_access_rights,
+        WIA_IPA_ACCESS_RIGHTS, VT_I4, "access_rights", 1, g_possible_access_rights,
     },
     {
-        WIA_IPA_BITS_PER_CHANNEL, "bits_per_channel", 0, NULL,
+        WIA_IPA_BITS_PER_CHANNEL, VT_I4, "bits_per_channel", 0, NULL,
     },
     {
-        WIA_IPA_BUFFER_SIZE, "buffer_size", 0, NULL,
+        WIA_IPA_BUFFER_SIZE, VT_I4, "buffer_size", 0, NULL,
     },
     {
-        WIA_IPA_BYTES_PER_LINE, "bytes_per_line", 0, NULL,
+        WIA_IPA_BYTES_PER_LINE, VT_I4, "bytes_per_line", 0, NULL,
     },
     {
-        WIA_IPA_CHANNELS_PER_PIXEL, "channels_per_pixel", 0, NULL,
+        WIA_IPA_CHANNELS_PER_PIXEL, VT_I4, "channels_per_pixel", 0, NULL,
     },
     {
-        WIA_IPA_COLOR_PROFILE, "color_profile", 0, NULL,
+        WIA_IPA_COLOR_PROFILE, VT_I4, "color_profile", 0, NULL,
     },
     {
-        WIA_IPA_COMPRESSION, "compression", 1, g_possible_compression,
+        WIA_IPA_COMPRESSION, VT_I4, "compression", 1, g_possible_compression,
     },
     {
-        WIA_IPA_DATATYPE, "datatype", 1, g_possible_datatype,
+        WIA_IPA_DATATYPE, VT_I4, "datatype", 1, g_possible_datatype,
     },
     {
-        WIA_IPA_DEPTH, "depth", 1, NULL,
+        WIA_IPA_DEPTH, VT_I4, "depth", 1, NULL,
     },
     {
-        WIA_IPA_FILENAME_EXTENSION, "filename_extension", 0, NULL,
+        WIA_IPA_FILENAME_EXTENSION, VT_BSTR, "filename_extension", 0, NULL,
     },
     {
-        WIA_IPA_FORMAT, "format", 1, g_possible_format,
+        WIA_IPA_FORMAT, VT_CLSID, "format", 1, g_possible_format,
     },
     {
-        WIA_IPA_FULL_ITEM_NAME, "full_item_name", 0, NULL,
+        WIA_IPA_FULL_ITEM_NAME, VT_BSTR, "full_item_name", 0, NULL,
     },
     {
-        WIA_IPA_GAMMA_CURVES, "gamma_curves", 0, NULL,
+        WIA_IPA_GAMMA_CURVES, VT_I4, "gamma_curves", 0, NULL,
     },
     {
-        WIA_IPA_ICM_PROFILE_NAME, "icm_profile_name", 0, NULL,
+        WIA_IPA_ICM_PROFILE_NAME, VT_BSTR, "icm_profile_name", 0, NULL,
     },
     {
-        WIA_IPA_ITEM_CATEGORY, "item_category", 0, g_possible_item_category,
+        WIA_IPA_ITEM_CATEGORY, VT_CLSID, "item_category", 0, g_possible_item_category,
     },
     {
-        WIA_IPA_ITEM_FLAGS, "item_flags", 0, g_possible_item_flags,
+        WIA_IPA_ITEM_FLAGS, VT_I4, "item_flags", 0, g_possible_item_flags,
     },
     {
-        WIA_IPA_ITEM_NAME, "item_name", 0, NULL,
+        WIA_IPA_ITEM_NAME, VT_BSTR, "item_name", 0, NULL,
     },
     {
-        WIA_IPA_ITEM_SIZE, "item_size", 0, NULL,
+        WIA_IPA_ITEM_SIZE, VT_I4, "item_size", 0, NULL,
     },
     {
-        WIA_IPA_ITEM_TIME, "item_time", 1, NULL,
+        WIA_IPA_ITEM_TIME, VT_UI2 | VT_VECTOR, "item_time", 1, NULL,
     },
     {
-        WIA_IPA_ITEMS_STORED, "items_stored", 1, NULL,
+        WIA_IPA_ITEMS_STORED, VT_I4, "items_stored", 1, NULL,
     },
     {
-        WIA_IPA_MIN_BUFFER_SIZE, "buffer_size", 0, NULL,
+        WIA_IPA_MIN_BUFFER_SIZE, VT_I4, "buffer_size", 0, NULL,
     },
     {
-        WIA_IPA_NUMBER_OF_LINES, "number_of_lines", 0, NULL,
+        WIA_IPA_NUMBER_OF_LINES, VT_I4, "number_of_lines", 0, NULL,
     },
     {
-        WIA_IPA_PIXELS_PER_LINE, "pixels_per_line", 0, NULL,
+        WIA_IPA_PIXELS_PER_LINE, VT_I4, "pixels_per_line", 0, NULL,
     },
     {
-        WIA_IPA_PLANAR, "planar", 1, g_possible_planar,
+        WIA_IPA_PLANAR, VT_I4, "planar", 1, g_possible_planar,
     },
     {
-        WIA_IPA_PREFERRED_FORMAT, "preferred_format", 0, g_possible_format,
+        WIA_IPA_PREFERRED_FORMAT, VT_CLSID, "preferred_format", 0, g_possible_format,
     },
     {
-        WIA_IPA_PROP_STREAM_COMPAT_ID, "prop_stream_compat_id", 0, NULL,
+        WIA_IPA_PROP_STREAM_COMPAT_ID, VT_CLSID, "prop_stream_compat_id", 0, NULL,
     },
     {
-        WIA_IPA_RAW_BITS_PER_CHANNEL, "raw_bits_per_channel", 0, NULL,
+        WIA_IPA_RAW_BITS_PER_CHANNEL, VT_UI1 | VT_VECTOR, "raw_bits_per_channel", 0, NULL,
     },
     {
-        WIA_IPA_REGION_TYPE, "region_type", 0, NULL,
+        WIA_IPA_REGION_TYPE, VT_I4, "region_type", 0, NULL,
     },
     {
-        WIA_IPA_SUPPRESS_PROPERTY_PAGE, "suppress_property_page", 0, g_possible_suppress_property_page,
+        WIA_IPA_SUPPRESS_PROPERTY_PAGE, VT_I4, "suppress_property_page", 0, g_possible_suppress_property_page,
     },
     {
-        WIA_IPA_TYMED, "tymed", 1, g_possible_tymed,
+        WIA_IPA_TYMED, VT_I4, "tymed", 1, g_possible_tymed,
     },
     {
-        WIA_IPA_UPLOAD_ITEM_SIZE, "upload_item_size", 1, NULL,
+        WIA_IPA_UPLOAD_ITEM_SIZE, VT_I4, "upload_item_size", 1, NULL,
     },
     {
-        WIA_DIP_DEV_ID, "dev_id", 0, NULL,
+        WIA_DIP_DEV_ID, VT_BSTR, "dev_id", 0, NULL,
     },
     {
-        WIA_DIP_VEND_DESC, "vend_desc", 0, NULL,
+        WIA_DIP_VEND_DESC, VT_BSTR, "vend_desc", 0, NULL,
     },
     {
-        WIA_DIP_DEV_DESC, "dev_desc", 0, NULL,
+        WIA_DIP_DEV_DESC, VT_BSTR, "dev_desc", 0, NULL,
     },
     {
-        WIA_DIP_DEV_TYPE, "dev_type", 0, g_possible_dev_type,
+        WIA_DIP_DEV_TYPE, VT_I4, "dev_type", 0, g_possible_dev_type,
     },
     {
-        WIA_DIP_PORT_NAME, "port_name", 0, NULL,
+        WIA_DIP_PORT_NAME, VT_BSTR, "port_name", 0, NULL,
     },
     {
-        WIA_DIP_DEV_NAME, "dev_name", 0, NULL,
+        WIA_DIP_DEV_NAME, VT_BSTR, "dev_name", 0, NULL,
     },
     {
-        WIA_DIP_SERVER_NAME, "server_name", 0, NULL,
+        WIA_DIP_SERVER_NAME, VT_BSTR, "server_name", 0, NULL,
     },
     {
-        WIA_DIP_REMOTE_DEV_ID, "remote_dev_id", 0, NULL,
+        WIA_DIP_REMOTE_DEV_ID, VT_BSTR, "remote_dev_id", 0, NULL,
     },
     {
-        WIA_DIP_UI_CLSID, "ui_clsid", 0, NULL,
+        WIA_DIP_UI_CLSID, VT_BSTR, "ui_clsid", 0, NULL,
     },
     {
-        WIA_DIP_HW_CONFIG, "hw_config", 0, g_possible_hw_config,
+        WIA_DIP_HW_CONFIG, VT_I4, "hw_config", 0, g_possible_hw_config,
     },
     {
-        WIA_DIP_BAUDRATE, "baudrate", 0, NULL,
+        WIA_DIP_BAUDRATE, VT_BSTR, "baudrate", 0, NULL,
     },
     {
-        WIA_DIP_STI_GEN_CAPABILITIES, "sti_gen_capabilities", 0, NULL,
+        WIA_DIP_STI_GEN_CAPABILITIES, VT_I4, "sti_gen_capabilities", 0, NULL,
     },
     {
-        WIA_DIP_WIA_VERSION, "wia_version", 0, NULL,
+        WIA_DIP_WIA_VERSION, VT_BSTR, "wia_version", 0, NULL,
     },
     {
-        WIA_DIP_DRIVER_VERSION, "driver_version", 0, NULL,
+        WIA_DIP_DRIVER_VERSION, VT_BSTR, "driver_version", 0, NULL,
     },
     {
-        WIA_DIP_PNP_ID, "pnp_id", 0, NULL,
+        WIA_DIP_PNP_ID, VT_BSTR, "pnp_id", 0, NULL,
     },
     {
-        WIA_DIP_STI_DRIVER_VERSION, "sti_driver_version", 0, NULL,
+        WIA_DIP_STI_DRIVER_VERSION, VT_BSTR, "sti_driver_version", 0, NULL,
     },
     {
-        WIA_DPS_DEVICE_ID, "device_id", 0, NULL,
+        WIA_DPS_DEVICE_ID, VT_BSTR, "device_id", 0, NULL,
     },
     {
-        WIA_DPS_DOCUMENT_HANDLING_CAPABILITIES, "document_handling_capabilities", 0, g_possible_document_handling_capabilities,
+        WIA_DPS_DOCUMENT_HANDLING_CAPABILITIES, VT_I4,
+        "document_handling_capabilities", 0, g_possible_document_handling_capabilities,
     },
     {
-        WIA_DPS_DOCUMENT_HANDLING_SELECT, "document_handling_select", 1, g_possible_document_handling_select,
+        WIA_DPS_DOCUMENT_HANDLING_SELECT, VT_I4, "document_handling_select", 1, g_possible_document_handling_select,
     },
     {
-        WIA_DPS_DOCUMENT_HANDLING_STATUS, "document_handling_status", 0, g_possible_document_handling_status,
+        WIA_DPS_DOCUMENT_HANDLING_STATUS, VT_I4, "document_handling_status", 0, g_possible_document_handling_status,
     },
     {
-        WIA_DPS_ENDORSER_CHARACTERS, "endorser_characters", 0, NULL,
+        WIA_DPS_ENDORSER_CHARACTERS, VT_BSTR, "endorser_characters", 0, NULL,
     },
     {
-        WIA_DPS_ENDORSER_STRING, "endorser_string", 1, NULL,
+        WIA_DPS_ENDORSER_STRING, VT_BSTR, "endorser_string", 1, NULL,
     },
     {
-        WIA_DPS_GLOBAL_IDENTITY, "global_identity", 0, NULL,
+        WIA_DPS_GLOBAL_IDENTITY, VT_BSTR, "global_identity", 0, NULL,
     },
     {
-        WIA_DPS_HORIZONTAL_BED_REGISTRATION, "horizontal_bed_registration", 0, g_possible_horizontal_bed_registration,
+        WIA_DPS_HORIZONTAL_BED_REGISTRATION, VT_I4,
+        "horizontal_bed_registration", 0, g_possible_horizontal_bed_registration,
     },
     {
-        WIA_DPS_HORIZONTAL_BED_SIZE, "horizontal_bed_size", 0, NULL,
+        WIA_DPS_HORIZONTAL_BED_SIZE, VT_I4, "horizontal_bed_size", 0, NULL,
     },
     {
-        WIA_DPS_HORIZONTAL_SHEET_FEED_SIZE, "horizontal_sheet_feed_size", 0, NULL,
+        WIA_DPS_HORIZONTAL_SHEET_FEED_SIZE, VT_I4, "horizontal_sheet_feed_size", 0, NULL,
     },
     {
-        WIA_DPS_MAX_SCAN_TIME, "max_scan_time", 0, NULL,
+        WIA_DPS_MAX_SCAN_TIME, VT_I4, "max_scan_time", 0, NULL,
     },
     {
-        WIA_DPS_MIN_HORIZONTAL_SHEET_FEED_SIZE, "min_horizontal_sheet_feed_size", 0, NULL,
+        WIA_DPS_MIN_HORIZONTAL_SHEET_FEED_SIZE, VT_I4, "min_horizontal_sheet_feed_size", 0, NULL,
     },
     {
-        WIA_DPS_MIN_VERTICAL_SHEET_FEED_SIZE, "min_vertical_sheet_feed_size", 0, NULL,
+        WIA_DPS_MIN_VERTICAL_SHEET_FEED_SIZE, VT_I4, "min_vertical_sheet_feed_size", 0, NULL,
     },
     {
-        WIA_DPS_OPTICAL_XRES, "optical_xres", 0, NULL,
+        WIA_DPS_OPTICAL_XRES, VT_I4, "optical_xres", 0, NULL,
     },
     {
-        WIA_DPS_OPTICAL_YRES, "optical_yres", 0, NULL,
+        WIA_DPS_OPTICAL_YRES, VT_I4, "optical_yres", 0, NULL,
     },
     // TODO(JFlesch): Visual C++ says WIA_DPS_ORIENTATION doesn't exist ?!
     //{
-    //    WIA_DPS_ORIENTATION, "orientation", 1, g_possible_orientation,
+    //    WIA_DPS_ORIENTATION, VT_I4, "orientation", 1, g_possible_orientation,
     //},
     {
-        WIA_DPS_PAD_COLOR, "pad_color", 0, NULL,
+        WIA_DPS_PAD_COLOR, VT_UI1 | VT_VECTOR, "pad_color", 0, NULL,
     },
     {
-        WIA_DPS_PAGE_HEIGHT, "page_height", 0, NULL,
+        WIA_DPS_PAGE_HEIGHT, VT_I4, "page_height", 0, NULL,
     },
     {
-        WIA_DPS_PAGE_SIZE, "page_size", 1, g_possible_page_size,
+        WIA_DPS_PAGE_SIZE, VT_I4, "page_size", 1, g_possible_page_size,
     },
     {
-        WIA_DPS_PAGE_WIDTH, "page_width", 0, NULL,
+        WIA_DPS_PAGE_WIDTH, VT_I4, "page_width", 0, NULL,
     },
     {
-        WIA_DPS_PAGES, "pages", 1, NULL,
+        WIA_DPS_PAGES, VT_I4, "pages", 1, NULL,
     },
     {
-        WIA_DPS_PLATEN_COLOR, "platen_color", 0, NULL,
+        WIA_DPS_PLATEN_COLOR, VT_UI1 | VT_VECTOR, "platen_color", 0, NULL,
     },
     {
-        WIA_DPS_PREVIEW, "preview", 1, g_possible_preview,
+        WIA_DPS_PREVIEW, VT_I4, "preview", 1, g_possible_preview,
     },
     {
-        WIA_DPS_SCAN_AHEAD_PAGES, "scan_ahead_pages", 1, NULL,
+        WIA_DPS_SCAN_AHEAD_PAGES, VT_I4, "scan_ahead_pages", 1, NULL,
     },
     {
-        WIA_DPS_SCAN_AVAILABLE_ITEM, "scan_available_item", 1, NULL,
+        WIA_DPS_SCAN_AVAILABLE_ITEM, VT_I4, "scan_available_item", 1, NULL,
     },
     {
-        WIA_DPS_SERVICE_ID, "service_id", 0, NULL,
+        WIA_DPS_SERVICE_ID, VT_BSTR, "service_id", 0, NULL,
     },
     {
-        WIA_DPS_SHEET_FEEDER_REGISTRATION, "sheet_feeder_registration", 0, g_possible_sheet_feeder_registration,
+        WIA_DPS_SHEET_FEEDER_REGISTRATION, VT_I4,
+        "sheet_feeder_registration", 0, g_possible_sheet_feeder_registration,
     },
     {
-        WIA_DPS_SHOW_PREVIEW_CONTROL, "show_preview_control", 0, g_possible_show_preview_control,
+        WIA_DPS_SHOW_PREVIEW_CONTROL, VT_I4, "show_preview_control", 0, g_possible_show_preview_control,
     },
     {
-        WIA_DPS_USER_NAME, "user_name", 0, NULL,
+        WIA_DPS_USER_NAME, VT_BSTR, "user_name", 0, NULL,
     },
     {
-        WIA_DPS_VERTICAL_BED_REGISTRATION, "vertical_bed_registration", 0, g_possible_vertical_bed_registration,
+        WIA_DPS_VERTICAL_BED_REGISTRATION, VT_I4, "vertical_bed_registration", 0, g_possible_vertical_bed_registration,
     },
     {
-        WIA_DPS_VERTICAL_BED_SIZE, "vertical_bed_size", 0, NULL,
+        WIA_DPS_VERTICAL_BED_SIZE, VT_I4, "vertical_bed_size", 0, NULL,
     },
     {
-        WIA_DPS_VERTICAL_SHEET_FEED_SIZE, "vertical_sheet_feed_size", 0, NULL,
+        WIA_DPS_VERTICAL_SHEET_FEED_SIZE, VT_I4, "vertical_sheet_feed_size", 0, NULL,
     },
     {
-        WIA_IPS_AUTO_DESKEW, "auto_deskew", 1, g_possible_auto_deskew,
+        WIA_IPS_AUTO_DESKEW, VT_I4, "auto_deskew", 1, g_possible_auto_deskew,
     },
     {
-        WIA_IPS_BRIGHTNESS, "brightness", 1, NULL,
+        WIA_IPS_BRIGHTNESS, VT_I4, "brightness", 1, NULL,
     },
     {
-        WIA_IPS_CONTRAST, "contrast", 1, NULL,
+        WIA_IPS_CONTRAST, VT_I4, "contrast", 1, NULL,
     },
     {
-        WIA_IPS_CUR_INTENT, "current_intent", 1, g_possible_intent,
+        WIA_IPS_CUR_INTENT, VT_I4, "current_intent", 1, g_possible_intent,
     },
     {
-        WIA_IPS_DESKEW_X, "deskew_x", 1, NULL,
+        WIA_IPS_DESKEW_X, VT_I4, "deskew_x", 1, NULL,
     },
     {
-        WIA_IPS_DESKEW_Y, "deskew_y", 1, NULL,
+        WIA_IPS_DESKEW_Y, VT_I4, "deskew_y", 1, NULL,
     },
     {
-        WIA_IPS_DOCUMENT_HANDLING_SELECT, "document_handling_select", 1, g_possible_document_handling_select,
+        WIA_IPS_DOCUMENT_HANDLING_SELECT, VT_I4, "document_handling_select", 1, g_possible_document_handling_select,
     },
     {
-        WIA_IPS_FILM_NODE_NAME, "film_node_name", 0, NULL,
+        WIA_IPS_FILM_NODE_NAME, VT_BSTR, "film_node_name", 0, NULL,
     },
     {
-        WIA_IPS_FILM_SCAN_MODE, "file_scan_mode", 1, g_possible_film_scan_mode,
+        WIA_IPS_FILM_SCAN_MODE, VT_BSTR, "file_scan_mode", 1, g_possible_film_scan_mode,
     },
     {
-        WIA_IPS_INVERT, "invert", 0, NULL,
+        WIA_IPS_INVERT, VT_I4, "invert", 0, NULL,
     },
     {
-        WIA_IPA_ITEMS_STORED, "items_stored", 0, NULL,
+        WIA_IPA_ITEMS_STORED, VT_I4, "items_stored", 0, NULL,
     },
     {
-        WIA_IPS_LAMP, "lamp", 1, g_possible_lamp,
+        WIA_IPS_LAMP, VT_I4, "lamp", 1, g_possible_lamp,
     },
     {
-        WIA_IPS_LAMP_AUTO_OFF, "lamp_auto_off", 1, NULL,
+        WIA_IPS_LAMP_AUTO_OFF, VT_UI4, "lamp_auto_off", 1, NULL,
     },
     {
-        WIA_IPS_MAX_HORIZONTAL_SIZE, "max_horizontal_size", 0, NULL,
+        WIA_IPS_MAX_HORIZONTAL_SIZE, VT_I4, "max_horizontal_size", 0, NULL,
     },
     {
-        WIA_IPS_MAX_VERTICAL_SIZE, "max_vertical_size", 0, NULL,
+        WIA_IPS_MAX_VERTICAL_SIZE, VT_I4, "max_vertical_size", 0, NULL,
     },
     {
-        WIA_IPS_MIN_HORIZONTAL_SIZE, "min_horizontal_size", 0, NULL,
+        WIA_IPS_MIN_HORIZONTAL_SIZE, VT_I4, "min_horizontal_size", 0, NULL,
     },
     {
-        WIA_IPS_MIN_VERTICAL_SIZE, "min_vertical_size", 0, NULL,
+        WIA_IPS_MIN_VERTICAL_SIZE, VT_I4, "min_vertical_size", 0, NULL,
     },
     {
-        WIA_IPS_MIRROR, "mirror", 0, NULL,
+        WIA_IPS_MIRROR, VT_I4, "mirror", 0, NULL,
     },
     {
-        WIA_IPS_OPTICAL_XRES, "optical_xres", 0, NULL,
+        WIA_IPS_OPTICAL_XRES, VT_I4, "optical_xres", 0, NULL,
     },
     {
-        WIA_IPS_OPTICAL_YRES, "optical_yres", 0, NULL,
+        WIA_IPS_OPTICAL_YRES, VT_I4, "optical_yres", 0, NULL,
     },
     {
-        WIA_IPS_ORIENTATION, "orientation", 1, g_possible_orientation,
+        WIA_IPS_ORIENTATION, VT_I4, "orientation", 1, g_possible_orientation,
     },
     {
-        WIA_IPS_PAGE_SIZE, "page_size", 1, g_possible_page_size,
+        WIA_IPS_PAGE_SIZE, VT_I4, "page_size", 1, g_possible_page_size,
     },
     {
-        WIA_IPS_PAGE_HEIGHT, "page_height", 0, NULL,
+        WIA_IPS_PAGE_HEIGHT, VT_I4, "page_height", 0, NULL,
     },
     {
-        WIA_IPS_PAGE_WIDTH, "page_width", 0, NULL,
+        WIA_IPS_PAGE_WIDTH, VT_I4, "page_width", 0, NULL,
     },
     {
-        WIA_IPS_PAGES, "pages", 1, NULL,
+        WIA_IPS_PAGES, VT_I4, "pages", 1, NULL,
     },
     {
-        WIA_IPS_PHOTOMETRIC_INTERP, "photometric_interp", 1, g_possible_photometric_interp,
+        WIA_IPS_PHOTOMETRIC_INTERP, VT_I4, "photometric_interp", 1, g_possible_photometric_interp,
     },
     {
-        WIA_IPS_PREVIEW, "preview", 1, g_possible_preview,
+        WIA_IPS_PREVIEW, VT_I4, "preview", 1, g_possible_preview,
     },
     {
-        WIA_IPS_PREVIEW_TYPE, "preview_type", 0, g_possible_preview_type,
+        WIA_IPS_PREVIEW_TYPE, VT_I4, "preview_type", 0, g_possible_preview_type,
     },
     {
-        WIA_IPS_ROTATION, "rotation", 1, g_possible_rotation,
+        WIA_IPS_ROTATION, VT_I4, "rotation", 1, g_possible_rotation,
     },
     {
-        WIA_IPS_SEGMENTATION, "segmentation", 0, g_possible_segmentation,
+        WIA_IPS_SEGMENTATION, VT_I4, "segmentation", 0, g_possible_segmentation,
     },
     {
-        WIA_IPS_SHEET_FEEDER_REGISTRATION, "sheet_feeder_registration", 0, g_possible_sheet_feeder_registration,
+        WIA_IPS_SHEET_FEEDER_REGISTRATION, VT_I4, "sheet_feeder_registration",
+        0, g_possible_sheet_feeder_registration,
     },
     {
-        WIA_IPS_SHOW_PREVIEW_CONTROL, "show_preview_control", 0, g_possible_show_preview_control,
+        WIA_IPS_SHOW_PREVIEW_CONTROL, VT_I4, "show_preview_control",
+        0, g_possible_show_preview_control,
     },
     {
-        WIA_IPS_SUPPORTS_CHILD_ITEM_CREATION, "supportes_child_item_creation", 0, NULL,
+        WIA_IPS_SUPPORTS_CHILD_ITEM_CREATION, VT_I4, "supportes_child_item_creation", 0, NULL,
     },
     {
-        WIA_IPS_THRESHOLD, "threshold", 1, NULL,
+        WIA_IPS_THRESHOLD, VT_I4, "threshold", 1, NULL,
     },
     {
-        WIA_IPS_TRANSFER_CAPABILITIES, "transfer_capabilities", 0, NULL,
+        WIA_IPS_TRANSFER_CAPABILITIES, VT_I4, "transfer_capabilities", 0, NULL,
     },
     {
-        WIA_IPA_UPLOAD_ITEM_SIZE, "upload_item_size", 1, NULL,
+        WIA_IPA_UPLOAD_ITEM_SIZE, VT_I4, "upload_item_size", 1, NULL,
     },
     {
-        WIA_IPS_WARM_UP_TIME, "warm_up_time", 0, NULL,
+        WIA_IPS_WARM_UP_TIME, VT_I4, "warm_up_time", 0, NULL,
     },
     {
-        WIA_IPS_XEXTENT, "xextent", 1, NULL,
+        WIA_IPS_XEXTENT, VT_I4, "xextent", 1, NULL,
     },
     {
-        WIA_IPS_XPOS, "xpos", 1, NULL,
+        WIA_IPS_XPOS, VT_I4, "xpos", 1, NULL,
     },
     {
-        WIA_IPS_XRES, "xres", 1, NULL,
+        WIA_IPS_XRES, VT_I4, "xres", 1, NULL,
     },
     {
-        WIA_IPS_XSCALING, "xscaling", 1, NULL,
+        WIA_IPS_XSCALING, VT_I4, "xscaling", 1, NULL,
     },
     {
-        WIA_IPS_YEXTENT, "yextent", 1, NULL,
+        WIA_IPS_YEXTENT, VT_I4, "yextent", 1, NULL,
     },
     {
-        WIA_IPS_YPOS, "ypos", 1, NULL,
+        WIA_IPS_YPOS, VT_I4, "ypos", 1, NULL,
     },
     {
-        WIA_IPS_YRES, "yres", 1, NULL,
+        WIA_IPS_YRES, VT_I4, "yres", 1, NULL,
     },
     {
-        WIA_IPS_YSCALING, "yscaling", 1, NULL,
+        WIA_IPS_YSCALING, VT_I4, "yscaling", 1, NULL,
     }
 };
+
 
 static PyObject *init(PyObject *, PyObject* args)
 {
