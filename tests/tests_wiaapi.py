@@ -37,7 +37,7 @@ class TestGetDevices(unittest.TestCase):
 
 
 class TestOpenDevice(unittest.TestCase):
-    def setUp(selfself):
+    def setUp(self):
         if os.name == "nt":
             rawapi.init()
 
@@ -57,9 +57,10 @@ class TestOpenDevice(unittest.TestCase):
 
 
 class TestGetSources(unittest.TestCase):
-    def setUp(selfself):
-        if os.name == "nt":
-            rawapi.init()
+    def setUp(self):
+        if os.name != "nt":
+            return
+        rawapi.init()
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_get_sources(self):
@@ -72,5 +73,33 @@ class TestGetSources(unittest.TestCase):
         self.assertTrue(len(sources) > 0)
 
     def tearDown(self):
-        if os.name == "nt":
-            rawapi.exit()
+        if os.name != "nt":
+            return
+        rawapi.exit()
+
+
+class TestGetProperties(unittest.TestCase):
+    def setUp(self):
+        if os.name != "nt":
+            return
+        rawapi.init()
+        devices = rawapi.get_devices()
+        devid = devices[0][0]
+        self.dev = rawapi.open(devid)
+        self.sources = rawapi.get_sources(self.dev)
+        self.assertTrue(len(self.sources) > 0)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_get_dev_properties(self):
+        props = rawapi.get_properties(self.dev)
+        self.assertTrue(len(props) > 0)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_get_src_properties(self):
+        props = rawapi.get_properties(self.sources[0][1])
+        self.assertTrue(len(props) > 0)
+
+    def tearDown(self):
+        if os.name != "nt":
+            return
+        rawapi.exit()

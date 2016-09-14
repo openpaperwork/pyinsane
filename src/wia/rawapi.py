@@ -17,6 +17,13 @@ def open(devid):
     return out
 
 
+def get_devices():
+    devices = _rawapi.get_devices()
+    if devices is None:
+        raise WIAException("Failed to get device list")
+    return devices
+
+
 def get_sources(dev):
     sources = _rawapi.get_sources(dev)
     if sources is None:
@@ -24,12 +31,14 @@ def get_sources(dev):
     return sources
 
 
+def get_properties(dev_or_src):
+    properties = _rawapi.get_properties(dev_or_src)
+    if properties is None:
+        raise WIAException("Failed to get scanner properties")
+    return properties
+
+
 def exit():
     _rawapi.exit()
 
 
-def get_devices():
-    devices = _rawapi.get_devices()
-    if devices is None:
-        raise WIAException("Failed to get device list")
-    return devices

@@ -1,7 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <windows.h>
 #include <atlbase.h>
@@ -18,6 +19,8 @@
 
 #define WIA_PYCAPSULE_DEV_NAME "WIA device"
 #define WIA_PYCAPSULE_SRC_NAME "WIA source"
+
+#define WIA_COUNT_OF(x) (sizeof(x) / sizeof(x[0]))
 
 struct wia_device {
     IWiaDevMgr2 *dev_manager;
@@ -175,7 +178,7 @@ static const struct wia_prop_int g_possible_dev_type[] = {
     { StiDeviceTypeDefault, "default", },
     { StiDeviceTypeScanner, "scanner", },
     { StiDeviceTypeDigitalCamera, "digital_camera", },
-    { StiDeviceTypeStreamingVideo, "steaming_video", },
+    { StiDeviceTypeStreamingVideo, "streaming_video", },
     { -1, NULL, },
 };
 
@@ -1052,6 +1055,193 @@ static PyObject *get_sources(PyObject *, PyObject *args)
     return all_sources;
 }
 
+
+static IWiaItem2 *capsule2item(PyObject *capsule)
+{
+    struct wia_device *wia_dev;
+    struct wia_source *wia_src;
+
+    if (!PyCapsule_CheckExact(capsule)) {
+        WIA_WARNING("Pyinsane: WARNING: invalid argument type (not a pycapsule)");
+        return NULL;
+    }
+
+    if (strcmp(PyCapsule_GetName(capsule), WIA_PYCAPSULE_DEV_NAME) == 0) {
+        wia_dev = (struct wia_device *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_DEV_NAME);
+        if (wia_dev != NULL)
+            return wia_dev->device;
+    }
+
+    if (strcmp(PyCapsule_GetName(capsule), WIA_PYCAPSULE_SRC_NAME) == 0) {
+        wia_src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
+        if (wia_src != NULL)
+            return wia_src->source;
+    }
+
+    WIA_WARNING("Pyinsane: WARNING: Invalid argument type (not a known pycapsule type)");
+    return NULL;
+}
+
+
+static PyObject *int_to_pyobject(const struct wia_property *property, long value)
+{
+    const struct wia_prop_int *values;
+    int i;
+    PyObject *out;
+
+    if (property->possible_values == NULL)
+        return PyLong_FromLong(value);
+    values = (const struct wia_prop_int *)property->possible_values;
+    for (i = 0 ; values[i].name != NULL ; i++) {
+        if (values[i].value == value)
+            return PyUnicode_FromString(values[i].name);
+    }
+
+    char str[256];
+    str[0] = '\0';
+    str[sizeof(str)-1] = '\0';
+
+    for (i = 0 ; values[i].name != NULL ; i++) {
+        if (value & values[i].value) {
+            if (str[0] == '\0')
+                strncpy_s(str, values[i].name, sizeof(str) - 1);
+            else {
+                strncat_s(str, ",", sizeof(str) - 1);
+                strncat_s(str, values[i].name, sizeof(str) - 1);
+            }
+        }
+    }
+    if (str[0] != '\0') {
+        out = PyUnicode_FromString(str);
+        return out;
+    }
+
+    return PyLong_FromLong(value);
+}
+
+
+static PyObject *clsid_to_pyobject(const struct wia_property *property, CLSID value)
+{
+    const struct wia_prop_clsid *values;
+    int i;
+
+    assert(property->possible_values != NULL);
+    values = (const struct wia_prop_clsid *)property->possible_values;
+    for (i = 0 ; NULL != values[i].name ; i++) {
+        if (values[i].value == value)
+            return PyUnicode_FromString(values[i].name);
+    }
+    WIA_WARNING("Pyinsane: WARNING: Got unknown clsid from driver");
+    return NULL;
+}
+
+
+static PyObject *get_properties(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    IWiaItem2 *item;
+    PROPSPEC *input;
+    PROPVARIANT *output;
+    int i;
+    HRESULT hr;
+    PyObject *all_props;
+    PyObject *propname;
+    PyObject *propvalue;
+    PyObject *prop;
+
+
+    if (!PyArg_ParseTuple(args, "O", &capsule)) {
+        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
+        return NULL;
+    }
+
+    item = capsule2item(capsule);
+    if (item == NULL)
+        Py_RETURN_NONE;
+
+    input = (PROPSPEC *)calloc(WIA_COUNT_OF(g_all_properties), sizeof(PROPSPEC));
+    output = (PROPVARIANT *)calloc(WIA_COUNT_OF(g_all_properties), sizeof(PROPVARIANT));
+
+    for (i = 0 ; i < WIA_COUNT_OF(g_all_properties) ; i++) {
+        input[i].ulKind = PRSPEC_PROPID;
+        input[i].propid = g_all_properties[i].id;
+    }
+
+    CComQIPtr<IWiaPropertyStorage> properties(item);
+    hr = properties->ReadMultiple(WIA_COUNT_OF(g_all_properties), input, output);
+    if (FAILED(hr)) {
+        WIA_WARNING("Pyinsane: WARNING: WiaPropertyStorage->ReadMultiple() failed");
+        free(input);
+        free(output);
+        Py_RETURN_NONE;
+    }
+    free(input);
+
+    all_props = PyList_New(0);
+    for (i = 0 ; i < WIA_COUNT_OF(g_all_properties) ; i++) {
+        if (output[i].vt == 0)
+            continue;
+        if (output[i].vt != g_all_properties[i].vartype) {
+            WIA_WARNING("Pyinsane: WARNING: A property has a type different from the one expected");
+            fprintf(stderr, "Pyinsane: WARNING: Got type %d instead of %d for property \"%s\"\n",
+                output[i].vt, g_all_properties[i].vartype, g_all_properties[i].name
+            );
+            continue;
+        }
+        switch(output[i].vt) {
+            case VT_I4:
+                propvalue = int_to_pyobject(&g_all_properties[i], output[i].lVal);
+                break;
+            case VT_UI4:
+                propvalue = int_to_pyobject(&g_all_properties[i], output[i].ulVal);
+                break;
+            case VT_VECTOR | VT_UI2:
+                // TODO
+                continue;
+            case VT_UI1 | VT_VECTOR:
+                // TODO
+                continue;
+            case VT_BSTR:
+                propvalue = PyUnicode_FromWideChar(output[i].bstrVal, -1);
+                break;
+            case VT_CLSID:
+                propvalue = clsid_to_pyobject(&g_all_properties[i], *output[i].puuid);
+                break;
+            default:
+                assert(0);
+                continue;
+        }
+        if (propvalue == NULL)
+            continue;
+        propname = PyUnicode_FromString(g_all_properties[i].name);
+
+        prop = PyTuple_Pack(2, propname, propvalue);
+        PyList_Append(all_props, prop);
+    }
+
+    free(output);
+    return all_props;
+}
+
+static PyObject *set_property(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    PyObject *prop_name;
+    PyObject *prop_value;
+    IWiaItem2 *item;
+
+    if (!PyArg_ParseTuple(args, "OOO", &capsule, &prop_name, &prop_value)) {
+        WIA_WARNING("Pyinsane: get_sources(): Invalid args");
+        return NULL;
+    }
+    item = capsule2item(capsule);
+    if (item == NULL)
+        Py_RETURN_FALSE;
+    // TODO
+    Py_RETURN_TRUE;
+}
+
+
 static PyObject *exit(PyObject *, PyObject* args)
 {
     if (!PyArg_ParseTuple(args, "")) {
@@ -1067,8 +1257,10 @@ static PyObject *exit(PyObject *, PyObject* args)
 static PyMethodDef rawapi_methods[] = {
 	{"init", init, METH_VARARGS, NULL},
 	{"get_devices", get_devices, METH_VARARGS, NULL},
+	{"get_properties", get_properties, METH_VARARGS, NULL},
 	{"get_sources", get_sources, METH_VARARGS, NULL},
 	{"open", open_device, METH_VARARGS, NULL},
+	{"set_property", set_property, METH_VARARGS, NULL},
 	{"exit", exit, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL},
 };
@@ -1095,4 +1287,5 @@ PyMODINIT_FUNC PyInit__rawapi(void)
 {
 	return PyModule_Create(&rawapi_module);
 }
+
 #endif
