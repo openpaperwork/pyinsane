@@ -51,6 +51,10 @@ class TestOpenDevice(unittest.TestCase):
         del dev
         dev = None
 
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_invalid_open_device(self):
+        self.assertRaises(rawapi.WIAException, rawapi.open, "randomcraphere")
+
     def tearDown(self):
         if os.name == "nt":
             rawapi.exit()
@@ -71,6 +75,12 @@ class TestGetSources(unittest.TestCase):
         self.assertNotEqual(dev, None)
         sources = rawapi.get_sources(dev)
         self.assertTrue(len(sources) > 0)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_invalid_get_sources(self):
+        self.assertRaises(
+            rawapi.WIAException, rawapi.get_sources, "randomcrappyobject"
+        )
 
     def tearDown(self):
         if os.name != "nt":
@@ -99,6 +109,10 @@ class TestGetProperties(unittest.TestCase):
         props = rawapi.get_properties(self.sources[0][1])
         self.assertTrue(len(props) > 0)
 
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_invalid_get_properties(self):
+        self.assertRaises(rawapi.WIAException, rawapi.get_properties, "crappy_obj")
+
     def tearDown(self):
         if os.name != "nt":
             return
@@ -117,7 +131,7 @@ class TestSetProperty(unittest.TestCase):
         self.assertTrue(len(self.sources) > 0)
 
     @unittest.skipIf(os.name != "nt", "Windows only")
-    def test_get_src_property_depth(self):
+    def test_set_src_property_depth(self):
         rawapi.set_property(self.sources[0][1], "depth", 8)
 
         props = rawapi.get_properties(self.sources[0][1])
@@ -135,7 +149,7 @@ class TestSetProperty(unittest.TestCase):
                 self.assertEqual(propvalue, 24)
 
     @unittest.skipIf(os.name != "nt", "Windows only")
-    def test_get_src_property_preview(self):
+    def test_set_src_property_preview(self):
         rawapi.set_property(self.sources[0][1], "preview", "preview_scan")
 
         props = rawapi.get_properties(self.sources[0][1])
@@ -151,6 +165,12 @@ class TestSetProperty(unittest.TestCase):
         for (propname, propvalue, _) in props:
             if (propname == "preview"):
                 self.assertEqual(propvalue, "final_scan")
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_invalid_set_src_property_depth(self):
+        self.assertRaises(rawapi.WIAException, rawapi.set_property, "crapobj", "depth", 8)
+        self.assertRaises(rawapi.WIAException, rawapi.set_property, self.sources[0][1], "crapproperty", 8)
+        self.assertRaises(rawapi.WIAException, rawapi.set_property, self.sources[0][1], "depth", "crapvalue")
 
     def tearDown(self):
         if os.name != "nt":
