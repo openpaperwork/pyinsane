@@ -1049,7 +1049,9 @@ static PyObject *get_sources(PyObject *, PyObject *args)
         source_name = PyUnicode_FromWideChar(output[0].bstrVal, -1);
         capsule = PyCapsule_New(source, WIA_PYCAPSULE_SRC_NAME, free_source);
         tuple = PyTuple_Pack(2, source_name, capsule);
+
         PyList_Append(all_sources, tuple);
+        Py_DECREF(tuple);
     }
 
     return all_sources;
@@ -1148,6 +1150,9 @@ static PyObject *get_properties(PyObject *, PyObject *args)
     PyObject *propname;
     PyObject *propvalue;
     PyObject *prop;
+    PyObject *ro;
+    PyObject *rw;
+    PyObject *access_right;
 
 
     if (!PyArg_ParseTuple(args, "O", &capsule)) {
@@ -1176,6 +1181,9 @@ static PyObject *get_properties(PyObject *, PyObject *args)
         Py_RETURN_NONE;
     }
     free(input);
+
+    ro = PyUnicode_FromString("ro");
+    rw = PyUnicode_FromString("rw");
 
     all_props = PyList_New(0);
     for (i = 0 ; i < WIA_COUNT_OF(g_all_properties) ; i++) {
@@ -1215,8 +1223,12 @@ static PyObject *get_properties(PyObject *, PyObject *args)
             continue;
         propname = PyUnicode_FromString(g_all_properties[i].name);
 
-        prop = PyTuple_Pack(2, propname, propvalue);
+        access_right = (g_all_properties[i].rw ? rw : ro);
+        Py_INCREF(access_right); // PyTuple_Pack steals the ref
+
+        prop = PyTuple_Pack(3, propname, propvalue, access_right);
         PyList_Append(all_props, prop);
+        Py_DECREF(prop);
     }
 
     free(output);
