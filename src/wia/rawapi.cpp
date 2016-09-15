@@ -1216,6 +1216,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
                 propvalue = clsid_to_pyobject(&g_all_properties[i], *output[i].puuid);
                 break;
             default:
+                WIA_WARNING("Pyinsane: WARNING: Unknown var type");
                 assert(0);
                 continue;
         }
@@ -1235,22 +1236,132 @@ static PyObject *get_properties(PyObject *, PyObject *args)
     return all_props;
 }
 
+
+static int py_to_int(const struct wia_property *property_spec, PyObject *pyvalue, int fail_value)
+{
+    char str[256];
+    char *pstr, *nstr;
+    int has_match;
+    int val;
+    int i;
+    const struct wia_prop_int *str2int;
+
+    if (PyLong_Check(pyvalue))
+        return PyLong_AsLong(pyvalue);
+
+    str2int = (const struct wia_prop_int *)property_spec->possible_values;
+    if (PyUnicode_Check(pyvalue) && str2int != NULL) {
+        // parse string
+        strncpy_s(str, PyUnicode_AsUTF8(pyvalue), sizeof(str));
+        val = 0;
+        has_match = 0;
+        pstr = str;
+        while(pstr) {
+            nstr = strchr(pstr, ',');
+            if (nstr) {
+                nstr[0] = '\0';
+                nstr++;
+            }
+            for (i = 0 ; str2int[i].name != NULL ; i++) {
+                if (strcmp(pstr, str2int[i].name) == 0) {
+                    val |= str2int[i].value;
+                    has_match = 1;
+                    break;
+                }
+            }
+            pstr = nstr;
+        }
+
+        if (has_match) {
+            return val;
+        }
+    }
+
+    WIA_WARNING("Pyinsane: WARNING: set_property(): Failed to parse value");
+    return fail_value;
+}
+
+
+static int _set_property(IWiaItem2 *item, const struct wia_property *property_spec, PyObject *pyvalue)
+{
+    HRESULT hr;
+    PROPSPEC propspec;
+    PROPVARIANT propvalue;
+
+    propspec.ulKind = PRSPEC_PROPID;
+    propspec.propid = property_spec->id;
+
+    propvalue.vt = property_spec->vartype;
+
+    switch(property_spec->vartype) {
+        case VT_I4:
+            propvalue.lVal = py_to_int(property_spec, pyvalue, -1);
+            if (propvalue.lVal == -1)
+                return 0;
+            break;
+        case VT_UI4:
+            propvalue.ulVal = py_to_int(property_spec, pyvalue, 0xFFFFFF);
+            if (propvalue.ulVal == 0xFFFFFF)
+                return 0;
+            break;
+        case VT_VECTOR | VT_UI2:
+        case VT_UI1 | VT_VECTOR:
+            WIA_WARNING("Pyinsane: WARNING: Vector not supported yet");
+            // TODO
+            return 0;
+        case VT_BSTR:
+            WIA_WARNING("Pyinsane: WARNING: String not supported yet");
+            // TODO
+            return 0;
+        case VT_CLSID:
+            WIA_WARNING("Pyinsane: WARNING: ClsId not supported yet");
+            // TODO
+            return 0;
+        default:
+            WIA_WARNING("Pyinsane: WARNING: Unknown var type");
+            assert(0);
+            return 0;
+    }
+
+    CComQIPtr<IWiaPropertyStorage> properties(item);
+    hr = properties->WriteMultiple(1, &propspec, &propvalue, property_spec->id);
+    if (FAILED(hr)) {
+        WIA_WARNING("Pyinsane: WARNING: properties->WriteMultiple() failed");
+        return 0;
+    }
+
+    return 1;
+}
+
 static PyObject *set_property(PyObject *, PyObject *args)
 {
     PyObject *capsule;
-    PyObject *prop_name;
-    PyObject *prop_value;
+    PyObject *py_propname;
+    PyObject *py_propvalue;
     IWiaItem2 *item;
+    const char *propname;
+    int i;
 
-    if (!PyArg_ParseTuple(args, "OOO", &capsule, &prop_name, &prop_value)) {
-        WIA_WARNING("Pyinsane: get_sources(): Invalid args");
+    if (!PyArg_ParseTuple(args, "OOO", &capsule, &py_propname, &py_propvalue)) {
+        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
         return NULL;
     }
     item = capsule2item(capsule);
     if (item == NULL)
         Py_RETURN_FALSE;
-    // TODO
-    Py_RETURN_TRUE;
+
+    propname = PyUnicode_AsUTF8(py_propname);
+    for (i = 0 ; i < WIA_COUNT_OF(g_all_properties) ; i++) {
+        if (strcmp(g_all_properties[i].name, propname) != 0)
+            continue;
+        if (!_set_property(item, &g_all_properties[i], py_propvalue)) {
+            Py_RETURN_FALSE;
+        }
+        Py_RETURN_TRUE;
+    }
+
+    WIA_WARNING("Pyinsame: WARNING: set_property(): Property not found");
+    Py_RETURN_FALSE;
 }
 
 

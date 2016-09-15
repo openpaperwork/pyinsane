@@ -103,3 +103,56 @@ class TestGetProperties(unittest.TestCase):
         if os.name != "nt":
             return
         rawapi.exit()
+
+
+class TestSetProperty(unittest.TestCase):
+    def setUp(self):
+        if os.name != "nt":
+            return
+        rawapi.init()
+        devices = rawapi.get_devices()
+        devid = devices[0][0]
+        self.dev = rawapi.open(devid)
+        self.sources = rawapi.get_sources(self.dev)
+        self.assertTrue(len(self.sources) > 0)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_get_src_property_depth(self):
+        rawapi.set_property(self.sources[0][1], "depth", 8)
+
+        props = rawapi.get_properties(self.sources[0][1])
+        self.assertTrue(len(props) > 0)
+        for (propname, propvalue, _) in props:
+            if (propname == "depth"):
+                self.assertEqual(propvalue, 8)
+
+        rawapi.set_property(self.sources[0][1], "depth", 24)
+
+        props = rawapi.get_properties(self.sources[0][1])
+        self.assertTrue(len(props) > 0)
+        for (propname, propvalue, _) in props:
+            if (propname == "depth"):
+                self.assertEqual(propvalue, 24)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_get_src_property_preview(self):
+        rawapi.set_property(self.sources[0][1], "preview", "preview_scan")
+
+        props = rawapi.get_properties(self.sources[0][1])
+        self.assertTrue(len(props) > 0)
+        for (propname, propvalue, _) in props:
+            if (propname == "preview"):
+                self.assertEqual(propvalue, "preview_scan")
+
+        rawapi.set_property(self.sources[0][1], "preview", "final_scan")
+
+        props = rawapi.get_properties(self.sources[0][1])
+        self.assertTrue(len(props) > 0)
+        for (propname, propvalue, _) in props:
+            if (propname == "preview"):
+                self.assertEqual(propvalue, "final_scan")
+
+    def tearDown(self):
+        if os.name != "nt":
+            return
+        rawapi.exit()

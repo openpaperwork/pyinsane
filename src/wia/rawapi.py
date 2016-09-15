@@ -38,6 +38,12 @@ def get_properties(dev_or_src):
     return properties
 
 
+def set_property(dev_or_src, propname, propvalue):
+    ret = _rawapi.set_property(dev_or_src, propname, propvalue)
+    if not ret:
+        raise WIAException("Failed to set scanner properties")
+
+
 def exit():
     _rawapi.exit()
 
