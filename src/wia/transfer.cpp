@@ -14,13 +14,15 @@ struct wia_image_stream_el {
     char odata[]; // original data, as written by the source
 };
 
-WiaImageStream::WiaImageStream(check_still_waiting_for_data_cb cb, void *cbData)
+
+PyinsaneImageStream::PyinsaneImageStream(check_still_waiting_for_data_cb *cb, void *cbData)
 {
     mCb = cb;
     mCbData = cbData;
 }
 
-WiaImageStream::~WiaImageStream()
+
+PyinsaneImageStream::~PyinsaneImageStream()
 {
     struct wia_image_stream_el *el, *nel;
 
@@ -31,32 +33,38 @@ WiaImageStream::~WiaImageStream()
     }
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Clone(IStream **)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Clone(IStream **)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Commit(DWORD)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Commit(DWORD)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 {
     pv = pv;
     cb = cb;
@@ -66,7 +74,7 @@ HRESULT STDMETHODCALLTYPE WiaImageStream::Read(void* pv, ULONG cb, ULONG* pcbRea
     mMutex.lock();
 
     if (mFirst == NULL) {
-        if (!mCb(mCbData)) {
+        if (!mCb(this, mCbData)) {
             *pcbRead = 0; // EOF
             mMutex.unlock();
             return S_OK;
@@ -75,7 +83,11 @@ HRESULT STDMETHODCALLTYPE WiaImageStream::Read(void* pv, ULONG cb, ULONG* pcbRea
         mCondition.wait(mMutex);
     }
 
-    assert(mFirst != NULL);
+    if (mFirst == NULL) {
+        *pcbRead = 0; // EOF
+        mMutex.unlock();
+        return S_OK;
+    }
 
     current = mFirst;
 
@@ -99,7 +111,8 @@ HRESULT STDMETHODCALLTYPE WiaImageStream::Read(void* pv, ULONG cb, ULONG* pcbRea
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten)
 {
     pv = pv;
     cb = cb;
@@ -132,22 +145,163 @@ HRESULT STDMETHODCALLTYPE WiaImageStream::Write(void const* pv, ULONG cb, ULONG*
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Revert()
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Revert()
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Seek(LARGE_INTEGER, DWORD, ULARGE_INTEGER*)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(LARGE_INTEGER, DWORD, ULARGE_INTEGER*)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::SetSize(ULARGE_INTEGER)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE WiaImageStream::Stat(STATSTG*, DWORD)
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Stat(STATSTG*, DWORD)
 {
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(const IID &,void **)
+{
+    return E_NOTIMPL;
+}
+
+ULONG STDMETHODCALLTYPE PyinsaneImageStream::AddRef()
+{
+    return 0;
+}
+
+ULONG STDMETHODCALLTYPE PyinsaneImageStream::Release()
+{
+    return 0;
+}
+
+void STDMETHODCALLTYPE PyinsaneImageStream::wakeUpListeners()
+{
+    mMutex.lock();
+    mCondition.notify_all();
+    mMutex.unlock();
+}
+
+static check_still_waiting_for_data_cb check_still_waiting;
+
+
+PyinsaneWiaTransferCallback::PyinsaneWiaTransferCallback()
+{
+    mRunning = 1;
+}
+
+
+PyinsaneWiaTransferCallback::~PyinsaneWiaTransferCallback()
+{
+}
+
+void PyinsaneWiaTransferCallback::makeNextStream()
+{
+    PyinsaneImageStream *stream;
+
+    stream = getCurrentWriteStream();
+    if (stream != NULL)
+        stream->wakeUpListeners();
+
+    stream = new PyinsaneImageStream(check_still_waiting, this);
+    mStreams.push_back(stream);
+    mCondition.wait(mMutex);
+}
+
+HRESULT PyinsaneWiaTransferCallback::GetNextStream(
+        LONG, BSTR, BSTR, IStream **ppDestination)
+{
+    mMutex.lock();
+    if (mStreams.empty()) {
+        makeNextStream();
+    }
+    *ppDestination = getCurrentWriteStream();
+    mMutex.unlock();
+    return S_OK;
+}
+
+
+HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG lFlags, WiaTransferParams *)
+{
+    mMutex.lock();
+    if (lFlags == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
+        mRunning = 0;
+    } else if (lFlags == WIA_TRANSFER_MSG_NEW_PAGE) {
+        makeNextStream();
+    }
+    mMutex.unlock();
+    return S_OK;
+}
+
+
+PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentReadStream()
+{
+    PyinsaneImageStream *stream;
+
+    mMutex.lock();
+    if (mStreams.empty()) {
+        if (mRunning) {
+            // Still getting data. Wait for next page
+            mCondition.wait(mMutex);
+        }
+    }
+    if (mStreams.empty()) {
+        mMutex.unlock();
+        return NULL;
+    }
+    stream = mStreams.front();
+    mMutex.lock();
+    return stream;
+}
+
+
+void PyinsaneWiaTransferCallback::popReadStream()
+{
+    mMutex.lock();
+    assert(!mStreams.empty());
+    delete mStreams.front();
+    mStreams.pop_front();
+    mMutex.unlock();
+}
+
+
+PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentWriteStream()
+{
+    PyinsaneImageStream *stream;
+
+    mMutex.lock();
+    if (mStreams.empty()) {
+        mMutex.unlock();
+        return NULL;
+    }
+    stream = mStreams.back();
+    mMutex.unlock();
+    return stream;
+}
+
+static int check_still_waiting(void *_img_stream, void *_data)
+{
+    PyinsaneImageStream *stream = (PyinsaneImageStream *)_img_stream;
+    PyinsaneWiaTransferCallback *callbacks = (PyinsaneWiaTransferCallback *)_data;
+
+    callbacks->mMutex.lock();
+    if (!callbacks->mRunning) {
+        callbacks->mMutex.unlock();
+        return 0;
+    }
+    if (callbacks->getCurrentWriteStream() != stream) {
+        callbacks->mMutex.unlock();
+        return 0;
+    }
+    callbacks->mMutex.unlock();
+    return 1;
 }

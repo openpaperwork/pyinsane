@@ -1,6 +1,7 @@
 #ifndef __PYINSANE_WIA_TRANSFER_H
 #define __PYINSANE_WIA_TRANSFER_H
 
+#include <list>
 #include <mutex>
 #include <thread>
 
@@ -9,13 +10,13 @@
 #include <wia.h>
 #include <Sti.h>
 
-typedef int (*check_still_waiting_for_data_cb)(void *data);
+typedef int (check_still_waiting_for_data_cb)(void *img_stream, void *data);
 
-class WiaImageStream : public IStream
+class PyinsaneImageStream : public IStream
 {
 public:
-    WiaImageStream(check_still_waiting_for_data_cb cb, void *cbData);
-    ~WiaImageStream();
+    PyinsaneImageStream(check_still_waiting_for_data_cb *cb, void *cbData);
+    ~PyinsaneImageStream();
 
     virtual HRESULT STDMETHODCALLTYPE Clone(IStream **);
     virtual HRESULT STDMETHODCALLTYPE Commit(DWORD);
@@ -29,9 +30,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg, DWORD grfStatFlag);
     virtual HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD);
     virtual HRESULT STDMETHODCALLTYPE Write(void const* pv, ULONG cb, ULONG* pcbWritten);
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID &,void **);
+    virtual ULONG STDMETHODCALLTYPE AddRef();
+    virtual ULONG STDMETHODCALLTYPE Release();
+
+    virtual void wakeUpListeners();
 
 private:
-    check_still_waiting_for_data_cb mCb;
+    check_still_waiting_for_data_cb *mCb;
     void *mCbData;
 
     std::unique_lock<std::mutex> mMutex;
@@ -39,6 +45,31 @@ private:
 
     struct wia_image_stream_el *mFirst;
     struct wia_image_stream_el *mLast;
+};
+
+class PyinsaneWiaTransferCallback : public IWiaTransferCallback
+{
+public:
+    PyinsaneWiaTransferCallback();
+    ~PyinsaneWiaTransferCallback();
+
+    // interface methods
+    HRESULT GetNextStream(LONG lFlags, BSTR bstrItemName, BSTR bstrFullItemName, IStream **ppDestination);
+    HRESULT TransferCallback(LONG lFlags, WiaTransferParams *pWiaTransferParams);
+
+    // Pyinsane methods
+    PyinsaneImageStream *getCurrentReadStream();
+    void popReadStream();
+    PyinsaneImageStream *getCurrentWriteStream();
+    int mRunning;
+    std::unique_lock<std::mutex> mMutex;
+
+private:
+    void makeNextStream();
+
+    std::condition_variable mCondition;
+
+    std::list<PyinsaneImageStream *> mStreams;
 };
 
 #endif
