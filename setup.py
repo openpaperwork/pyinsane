@@ -9,6 +9,7 @@ if os.name == "nt":
     extensions = [
         Extension(
             'pyinsane.wia._rawapi', [
+                'src/wia/properties.cpp',
                 'src/wia/rawapi.cpp',
             ],
             include_dirs=[],
