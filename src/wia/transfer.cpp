@@ -288,6 +288,7 @@ PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentWriteStream()
     return stream;
 }
 
+
 static int check_still_waiting(void *_img_stream, void *_data)
 {
     PyinsaneImageStream *stream = (PyinsaneImageStream *)_img_stream;
@@ -304,4 +305,19 @@ static int check_still_waiting(void *_img_stream, void *_data)
     }
     callbacks->mMutex.unlock();
     return 1;
+}
+
+HRESULT STDMETHODCALLTYPE PyinsaneWiaTransferCallback::QueryInterface(const IID &,void **)
+{
+    return E_NOTIMPL;
+}
+
+ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::AddRef()
+{
+    return 0;
+}
+
+ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::Release()
+{
+    return 0;
 }

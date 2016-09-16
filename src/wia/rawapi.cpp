@@ -17,6 +17,7 @@
 
 #define WIA_PYCAPSULE_DEV_NAME "WIA device"
 #define WIA_PYCAPSULE_SRC_NAME "WIA source"
+#define WIA_PYCAPSULE_SCAN_NAME "WIA scan"
 
 struct wia_device {
     IWiaDevMgr2 *dev_manager;
@@ -504,6 +505,104 @@ static PyObject *set_property(PyObject *, PyObject *args)
     Py_RETURN_FALSE;
 }
 
+struct wia_scan {
+    struct wia_source *src;
+    IWiaTransfer *transfer;
+    PyinsaneWiaTransferCallback *callbacks;
+    PyinsaneImageStream *current_stream;
+};
+
+static void end_scan(PyObject *capsule)
+{
+    struct wia_scan *scan;
+
+    scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
+    if (scan == NULL)
+        return;
+    scan->transfer->Release();
+    delete scan->callbacks;
+    free(scan);
+}
+
+static PyObject *start_scan(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    struct wia_source *src;
+    struct wia_scan *scan;
+    HRESULT hr;
+
+    if (!PyArg_ParseTuple(args, "O", &capsule)) {
+        WIA_WARNING("Pyinsane: WARNING: start_scan(): Invalid args");
+        return NULL;
+    }
+
+    src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
+    if (src == NULL)
+        Py_RETURN_NONE;
+
+    scan = (struct wia_scan *)calloc(1, sizeof(struct wia_scan));
+    scan->src = src;
+
+    hr = scan->src->source->QueryInterface(IID_IWiaTransfer, (void**)&scan->transfer);
+    if (FAILED(hr)) {
+        WIA_WARNING("source->QueryInterface(WiaTransfer) failed");
+        free(scan);
+        Py_RETURN_NONE;
+    }
+
+    scan->callbacks = new PyinsaneWiaTransferCallback();
+    hr = scan->transfer->Download(0, scan->callbacks);
+    if (FAILED(hr)) {
+        WIA_WARNING("source->transfer->Download() failed");
+        scan->transfer->Release();
+        free(scan);
+        Py_RETURN_NONE;
+    }
+
+    return PyCapsule_New(scan, WIA_PYCAPSULE_SCAN_NAME, end_scan);
+}
+
+
+static PyObject *scan_read(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    Py_buffer buf;
+    struct wia_scan *scan;
+    unsigned long urd;
+    HRESULT hr;
+
+    if (!PyArg_ParseTuple(args, "Oy*", &capsule, &buf)) {
+        WIA_WARNING("Pyinsane: WARNING: scan_read(): Invalid args");
+        return NULL;
+    }
+
+    scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
+    if (scan == NULL)
+        Py_RETURN_NONE;
+
+    if (scan->current_stream == NULL) {
+        scan->current_stream = scan->callbacks->getCurrentReadStream();
+        if (scan->current_stream == NULL) {
+            return PyLong_FromLong(-1);
+        }
+    }
+
+    urd = (unsigned long)buf.len;
+    hr = scan->current_stream->Read(buf.buf, urd, &urd);
+    if (FAILED(hr)) {
+        WIA_WARNING("Pyinsane: WARNING: Read() failed");
+        Py_RETURN_NONE;
+    }
+
+    if (urd == 0) {
+        // end of page
+        scan->current_stream = NULL;
+        scan->callbacks->popReadStream();
+    }
+
+    return PyLong_FromLong(urd);
+}
+
 
 static PyObject *exit(PyObject *, PyObject* args)
 {
@@ -523,6 +622,8 @@ static PyMethodDef rawapi_methods[] = {
 	{"get_properties", get_properties, METH_VARARGS, NULL},
 	{"get_sources", get_sources, METH_VARARGS, NULL},
 	{"open", open_device, METH_VARARGS, NULL},
+	{"start_scan", start_scan, METH_VARARGS, NULL},
+	{"read", scan_read, METH_VARARGS, NULL},
 	{"set_property", set_property, METH_VARARGS, NULL},
 	{"exit", exit, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL},

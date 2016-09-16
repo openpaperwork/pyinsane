@@ -54,8 +54,11 @@ public:
     ~PyinsaneWiaTransferCallback();
 
     // interface methods
-    HRESULT GetNextStream(LONG lFlags, BSTR bstrItemName, BSTR bstrFullItemName, IStream **ppDestination);
-    HRESULT TransferCallback(LONG lFlags, WiaTransferParams *pWiaTransferParams);
+    virtual HRESULT GetNextStream(LONG lFlags, BSTR bstrItemName, BSTR bstrFullItemName, IStream **ppDestination);
+    virtual HRESULT TransferCallback(LONG lFlags, WiaTransferParams *pWiaTransferParams);
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID &,void **);
+    virtual ULONG STDMETHODCALLTYPE AddRef();
+    virtual ULONG STDMETHODCALLTYPE Release();
 
     // Pyinsane methods
     PyinsaneImageStream *getCurrentReadStream();

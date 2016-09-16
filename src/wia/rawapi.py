@@ -44,6 +44,25 @@ def set_property(dev_or_src, propname, propvalue):
         raise WIAException("Failed to set scanner properties")
 
 
+def start_scan(src):
+    ret = _rawapi.start_scan(src)
+    if ret is None:
+        raise WIAException("Failed to start scan")
+    return ret
+
+
+def read(scan):
+    buf = 1024 * b"\0"
+    ret = _rawapi.read(scan, buf)
+    if ret is None:
+        raise WIAException("Failed to start scan")
+    elif ret == 0:
+        raise EOFError()
+    elif ret == -1:
+        raise StopIteration()
+    return buf[:ret]
+
+
 def exit():
     _rawapi.exit()
 
