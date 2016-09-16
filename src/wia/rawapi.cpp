@@ -12,6 +12,7 @@
 #include <Python.h>
 
 #include "properties.h"
+#include "transfer.h"
 #include "util.h"
 
 #define WIA_PYCAPSULE_DEV_NAME "WIA device"

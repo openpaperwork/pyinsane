@@ -11,6 +11,7 @@ if os.name == "nt":
             'pyinsane.wia._rawapi', [
                 'src/wia/properties.cpp',
                 'src/wia/rawapi.cpp',
+                'src/wia/transfer.cpp',
             ],
             include_dirs=[],
             libraries=[

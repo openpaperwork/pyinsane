@@ -9,4 +9,6 @@
         fprintf(stderr, "\n"); \
     } while(0)
 
+#define WIA_MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 #endif
