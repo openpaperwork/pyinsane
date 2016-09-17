@@ -21,6 +21,7 @@ PyinsaneImageStream::PyinsaneImageStream(check_still_waiting_for_data_cb *cb, vo
 {
     mCb = cb;
     mCbData = cbData;
+    mStreamLength = 0;
 }
 
 
@@ -141,6 +142,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
         mLast->next = el;
     }
 
+    mStreamLength += cb;
     mCondition.notify_all();
     return S_OK;
 }
@@ -153,8 +155,15 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Revert()
 }
 
 
-HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(LARGE_INTEGER, DWORD, ULARGE_INTEGER*)
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(
+        LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition
+    )
 {
+    if (dwOrigin == STREAM_SEEK_END && dlibMove.QuadPart == 0) {
+        plibNewPosition->QuadPart = mStreamLength;
+        return S_OK;
+    }
+    fprintf(stderr, "SEEK(%lld, %d, %p);\n", dlibMove.QuadPart, dwOrigin, plibNewPosition);
     WIA_WARNING("Pyinsane: WARNING: IStream::Seek() not implemented but called !");
     return E_NOTIMPL;
 }
@@ -167,10 +176,13 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER)
 }
 
 
-HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Stat(STATSTG*, DWORD)
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
 {
-    WIA_WARNING("Pyinsane: WARNING: IStream::Stat() not implemented but called !");
-    return E_NOTIMPL;
+    memset(pstatstg, 0, sizeof(STATSTG));
+    pstatstg->type = STGTY_STREAM;
+    pstatstg->cbSize.QuadPart = mStreamLength;
+    pstatstg->clsid = CLSID_NULL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void **ppvObject)
@@ -198,13 +210,13 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void 
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::AddRef()
 {
-    WIA_WARNING("Pyinsane: WARNING: IStream::AddRef() not implemented but called !");
+    //WIA_WARNING("Pyinsane: WARNING: IStream::AddRef() not implemented but called !");
     return 0;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::Release()
 {
-    WIA_WARNING("Pyinsane: WARNING: IStream::Release() not implemented but called !");
+    //WIA_WARNING("Pyinsane: WARNING: IStream::Release() not implemented but called !");
     return 0;
 }
 
@@ -231,7 +243,6 @@ void PyinsaneWiaTransferCallback::makeNextStream()
 {
     PyinsaneImageStream *stream;
 
-    fprintf(stderr, "DEBUG: %d\n", __LINE__);
     if (!mStreams.empty()) {
         stream = mStreams.back();
         stream->wakeUpListeners();
@@ -352,12 +363,12 @@ HRESULT STDMETHODCALLTYPE PyinsaneWiaTransferCallback::QueryInterface(REFIID rii
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::AddRef()
 {
-    WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::AddRef() not implemented but called !");
+    //WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::AddRef() not implemented but called !");
     return 0;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::Release()
 {
-    WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::Release() not implemented but called !");
+    //WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::Release() not implemented but called !");
     return 0;
 }
