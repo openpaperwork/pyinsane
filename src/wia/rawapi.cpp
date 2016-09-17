@@ -1,9 +1,11 @@
 #include <assert.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <comdef.h>
 #include <windows.h>
 #include <atlbase.h>
 #include <wia.h>
@@ -455,9 +457,9 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
             // TODO
             return 0;
         case VT_CLSID:
-            WIA_WARNING("Pyinsane: WARNING: ClsId not supported yet");
-            // TODO
-            return 0;
+            if (!pyobject_to_clsid(property_spec, pyvalue, &propvalue.puuid))
+                return 0;
+            break;
         default:
             WIA_WARNING("Pyinsane: WARNING: Unknown var type");
             assert(0);
@@ -553,7 +555,13 @@ static PyObject *start_scan(PyObject *, PyObject *args)
     scan->callbacks = new PyinsaneWiaTransferCallback();
     hr = scan->transfer->Download(0, scan->callbacks);
     if (FAILED(hr)) {
-        WIA_WARNING("source->transfer->Download() failed");
+        _com_error err(hr);
+        LPCTSTR errMsg = err.ErrorMessage();
+
+        WIA_WARNING("Pyinsane: WARNING: source->transfer->Download() failed");
+
+        std::cerr << "Pyinsane: WARNING: source->transfer->Download() failed: " << hr << " ; " << errMsg << std::endl;
+
         scan->transfer->Release();
         free(scan);
         Py_RETURN_NONE;

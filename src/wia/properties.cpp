@@ -856,3 +856,30 @@ int pyobject_to_int(const struct wia_property *property_spec, PyObject *pyvalue,
     WIA_WARNING("Pyinsane: WARNING: set_property(): Failed to parse value");
     return fail_value;
 }
+
+int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalue, CLSID **out)
+{
+    const struct wia_prop_clsid *str2clsid;
+    int i;
+    const char *value;
+
+    if (!PyUnicode_Check(pyvalue)) {
+        WIA_WARNING("Pyinsane: WARNING: set_property(): Invalid type for clsid property");
+        return 0;
+    }
+
+    str2clsid = (const struct wia_prop_clsid *)property_spec->possible_values;
+    assert(str2clsid != NULL);
+
+    value = PyUnicode_AsUTF8(pyvalue);
+
+    for (i = 0 ; str2clsid[i].name != NULL ; i++) {
+        if (strcmp(value, str2clsid[i].name) == 0) {
+            *out = (CLSID *)&str2clsid[i].value;
+            return 1;
+        }
+    }
+
+    WIA_WARNING("Pyinsane: WARNING: set_property(): Invalid value for clsid property");
+    return 0;
+}
