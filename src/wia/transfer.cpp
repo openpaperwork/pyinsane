@@ -197,28 +197,28 @@ PyinsaneWiaTransferCallback::~PyinsaneWiaTransferCallback()
 {
 }
 
-void PyinsaneWiaTransferCallback::makeNextStream(std::unique_lock<std::mutex> &lock)
+void PyinsaneWiaTransferCallback::makeNextStream()
 {
     PyinsaneImageStream *stream;
 
-    stream = getCurrentWriteStream();
-    if (stream != NULL)
+    if (!mStreams.empty()) {
+        stream = mStreams.back();
         stream->wakeUpListeners();
+    }
 
     stream = new PyinsaneImageStream(check_still_waiting, this);
     mStreams.push_back(stream);
-    mCondition.wait(lock);
+    mCondition.notify_all();
 }
 
 HRESULT PyinsaneWiaTransferCallback::GetNextStream(
         LONG, BSTR, BSTR, IStream **ppDestination)
 {
     std::unique_lock<std::mutex> lock(mMutex);
-
     if (mStreams.empty()) {
-        makeNextStream(lock);
+        makeNextStream();
     }
-    *ppDestination = getCurrentWriteStream();
+    *ppDestination = mStreams.back();
     return S_OK;
 }
 
@@ -229,7 +229,7 @@ HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG lFlags, WiaTransferPa
     if (lFlags == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
         mRunning = 0;
     } else if (lFlags == WIA_TRANSFER_MSG_NEW_PAGE) {
-        makeNextStream(lock);
+        makeNextStream();
     }
     return S_OK;
 }
@@ -268,7 +268,6 @@ PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentWriteStream()
 {
     PyinsaneImageStream *stream;
 
-    std::unique_lock<std::mutex> lock(mMutex);
     if (mStreams.empty()) {
         return NULL;
     }

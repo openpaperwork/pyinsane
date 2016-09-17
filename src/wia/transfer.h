@@ -68,7 +68,7 @@ public:
     std::mutex mMutex;
 
 private:
-    void makeNextStream(std::unique_lock<std::mutex> &lock);
+    void makeNextStream();
 
     std::condition_variable mCondition;
 
