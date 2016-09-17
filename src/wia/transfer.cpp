@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <Python.h>
+
 #include "transfer.h"
 #include "util.h"
 
@@ -35,30 +37,34 @@ PyinsaneImageStream::~PyinsaneImageStream()
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Clone(IStream **)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::Clone() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Commit(DWORD)
 {
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::CopyTo() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::LockRegion() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::UnlockRegion() not implemented but called !");
     return E_NOTIMPL;
 }
 
@@ -142,39 +148,63 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Revert()
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::Revert() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(LARGE_INTEGER, DWORD, ULARGE_INTEGER*)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::Seek() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::SetSize() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Stat(STATSTG*, DWORD)
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::Stat() not implemented but called !");
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(const IID &,void **)
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void **ppvObject)
 {
-    return E_NOTIMPL;
+    assert(NULL != ppvObject);
+
+    if (IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObject = static_cast<IUnknown*>(this);
+    }
+    else if (IsEqualIID(riid, IID_IStream))
+    {
+        *ppvObject = static_cast<IStream*>(this);
+    }
+    else
+    {
+        *ppvObject = NULL;
+        return E_NOINTERFACE;
+    }
+
+    // Increment the reference count before we return the interface
+    reinterpret_cast<IUnknown*>(*ppvObject)->AddRef();
+    return S_OK;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::AddRef()
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::AddRef() not implemented but called !");
     return 0;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::Release()
 {
+    WIA_WARNING("Pyinsane: WARNING: IStream::Release() not implemented but called !");
     return 0;
 }
 
@@ -201,6 +231,7 @@ void PyinsaneWiaTransferCallback::makeNextStream()
 {
     PyinsaneImageStream *stream;
 
+    fprintf(stderr, "DEBUG: %d\n", __LINE__);
     if (!mStreams.empty()) {
         stream = mStreams.back();
         stream->wakeUpListeners();
@@ -294,17 +325,39 @@ static int check_still_waiting(void *_img_stream, void *_data)
     return 1;
 }
 
-HRESULT STDMETHODCALLTYPE PyinsaneWiaTransferCallback::QueryInterface(const IID &,void **)
+
+HRESULT STDMETHODCALLTYPE PyinsaneWiaTransferCallback::QueryInterface(REFIID riid, void **ppvObject)
 {
-    return E_NOTIMPL;
+    assert(NULL != ppvObject);
+
+    if (IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObject = static_cast<IUnknown*>(this);
+    }
+    else if (IsEqualIID( riid, IID_IWiaTransferCallback ))
+    {
+        *ppvObject = static_cast<IWiaTransferCallback*>(this);
+    }
+    else
+    {
+        *ppvObject = NULL;
+        return E_NOINTERFACE;
+    }
+
+    // Increment the reference count before we return the interface
+    reinterpret_cast<IUnknown*>(*ppvObject)->AddRef();
+    return S_OK;
 }
+
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::AddRef()
 {
+    WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::AddRef() not implemented but called !");
     return 0;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::Release()
 {
+    WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::Release() not implemented but called !");
     return 0;
 }
