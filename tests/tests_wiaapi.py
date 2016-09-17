@@ -176,3 +176,33 @@ class TestSetProperty(unittest.TestCase):
         if os.name != "nt":
             return
         rawapi.exit()
+
+
+class TestScan(unittest.TestCase):
+    def setUp(self):
+        if os.name != "nt":
+            return
+        rawapi.init()
+        devices = rawapi.get_devices()
+        devid = devices[0][0]
+        self.dev = rawapi.open(devid)
+        self.sources = rawapi.get_sources(self.dev)
+        self.assertTrue(len(self.sources) > 0)
+
+    @unittest.skipIf(os.name != "nt", "Windows only")
+    def test_scan(self):
+        scan = rawapi.start_scan(self.sources[0][1])
+        try:
+            while True:
+                rawapi.read(scan)
+        except EOFError:
+            pass
+        try:
+            rawapi.read(scan)
+        except StopIteration:
+            pass
+
+    def tearDown(self):
+        if os.name != "nt":
+            return
+        rawapi.exit()
