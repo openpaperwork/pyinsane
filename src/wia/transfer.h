@@ -40,7 +40,7 @@ private:
     check_still_waiting_for_data_cb *mCb;
     void *mCbData;
 
-    std::unique_lock<std::mutex> mMutex;
+    std::mutex mMutex;
     std::condition_variable mCondition;
 
     struct wia_image_stream_el *mFirst;
@@ -65,10 +65,10 @@ public:
     void popReadStream();
     PyinsaneImageStream *getCurrentWriteStream();
     int mRunning;
-    std::unique_lock<std::mutex> mMutex;
+    std::mutex mMutex;
 
 private:
-    void makeNextStream();
+    void makeNextStream(std::unique_lock<std::mutex> &lock);
 
     std::condition_variable mCondition;
 

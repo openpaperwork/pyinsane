@@ -28,7 +28,6 @@ PyinsaneImageStream::~PyinsaneImageStream()
 
     for (el = mFirst ; el != NULL ; el = nel) {
         nel = el->next;
-
         free(el);
     }
 }
@@ -71,7 +70,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void* pv, ULONG cb, ULONG* p
     pcbRead = pcbRead;
     struct wia_image_stream_el *current;
 
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
 
     if (mFirst == NULL) {
         if (!mCb(this, mCbData)) {
@@ -80,12 +79,11 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void* pv, ULONG cb, ULONG* p
             return S_OK;
         }
 
-        mCondition.wait(mMutex);
+        mCondition.wait(lock);
     }
 
     if (mFirst == NULL) {
         *pcbRead = 0; // EOF
-        mMutex.unlock();
         return S_OK;
     }
 
@@ -105,8 +103,6 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void* pv, ULONG cb, ULONG* p
         current->data += *pcbRead;
         current->nb_bytes -= *pcbRead;
     }
-
-    mMutex.unlock();
 
     return S_OK;
 }
@@ -129,7 +125,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
     el->nb_bytes = cb;
     el->next = NULL;
 
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
 
     if (mLast == NULL) {
         assert(mFirst == NULL);
@@ -140,8 +136,6 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
     }
 
     mCondition.notify_all();
-    mMutex.unlock();
-
     return S_OK;
 }
 
@@ -186,9 +180,8 @@ ULONG STDMETHODCALLTYPE PyinsaneImageStream::Release()
 
 void STDMETHODCALLTYPE PyinsaneImageStream::wakeUpListeners()
 {
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
     mCondition.notify_all();
-    mMutex.unlock();
 }
 
 static check_still_waiting_for_data_cb check_still_waiting;
@@ -204,7 +197,7 @@ PyinsaneWiaTransferCallback::~PyinsaneWiaTransferCallback()
 {
 }
 
-void PyinsaneWiaTransferCallback::makeNextStream()
+void PyinsaneWiaTransferCallback::makeNextStream(std::unique_lock<std::mutex> &lock)
 {
     PyinsaneImageStream *stream;
 
@@ -214,31 +207,30 @@ void PyinsaneWiaTransferCallback::makeNextStream()
 
     stream = new PyinsaneImageStream(check_still_waiting, this);
     mStreams.push_back(stream);
-    mCondition.wait(mMutex);
+    mCondition.wait(lock);
 }
 
 HRESULT PyinsaneWiaTransferCallback::GetNextStream(
         LONG, BSTR, BSTR, IStream **ppDestination)
 {
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
+
     if (mStreams.empty()) {
-        makeNextStream();
+        makeNextStream(lock);
     }
     *ppDestination = getCurrentWriteStream();
-    mMutex.unlock();
     return S_OK;
 }
 
 
 HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG lFlags, WiaTransferParams *)
 {
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
     if (lFlags == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
         mRunning = 0;
     } else if (lFlags == WIA_TRANSFER_MSG_NEW_PAGE) {
-        makeNextStream();
+        makeNextStream(lock);
     }
-    mMutex.unlock();
     return S_OK;
 }
 
@@ -247,30 +239,28 @@ PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentReadStream()
 {
     PyinsaneImageStream *stream;
 
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
+
     if (mStreams.empty()) {
         if (mRunning) {
             // Still getting data. Wait for next page
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
         }
     }
     if (mStreams.empty()) {
-        mMutex.unlock();
         return NULL;
     }
     stream = mStreams.front();
-    mMutex.lock();
     return stream;
 }
 
 
 void PyinsaneWiaTransferCallback::popReadStream()
 {
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
     assert(!mStreams.empty());
     delete mStreams.front();
     mStreams.pop_front();
-    mMutex.unlock();
 }
 
 
@@ -278,13 +268,11 @@ PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentWriteStream()
 {
     PyinsaneImageStream *stream;
 
-    mMutex.lock();
+    std::unique_lock<std::mutex> lock(mMutex);
     if (mStreams.empty()) {
-        mMutex.unlock();
         return NULL;
     }
     stream = mStreams.back();
-    mMutex.unlock();
     return stream;
 }
 
