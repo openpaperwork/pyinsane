@@ -136,15 +136,17 @@ class TestSetProperty(unittest.TestCase):
 
         props = rawapi.get_properties(self.sources[0][1])
         self.assertTrue(len(props) > 0)
-        for (propname, propvalue, _) in props:
+        for (propname, propvalue, accessright, _) in props:
+            self.assertTrue(accessright == "ro" or accessright == "rw")
             if (propname == "depth"):
                 self.assertEqual(propvalue, 8)
+                self.assertEqual(accessright, "rw")
 
         rawapi.set_property(self.sources[0][1], "depth", 24)
 
         props = rawapi.get_properties(self.sources[0][1])
         self.assertTrue(len(props) > 0)
-        for (propname, propvalue, _) in props:
+        for (propname, propvalue, _a, _b) in props:
             if (propname == "depth"):
                 self.assertEqual(propvalue, 24)
 
@@ -154,15 +156,17 @@ class TestSetProperty(unittest.TestCase):
 
         props = rawapi.get_properties(self.sources[0][1])
         self.assertTrue(len(props) > 0)
-        for (propname, propvalue, _) in props:
+        for (propname, propvalue, accessright, _) in props:
+            self.assertTrue(accessright == "ro" or accessright == "rw")
             if (propname == "preview"):
                 self.assertEqual(propvalue, "preview_scan")
+                self.assertEqual(accessright, "rw")
 
         rawapi.set_property(self.sources[0][1], "preview", "final_scan")
 
         props = rawapi.get_properties(self.sources[0][1])
         self.assertTrue(len(props) > 0)
-        for (propname, propvalue, _) in props:
+        for (propname, propvalue, _a, _b) in props:
             if (propname == "preview"):
                 self.assertEqual(propvalue, "final_scan")
 

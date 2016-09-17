@@ -339,6 +339,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
     PyObject *ro;
     PyObject *rw;
     PyObject *access_right;
+    PyObject *possible_values;
 
 
     if (!PyArg_ParseTuple(args, "O", &capsule)) {
@@ -416,7 +417,9 @@ static PyObject *get_properties(PyObject *, PyObject *args)
         access_right = (g_wia_all_properties[i].rw ? rw : ro);
         Py_INCREF(access_right); // PyTuple_Pack steals the ref
 
-        prop = PyTuple_Pack(3, propname, propvalue, access_right);
+        possible_values = g_wia_all_properties[i].get_possible_values(&g_wia_all_properties[i]);
+
+        prop = PyTuple_Pack(4, propname, propvalue, access_right, possible_values);
         PyList_Append(all_props, prop);
         Py_DECREF(prop);
     }

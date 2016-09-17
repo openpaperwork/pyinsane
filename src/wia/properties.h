@@ -1,6 +1,8 @@
 #ifndef __PYINSANE_WIA_PROPERTIES_H
 #define __PYINSANE_WIA_PROPERTIES_H
 
+#include <Python.h>
+
 #include <windows.h>
 
 struct wia_prop_int {
@@ -19,6 +21,7 @@ struct wia_property {
     const char *name; // NULL == end of list
     int rw;
     const void *possible_values; // points to a (struct wia_prop_*) ; see vartype
+    PyObject *(*get_possible_values)(const struct wia_property*);
 };
 
 extern const struct wia_property *g_wia_all_properties;
