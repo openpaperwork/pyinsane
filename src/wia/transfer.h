@@ -39,7 +39,8 @@ public:
 private:
     check_still_waiting_for_data_cb *mCb;
     void *mCbData;
-    unsigned long long mStreamLength;
+    unsigned long long mWritten;
+    unsigned long long mRead;
 
     std::mutex mMutex;
     std::condition_variable mCondition;

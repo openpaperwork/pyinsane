@@ -1,3 +1,5 @@
+import faulthandler
+
 from . import _rawapi
 
 
@@ -52,7 +54,7 @@ def start_scan(src):
 
 
 def read(scan):
-    buf = 1024 * b"\0"
+    buf = 8192 * b"\0"
     ret = _rawapi.read(scan, buf)
     if ret is None:
         raise WIAException("Failed to start scan")
