@@ -53,8 +53,7 @@ def start_scan(src):
     return ret
 
 
-def read(scan):
-    buf = 8192 * b"\0"
+def read(scan, buf):
     ret = _rawapi.read(scan, buf)
     if ret is None:
         raise WIAException("Failed to start scan")
@@ -62,7 +61,7 @@ def read(scan):
         raise EOFError()
     elif ret == -1:
         raise StopIteration()
-    return buf[:ret]
+    return ret
 
 
 def exit():

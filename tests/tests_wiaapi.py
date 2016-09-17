@@ -191,14 +191,16 @@ class TestScan(unittest.TestCase):
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_scan(self):
+        buf = 512000 * b"\0"
         scan = rawapi.start_scan(self.sources[0][1])
         try:
             while True:
-                rawapi.read(scan)
+                ret = rawapi.read(scan, buf)
+                self.assertTrue(ret > 0)
         except EOFError:
             pass
         try:
-            rawapi.read(scan)
+            rawapi.read(scan, buf)
         except StopIteration:
             pass
 
