@@ -71,6 +71,7 @@ public:
 
 private:
     void makeNextStream();
+    void wakeUpReader();
 
     std::condition_variable mCondition;
 

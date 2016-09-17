@@ -297,16 +297,23 @@ PyinsaneWiaTransferCallback::~PyinsaneWiaTransferCallback()
     TRACE();
 }
 
-void PyinsaneWiaTransferCallback::makeNextStream()
+void PyinsaneWiaTransferCallback::wakeUpReader()
 {
     PyinsaneImageStream *stream;
 
-    TRACE();
     if (!mStreams.empty()) {
         TRACE();
         stream = mStreams.back();
         stream->wakeUpListeners();
     }
+}
+
+void PyinsaneWiaTransferCallback::makeNextStream()
+{
+    PyinsaneImageStream *stream;
+
+    TRACE();
+    wakeUpReader();
 
     TRACE();
     stream = new PyinsaneImageStream(check_still_waiting, this);
@@ -339,6 +346,7 @@ HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG, WiaTransferParams *p
     if (params->lMessage == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
         TRACE();
         mRunning = 0;
+        wakeUpReader();
     } else if (params->lMessage == WIA_TRANSFER_MSG_NEW_PAGE) {
         TRACE();
         makeNextStream();

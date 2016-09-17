@@ -553,7 +553,29 @@ static PyObject *start_scan(PyObject *, PyObject *args)
     }
 
     scan->callbacks = new PyinsaneWiaTransferCallback();
+    return PyCapsule_New(scan, WIA_PYCAPSULE_SCAN_NAME, end_scan);
+}
+
+
+static PyObject *download(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    struct wia_scan *scan;
+    HRESULT hr;
+
+    if (!PyArg_ParseTuple(args, "O", &capsule)) {
+        WIA_WARNING("Pyinsane: WARNING: scan_read(): Invalid args");
+        return NULL;
+    }
+
+    scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
+    if (scan == NULL) {
+        return NULL;
+    }
+
+    Py_BEGIN_ALLOW_THREADS;
     hr = scan->transfer->Download(0, scan->callbacks);
+    Py_END_ALLOW_THREADS;
     if (FAILED(hr)) {
         _com_error err(hr);
         LPCTSTR errMsg = err.ErrorMessage();
@@ -563,11 +585,8 @@ static PyObject *start_scan(PyObject *, PyObject *args)
         std::cerr << "Pyinsane: WARNING: source->transfer->Download() failed: " << hr << " ; " << errMsg << std::endl;
 
         scan->transfer->Release();
-        free(scan);
-        Py_RETURN_NONE;
     }
-
-    return PyCapsule_New(scan, WIA_PYCAPSULE_SCAN_NAME, end_scan);
+    Py_RETURN_NONE;
 }
 
 
@@ -578,19 +597,26 @@ static PyObject *scan_read(PyObject *, PyObject *args)
     struct wia_scan *scan;
     unsigned long urd;
     HRESULT hr;
+    PyThreadState *_save;
+
+    _save = PyEval_SaveThread();
 
     if (!PyArg_ParseTuple(args, "Oy*", &capsule, &buf)) {
         WIA_WARNING("Pyinsane: WARNING: scan_read(): Invalid args");
+        PyEval_RestoreThread(_save);
         return NULL;
     }
 
     scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
-    if (scan == NULL)
-        Py_RETURN_NONE;
+    if (scan == NULL) {
+        PyEval_RestoreThread(_save);
+        return NULL;
+    }
 
     if (scan->current_stream == NULL) {
         scan->current_stream = scan->callbacks->getCurrentReadStream();
         if (scan->current_stream == NULL) {
+            PyEval_RestoreThread(_save);
             return PyLong_FromLong(-1);
         }
     }
@@ -599,6 +625,7 @@ static PyObject *scan_read(PyObject *, PyObject *args)
     hr = scan->current_stream->Read(buf.buf, urd, &urd);
     if (FAILED(hr)) {
         WIA_WARNING("Pyinsane: WARNING: Read() failed");
+        PyEval_RestoreThread(_save);
         Py_RETURN_NONE;
     }
 
@@ -608,6 +635,7 @@ static PyObject *scan_read(PyObject *, PyObject *args)
         scan->callbacks->popReadStream();
     }
 
+    PyEval_RestoreThread(_save);
     return PyLong_FromLong(urd);
 }
 
@@ -631,6 +659,7 @@ static PyMethodDef rawapi_methods[] = {
 	{"get_sources", get_sources, METH_VARARGS, NULL},
 	{"open", open_device, METH_VARARGS, NULL},
 	{"start_scan", start_scan, METH_VARARGS, NULL},
+	{"download", download, METH_VARARGS, NULL},
 	{"read", scan_read, METH_VARARGS, NULL},
 	{"set_property", set_property, METH_VARARGS, NULL},
 	{"exit", exit, METH_VARARGS, NULL},
