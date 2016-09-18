@@ -379,7 +379,7 @@ static const struct wia_property _g_wia_all_properties[] =
         WIA_DPA_DEVICE_TIME, VT_VECTOR | VT_UI2, "device_time", 0, NULL, get_possible_values_none,
     },
     {
-        WIA_DPA_FIRMWARE_VERSION, VT_BSTR, "firmware version", 0, NULL, get_possible_values_none,
+        WIA_DPA_FIRMWARE_VERSION, VT_BSTR, "firmware_version", 0, NULL, get_possible_values_none,
     },
     {
         WIA_IPA_ACCESS_RIGHTS, VT_I4, "access_rights", 1, g_possible_access_rights, get_possible_values_int,

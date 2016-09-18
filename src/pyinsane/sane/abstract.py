@@ -39,6 +39,14 @@ SANE_READ_BUFSIZE = 512 * 1024
 sane_dev_handle = ("", None)
 
 
+def init():
+    sane_init()
+
+
+def exit():
+    sane_exit()
+
+
 class ScannerOption(object):
     idx = 0
     name = ""

@@ -9,9 +9,9 @@ if os.name == "nt":
     extensions = [
         Extension(
             'pyinsane.wia._rawapi', [
-                'src/wia/properties.cpp',
-                'src/wia/rawapi.cpp',
-                'src/wia/transfer.cpp',
+                'src/pyinsane/wia/properties.cpp',
+                'src/pyinsane/wia/rawapi.cpp',
+                'src/pyinsane/wia/transfer.cpp',
             ],
             include_dirs=[],
             libraries=[
@@ -56,9 +56,9 @@ setup(
         'pyinsane.wia',
     ],
     package_dir={
-        'pyinsane': 'src',
-        'pyinsane.sane': 'src/sane',
-        'pyinsane.wia': 'src/wia',
+        'pyinsane': 'src/pyinsane',
+        'pyinsane.sane': 'src/pyinsane/sane',
+        'pyinsane.wia': 'src/pyinsane/wia',
     },
     data_files=[],
     scripts=[],

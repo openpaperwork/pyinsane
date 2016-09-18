@@ -1,11 +1,9 @@
 import os
 import sys
-sys.path = ["src"] + sys.path
-
 import unittest
 
 if os.name != "nt":
-    from sane import rawapi
+    from pyinsane.sane import rawapi
 
 
 def get_test_devices():

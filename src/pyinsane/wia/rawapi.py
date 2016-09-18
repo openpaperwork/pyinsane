@@ -3,9 +3,10 @@ import sys
 import threading
 
 from . import _rawapi
+from .. import util
 
 
-class WIAException(Exception):
+class WIAException(util.PyinsaneException):
     def __init__(self, msg):
         super(WIAException, self).__init__("WIA: {}".format(msg))
 

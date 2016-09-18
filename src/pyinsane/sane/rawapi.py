@@ -1,6 +1,9 @@
 import ctypes
 import functools
 
+from .. import util
+
+
 __all__ = [
     'SaneCapabilities',
     'SaneConstraint',
@@ -150,7 +153,7 @@ class SaneStatus(SaneEnum):
     }
 
 
-class SaneException(Exception):
+class SaneException(util.PyinsaneException):
     def __init__(self, status):
         Exception.__init__(self, str(status))
         self.status = status

@@ -96,11 +96,11 @@ def remote_do(command, *args, **kwargs):
     return result['out']
 
 
-def sane_init():
+def init():
     return SaneAction(abstract.sane_init).wait()
 
 
-def sane_exit():
+def exit():
     return SaneAction(abstract.sane_exit).wait()
 
 
