@@ -9,6 +9,8 @@ from . import rawapi
 from .rawapi import WIAException
 
 __all__ = [
+    'init',
+    'exit',
     'Scanner',
     'ScannerOption',
     'WIAException',

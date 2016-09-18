@@ -1,4 +1,14 @@
 import os
+import sys
+
+__all__ = [
+    'init',
+    'exit',
+    'Scanner',
+    'ScannerOption',
+    'PyinsaneException',
+    'get_devices',
+]
 
 from .util import PyinsaneException
 
@@ -7,9 +17,4 @@ if os.name == "nt":
 else:
     from .sane.abstract_proc import *
 
-__all__ = [
-    'Scanner',
-    'ScannerOption',
-    'PyinsaneException',
-    'get_devices',
-]
+sys.stderr.write("MEH\n")

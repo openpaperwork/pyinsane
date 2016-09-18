@@ -1,11 +1,8 @@
 import os
-import sys
-sys.path = ["src"] + sys.path
-
 import unittest
 
 if os.name == "nt":
-    from wia import rawapi
+    from pyinsane.wia import rawapi
 
 
 class TestInit(unittest.TestCase):

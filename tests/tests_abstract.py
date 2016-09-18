@@ -1,9 +1,8 @@
 import os
-import sys
-import traceback
 import unittest
 
 import pyinsane
+
 
 class TestSaneGetDevices(unittest.TestCase):
     module = None
@@ -13,9 +12,8 @@ class TestSaneGetDevices(unittest.TestCase):
 
     def setUp(self):
         if self.module is None:
-            from pyinsane.wia import abstract
-            abstract.init()
-            self.module = abstract
+            pyinsane.init()
+            self.module = pyinsane
 
     def test_get_devices(self):
         devices = self.module.get_devices()
@@ -38,9 +36,8 @@ class TestSaneOptions(unittest.TestCase):
 
     def setUp(self):
         if self.module is None:
-            from pyinsane.wia import abstract
-            abstract.init()
-            self.module = abstract
+            pyinsane.init()
+            self.module = pyinsane
         self.devices = self.module.get_devices()
         self.assertTrue(len(self.devices) > 0)
 
@@ -94,9 +91,8 @@ class TestSaneScan(unittest.TestCase):
 
     def setUp(self):
         if self.module is None:
-            from pyinsane.wia import abstract
-            abstract.init()
-            self.module = abstract
+            pyinsane.init()
+            self.module = pyinsane
         devices = self.module.get_devices()
         self.assertTrue(len(devices) > 0)
         self.dev = devices[0]
