@@ -141,7 +141,7 @@ class ScannerOption(object):
     val_type = None  # TODO
     unit = None  # TODO
     size = 4
-    capabilities = None  # TODO
+    capabilities = None
 
     constraint_type = None # TODO
     constraint = None
@@ -177,7 +177,7 @@ class ScannerOption(object):
     value = property(_get_value, _set_value)
 
 
-class SourceOption(object):
+class SourceOption(ScannerOption):
     idx = -1
     name = ""
     title = ""
@@ -185,7 +185,7 @@ class SourceOption(object):
     val_type = None  # TODO
     unit = None  # TODO
     size = 4
-    capabilities = None  # TODO
+    capabilities = None
 
     constraint_type = None # TODO
     constraint = None
@@ -216,7 +216,7 @@ class ModeOption(object):
     val_type = None  # TODO
     unit = None  # TODO
     size = 4
-    capabilities = None  # TODO
+    capabilities = None
 
     constraint_type = None # TODO
     constraint = None
@@ -253,6 +253,113 @@ class ModeOption(object):
         raise WIAException("Unknown value '{}' for option 'mode'".format(new_value))
 
     value = property(_get_value, _set_value)
+
+
+def get_pos_constraint(options, opt_min, opt_max, opt_res):
+    if (opt_min not in options or
+            opt_max not in options or
+            opt_res not in options):
+        return None
+    vmax = options[opt_max].value / 1000  # thousandths of inch
+    vres = options[opt_res].value
+    return (0, int(vmax * vres))
+
+
+class PosOption(object):
+    idx = -1
+    name = ""
+    title = ""
+    desc = ""
+    val_type = None  # TODO
+    unit = None  # TODO
+    size = 4
+    capabilities = None
+
+    constraint_type = None # TODO
+    constraint = None
+
+    def __init__(self, scanner, name, base_name, options, opt_min, opt_max, opt_res):
+        self.name = name
+        self.base_name = base_name
+        self.capabilities = ScannerCapabilities(self)
+        self.scanner = scanner
+        self._options = options
+        self.constraint = get_pos_constraint(options, opt_min, opt_max, opt_res)
+
+    def _get_value(self):
+        return self._options[self.base_name + 'pos'].value
+
+    def _set_value(self, new_value):
+        diff = self._options[self.base_name + 'pos'].value - self.value
+        extent = self._options[self.base_name + 'extent'].value
+        self._options[self.base_name + 'pos'].value = new_value
+        self._options[self.base_name + 'extent'].value = extent - diff
+
+    value = property(_get_value, _set_value)
+
+
+class ExtendOption(object):
+    idx = -1
+    name = ""
+    title = ""
+    desc = ""
+    val_type = None  # TODO
+    unit = None  # TODO
+    size = 4
+    capabilities = None
+
+    constraint_type = None # TODO
+    constraint = None
+
+    def __init__(self, scanner, name, base_name, options, opt_min, opt_max, opt_res):
+        self.name = name
+        self.base_name = base_name
+        self.capabilities = ScannerCapabilities(self)
+        self.scanner = scanner
+        self._options = options
+        self.constraint = get_pos_constraint(options, opt_min, opt_max, opt_res)
+
+    def _get_value(self):
+        return (self._options[self.base_name + 'extent'].value
+                + self._options[self.base_name + 'pos'].value)
+
+    def _set_value(self, new_value):
+        new_value -= self._options[self.base_name + 'pos'].value
+        self._options[self.base_name + 'extent'].value = new_value
+
+    value = property(_get_value, _set_value)
+
+
+class MultialiasOption(object):
+    idx = -1
+    name = ""
+    title = ""
+    desc = ""
+    val_type = None  # TODO
+    unit = None  # TODO
+    size = 4
+    capabilities = None
+
+    constraint_type = None # TODO
+    constraint = None
+
+    def __init__(self, scanner, name, alias_for, options):
+        self.name = name
+        self.scanner = scanner
+        self.capabilities = ScannerCapabilities(self)
+        self.scanner = scanner
+        self.alias_for = alias_for
+        self._options = options
+
+    def _get_value(self):
+        return self._options[self.alias_for[0]].value
+
+    def _set_value(self, new_value):
+        for opt_name in self.alias_for:
+            self._options[opt_name].value = new_value
+
+    value = property(_get_value, _set_value)
+
 
 
 class Scanner(object):
@@ -315,6 +422,26 @@ class Scanner(object):
                     opt_name, opt_infos['value'], opt_infos['possible_values'],
                     opt_infos['accessright']
                 )
+
+        # aliases to match Sane
+        if "xpos" in self.options.keys() and "xextent" in self.options.keys():
+            self.options['tl-x'] = PosOption(
+                self, "tl-x", "x", self.options, "min_horizontal_size", "max_horizontal_size", "xres"
+            )
+            self.options['br-x'] = ExtendOption(
+                self, "br-x", "x", self.options, "min_horizontal_size", "max_horizontal_size", "xres"
+            )
+        if "ypos" in self.options.keys() and "yextent" in self.options.keys():
+            self.options['tl-y'] = PosOption(
+                self, "tl-y", "y", self.options, "min_vertical_size", "max_vertical_size", "yres"
+            )
+            self.options['br-y'] = ExtendOption(
+                self, "br-y", "y", self.options, "min_vertical_size", "max_vertical_size", "yres"
+            )
+        if "xres" in self.options.keys() and "yres" in self.options.keys():
+            self.options['resolution'] = MultialiasOption(
+                self, "resolution", ["xres", "yres"], self.options
+            )
 
         if 'source' in original:
             self.options['source'] = original['source']

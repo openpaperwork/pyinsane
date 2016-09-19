@@ -36,7 +36,6 @@ class WiaAction(object):
 
     def do(self):
         try:
-            sys.stdout.flush()
             self.result = self.func(**self.kwargs)
         except Exception as exc:
             self.exception = exc

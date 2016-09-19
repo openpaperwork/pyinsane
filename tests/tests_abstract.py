@@ -132,6 +132,7 @@ class TestSaneScan(unittest.TestCase):
             self.dev.options['mode'].value = "Color"
         except pyinsane.PyinsaneException:
             self.skipTest("scanner does not support required option")
+        self.dev.options['resolution'].value = 300
         scan_session = self.dev.scan(multiple=False)
         try:
             while True:
