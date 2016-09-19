@@ -46,15 +46,17 @@ class Scan(object):
         # will raise EOFError at the end of each page
         # will raise StopIteration when all the pages are done
         try:
-            buf = 512000 * b"\0"
-            r = rawapi.read(self.scan, buf)
-            self._data += buf[:r]
+            buf = self.scan.read()
+            self._data += buf
             self._got_data = True
         except EOFError:
             if len(self._data) >= self.MIN_BYTES:
                 self._session._add_image(self._get_current_image())
                 self._session._next()
-            raise
+                raise
+            else:
+                # Too small. Scrap the crap from the drivers.
+                self._data = b""
 
     def _get_current_image(self):
         # We get the image as a truncated bitmap.
@@ -68,9 +70,12 @@ class Scan(object):
 
     def _get_available_lines(self):
         if self._img_size is None:
-            self._get_current_image()
+            try:
+                self._get_current_image()
+            except:
+                return 0
         # estimated
-        line_size = self.img_size[0] * 3  # rgb
+        line_size = self._img_size[0] * 3  # rgb
         data = len(self._data) - 1024  # - headers
         return int(data / line_size)
 
@@ -91,10 +96,10 @@ class Scan(object):
         img = self._get_current_image()
         img_size = img.size
         if start_line > 0:
-            img = img.crop(0, start_line, img_size[0], img_size[1])
+            img = img.crop((0, start_line, img_size[0], img_size[1]))
         if end_line >= 0:
             end_line -= start_line
-            img = img.crop(0, 0, img_size[0], end_line)
+            img = img.crop((0, 0, img_size[0], end_line))
         return img
 
     def cancel(self):

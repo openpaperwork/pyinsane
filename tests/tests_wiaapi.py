@@ -192,18 +192,14 @@ class TestScan(unittest.TestCase):
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_scan(self):
-        buf = 512000 * b"\0"
         scan = rawapi.start_scan(self.sources[0][1])
         try:
             while True:
-                ret = rawapi.read(scan, buf)
-                self.assertTrue(ret > 0)
+                buf = scan.read()
+                self.assertTrue(len(buf) > 0)
         except EOFError:
             pass
-        try:
-            rawapi.read(scan, buf)
-        except StopIteration:
-            pass
+        self.assertRaises(StopIteration, scan.read)  # no more than one page expected
 
     def tearDown(self):
         if os.name != "nt":

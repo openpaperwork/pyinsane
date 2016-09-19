@@ -8,46 +8,23 @@
 #include "util.h"
 
 
-//#define TRACE() do { \
-//    fprintf(stderr, "DEBUG: L%d : %s\n", __LINE__, __FUNCTION__); \
-//    fflush(stderr); \
-//} while(0)
+#define TRACE() do { \
+    fprintf(stderr, "DEBUG: L%d : %s\n", __LINE__, __FUNCTION__); \
+    fflush(stderr); \
+} while(0)
 #define TRACE()
 
 
-struct wia_image_stream_el {
-    char *data; // points to somewhere in the odata buffer
-    unsigned long nb_bytes; // remaining number of bytes between 'data' and the end of the buffer 'odata'
-
-    struct wia_image_stream_el *next;
-
-    char odata[]; // original data, as written by the source
-};
-
-
-PyinsaneImageStream::PyinsaneImageStream(check_still_waiting_for_data_cb *cb, void *cbData)
+PyinsaneImageStream::PyinsaneImageStream(
+        data_cb getData, void *cbData
+    ) : mGetData(getData), mCbData(cbData), mRefCount(1)
 {
-    mCb = cb;
-    mCbData = cbData;
-    mWritten = 0;
-    mRead = 0;
-    mFirst = NULL;
-    mLast = NULL;
     TRACE();
 }
 
 
 PyinsaneImageStream::~PyinsaneImageStream()
 {
-    struct wia_image_stream_el *el, *nel;
-
-    assert(mWritten == mRead); // cancel is not yet supported, so ...
-
-    TRACE();
-    for (el = mFirst ; el != NULL ; el = nel) {
-        nel = el->next;
-        free(el);
-    }
     TRACE();
 }
 
@@ -87,108 +64,19 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::UnlockRegion(ULARGE_INTEGER, ULAR
 }
 
 
-HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void *, ULONG, ULONG *)
 {
-    pv = pv;
-    cb = cb;
-    pcbRead = pcbRead;
-    struct wia_image_stream_el *current;
-
-    std::unique_lock<std::mutex> lock(mMutex);
-
-    TRACE();
-
-    if (mFirst == NULL) {
-        if (!mCb(this, mCbData)) {
-            *pcbRead = 0; // EOF
-            mMutex.unlock();
-            TRACE();
-            return S_OK;
-        }
-        TRACE();
-        mCondition.wait(lock);
-    }
-
-    if (mFirst == NULL) {
-        *pcbRead = 0; // EOF
-        TRACE();
-        return S_OK;
-    }
-
-    current = mFirst;
-
-    TRACE();
-
-    *pcbRead = WIA_MIN(current->nb_bytes, cb);
-    assert(*pcbRead > 0); // would mean EOF otherwise
-    memcpy(pv, current->data, *pcbRead);
-    mRead += *pcbRead;
-
-    TRACE();
-
-    if (current->nb_bytes == *pcbRead) {
-        TRACE();
-        // this element has been fully consumed
-        if (mLast == mFirst) {
-            mLast = NULL;
-            mFirst = NULL;
-        } else {
-            mFirst = mFirst->next;
-        }
-        free(current);
-        TRACE();
-    } else {
-        TRACE();
-        // there is remaining data in the element
-        current->data += *pcbRead;
-        current->nb_bytes -= *pcbRead;
-    }
-
-    TRACE();
-
-    return S_OK;
+    WIA_WARNING("Pyinsane: WARNING: IStream::Read() not implemented but called !");
+    return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten)
 {
-    pv = pv;
-    cb = cb;
-    pcbWritten = pcbWritten;
-    struct wia_image_stream_el *el;
-
-    if (cb == 0) {
-        return S_OK;
-    }
-
     TRACE();
-
-    el = (struct wia_image_stream_el *)malloc(sizeof(struct wia_image_stream_el) + cb);
-    memcpy(el->odata, pv, cb);
-    el->data = el->odata;
-    el->nb_bytes = cb;
-    el->next = NULL;
-
+    mGetData(pv, cb, mCbData);
     TRACE();
-
-    std::unique_lock<std::mutex> lock(mMutex);
-
-    TRACE();
-
-    if (mLast == NULL) {
-        TRACE();
-        assert(mFirst == NULL);
-        mFirst = el;
-        mLast = el;
-    } else {
-        TRACE();
-        mLast->next = el;
-        mLast = el;
-    }
-
     mWritten += cb;
-    mCondition.notify_all();
-    TRACE();
     return S_OK;
 }
 
@@ -262,33 +150,29 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void 
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::AddRef()
 {
-    //WIA_WARNING("Pyinsane: WARNING: IStream::AddRef() not implemented but called !");
     TRACE();
-    return 0;
+    mRefCount++;
+    return mRefCount;
 }
+
 
 ULONG STDMETHODCALLTYPE PyinsaneImageStream::Release()
 {
-    //WIA_WARNING("Pyinsane: WARNING: IStream::Release() not implemented but called !");
     TRACE();
-    return 0;
+    mRefCount--;
+    if (mRefCount == 0) {
+        TRACE();
+        delete this;
+    }
+    return mRefCount;
 }
 
-void STDMETHODCALLTYPE PyinsaneImageStream::wakeUpListeners()
+
+PyinsaneWiaTransferCallback::PyinsaneWiaTransferCallback(
+        data_cb getData, end_of_page_cb eop, end_of_scan_cb eos, void *cbData
+    ) : mGetData(getData), mEop(eop), mEos(eos), mCbData(cbData), mRefCount(1)
 {
     TRACE();
-    std::unique_lock<std::mutex> lock(mMutex);
-    mCondition.notify_all();
-    TRACE();
-}
-
-static check_still_waiting_for_data_cb check_still_waiting;
-
-
-PyinsaneWiaTransferCallback::PyinsaneWiaTransferCallback()
-{
-    TRACE();
-    mRunning = 1;
 }
 
 
@@ -297,42 +181,11 @@ PyinsaneWiaTransferCallback::~PyinsaneWiaTransferCallback()
     TRACE();
 }
 
-void PyinsaneWiaTransferCallback::wakeUpReader()
-{
-    PyinsaneImageStream *stream;
-
-    if (!mStreams.empty()) {
-        TRACE();
-        stream = mStreams.back();
-        stream->wakeUpListeners();
-    }
-}
-
-void PyinsaneWiaTransferCallback::makeNextStream()
-{
-    PyinsaneImageStream *stream;
-
-    TRACE();
-    wakeUpReader();
-
-    TRACE();
-    stream = new PyinsaneImageStream(check_still_waiting, this);
-    mStreams.push_back(stream);
-    mCondition.notify_all();
-    TRACE();
-}
-
 HRESULT PyinsaneWiaTransferCallback::GetNextStream(
         LONG, BSTR, BSTR, IStream **ppDestination)
 {
     TRACE();
-    std::unique_lock<std::mutex> lock(mMutex);
-    if (mStreams.empty()) {
-        TRACE();
-        makeNextStream();
-    }
-    TRACE();
-    *ppDestination = mStreams.back();
+    *ppDestination = new PyinsaneImageStream(mGetData, mCbData);
     TRACE();
     return S_OK;
 }
@@ -341,96 +194,13 @@ HRESULT PyinsaneWiaTransferCallback::GetNextStream(
 HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG, WiaTransferParams *params)
 {
     TRACE();
-    std::unique_lock<std::mutex> lock(mMutex);
-    TRACE();
     if (params->lMessage == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
-        TRACE();
-        mRunning = 0;
-        wakeUpReader();
+        mEop(mCbData); // mark the current page as finished
+        mEos(mCbData);
     } else if (params->lMessage == WIA_TRANSFER_MSG_NEW_PAGE) {
-        TRACE();
-        makeNextStream();
+        mEop(mCbData);
     }
-    TRACE();
     return S_OK;
-}
-
-
-PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentReadStream()
-{
-    PyinsaneImageStream *stream;
-
-    TRACE();
-    std::unique_lock<std::mutex> lock(mMutex);
-
-    if (mStreams.empty()) {
-        TRACE();
-        if (mRunning) {
-            // Still getting data. Wait for next page
-            TRACE();
-            mCondition.wait(lock);
-        }
-    }
-    TRACE();
-    if (mStreams.empty()) {
-        TRACE();
-        return NULL;
-    }
-    TRACE();
-    stream = mStreams.front();
-    return stream;
-}
-
-
-void PyinsaneWiaTransferCallback::popReadStream()
-{
-    TRACE();
-    std::unique_lock<std::mutex> lock(mMutex);
-    assert(!mStreams.empty());
-    TRACE();
-    delete mStreams.front();
-    mStreams.pop_front();
-    TRACE();
-}
-
-
-PyinsaneImageStream *PyinsaneWiaTransferCallback::getCurrentWriteStream()
-{
-    PyinsaneImageStream *stream;
-
-    TRACE();
-    if (mStreams.empty()) {
-        TRACE();
-        return NULL;
-    }
-    TRACE();
-    stream = mStreams.back();
-    TRACE();
-    return stream;
-}
-
-
-static int check_still_waiting(void *_img_stream, void *_data)
-{
-    PyinsaneImageStream *stream = (PyinsaneImageStream *)_img_stream;
-    PyinsaneWiaTransferCallback *callbacks = (PyinsaneWiaTransferCallback *)_data;
-
-    TRACE();
-    callbacks->mMutex.lock();
-    if (!callbacks->mRunning) {
-        TRACE();
-        callbacks->mMutex.unlock();
-        return 0;
-    }
-    TRACE();
-    if (callbacks->getCurrentWriteStream() != stream) {
-        TRACE();
-        callbacks->mMutex.unlock();
-        return 0;
-    }
-    TRACE();
-    callbacks->mMutex.unlock();
-    return 1;
 }
 
 
@@ -465,14 +235,18 @@ HRESULT STDMETHODCALLTYPE PyinsaneWiaTransferCallback::QueryInterface(REFIID rii
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::AddRef()
 {
-    //WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::AddRef() not implemented but called !");
     TRACE();
-    return 0;
+    mRefCount++;
+    return mRefCount;
 }
 
 ULONG STDMETHODCALLTYPE PyinsaneWiaTransferCallback::Release()
 {
-    //WIA_WARNING("Pyinsane: WARNING: WiaTransferCallback::Release() not implemented but called !");
     TRACE();
-    return 0;
+    mRefCount--;
+    if (mRefCount == 0) {
+        TRACE();
+        delete this;
+    }
+    return mRefCount;
 }

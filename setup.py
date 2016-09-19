@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 
 import os
+import platform
 
 from setuptools import Extension
 from setuptools import setup
+
+if platform.architecture()[0] == '32bit':
+    DEFAULT_ATL_WINDDK_LIB_DIR = "c:\\winddk\\7600.16385.1\\lib\\ATL\\amd64"
+else:
+    DEFAULT_ATL_WINDDK_LIB_DIR = "c:\\winddk\\7600.16385.1\\lib\\ATL\\i386"
 
 if os.name == "nt":
     extensions = [
@@ -13,7 +19,14 @@ if os.name == "nt":
                 'src/pyinsane/wia/rawapi.cpp',
                 'src/pyinsane/wia/transfer.cpp',
             ],
-            include_dirs=[],
+            include_dirs=[
+                # Yeah, I know.
+                os.getenv("WINDDK_INCLUDE_DIR", "c:\\winddk\\7600.16385.1\\inc\\atl71"),
+            ],
+            library_dirs=[
+                # Yeah, I know.
+                os.getenv("WINDDK_LIB_DIR", DEFAULT_ATL_WINDDK_LIB_DIR),
+            ],
             libraries=[
                 "ole32",
                 "wiaguid",

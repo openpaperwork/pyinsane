@@ -124,32 +124,72 @@ def set_property(dev_or_src, propname, propvalue):
                      propname=propname, propvalue=propvalue).wait()
 
 
-def _start_scan(src):
-    ret = _rawapi.start_scan(src)
+class WiaCallbacks(object):
+    def __init__(self):
+        super(WiaCallbacks, self).__init__()
+        self.received = []
+        self.condition = threading.Condition()
+        self.buffer = 512000 * b"\0"
+
+    def get_data_cb(self, nb_bytes):
+        self.condition.acquire()
+        try:
+            data = self.buffer[:nb_bytes]
+            self.received.append(data)
+            self.condition.notify_all()
+        finally:
+            self.condition.release()
+
+    def end_of_page_cb(self):
+        self.condition.acquire()
+        try:
+            self.received.append(
+                EOFError()
+            )
+            self.condition.notify_all()
+        finally:
+            self.condition.release()
+
+    def end_of_scan_cb(self):
+        self.condition.acquire()
+        try:
+            self.received.append(
+                StopIteration()
+            )
+            self.condition.notify_all()
+        finally:
+            self.condition.release()
+
+    def read(self):
+        self.condition.acquire()
+        try:
+            if len(self.received) <= 0:
+                self.condition.wait()
+            popped = self.received.pop(0)
+            if isinstance(popped, Exception):
+                raise popped
+            return popped
+        finally:
+            self.condition.release()
+
+
+def _start_scan(src, out):
+    ret = _rawapi.download(
+        src,
+        out.get_data_cb,
+        out.end_of_page_cb,
+        out.end_of_scan_cb,
+        out.buffer,
+    )
     if ret is None:
         raise WIAException("Failed to start scan")
     return ret
-
-
-def _download(scan):
-    _rawapi.download(scan)
 
 
 def start_scan(src):
-    r = WiaAction(_start_scan, src=src).wait()
-    WiaAction(_download, scan=r).start()  # don't wait
-    return r
-
-
-def read(scan, buf):
-    ret = _rawapi.read(scan, buf)
-    if ret is None:
-        raise WIAException("Failed to start scan")
-    elif ret == 0:
-        raise EOFError()
-    elif ret == -1:
-        raise StopIteration()
-    return ret
+    out = WiaCallbacks()
+    WiaAction(_start_scan, src=src, out=out).start()  # don't wait
+    return out
 
 
 def exit():

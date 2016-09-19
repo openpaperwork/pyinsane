@@ -2,20 +2,19 @@
 #define __PYINSANE_WIA_TRANSFER_H
 
 #include <list>
-#include <mutex>
-#include <thread>
 
 #include <windows.h>
-#include <atlbase.h>
 #include <wia.h>
 #include <Sti.h>
 
-typedef int (check_still_waiting_for_data_cb)(void *img_stream, void *data);
+typedef void (*data_cb)(const void *data, int nb_bytes, void *cb_data);
+typedef void (*end_of_page_cb)(void *cb_data);
+typedef void (*end_of_scan_cb)(void *cb_data);
 
 class PyinsaneImageStream : public IStream
 {
 public:
-    PyinsaneImageStream(check_still_waiting_for_data_cb *cb, void *cbData);
+    PyinsaneImageStream(data_cb getData, void *cbData);
     ~PyinsaneImageStream();
 
     virtual HRESULT STDMETHODCALLTYPE Clone(IStream **);
@@ -34,25 +33,17 @@ public:
     virtual ULONG STDMETHODCALLTYPE AddRef();
     virtual ULONG STDMETHODCALLTYPE Release();
 
-    virtual void wakeUpListeners();
-
 private:
-    check_still_waiting_for_data_cb *mCb;
-    void *mCbData;
     unsigned long long mWritten;
-    unsigned long long mRead;
-
-    std::mutex mMutex;
-    std::condition_variable mCondition;
-
-    struct wia_image_stream_el *mFirst;
-    struct wia_image_stream_el *mLast;
+    int mRefCount;
+    data_cb mGetData;
+    void *mCbData;
 };
 
 class PyinsaneWiaTransferCallback : public IWiaTransferCallback
 {
 public:
-    PyinsaneWiaTransferCallback();
+    PyinsaneWiaTransferCallback(data_cb getData, end_of_page_cb eop, end_of_scan_cb eos, void *cbData);
     ~PyinsaneWiaTransferCallback();
 
     // interface methods
@@ -62,20 +53,12 @@ public:
     virtual ULONG STDMETHODCALLTYPE AddRef();
     virtual ULONG STDMETHODCALLTYPE Release();
 
-    // Pyinsane methods
-    PyinsaneImageStream *getCurrentReadStream();
-    void popReadStream();
-    PyinsaneImageStream *getCurrentWriteStream();
-    int mRunning;
-    std::mutex mMutex;
-
 private:
-    void makeNextStream();
-    void wakeUpReader();
-
-    std::condition_variable mCondition;
-
-    std::list<PyinsaneImageStream *> mStreams;
+    data_cb mGetData;
+    end_of_page_cb mEop;
+    end_of_scan_cb mEos;
+    void *mCbData;
+    int mRefCount;
 };
 
 #endif

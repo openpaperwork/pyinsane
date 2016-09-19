@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include <windows.h>
-#include <atlbase.h>
 #include <wia.h>
 #include <Sti.h>
 
@@ -31,7 +30,7 @@ static const struct wia_prop_int g_possible_access_rights[] = {
 
 static const struct wia_prop_int g_possible_compression[] = {
     { WIA_COMPRESSION_NONE, "none", },
-    { WIA_COMPRESSION_AUTO, "auto", },
+    { 100 /* WIA_COMPRESSION_AUTO ; Visual C++ 2010 doesn't know this value */, "auto", },
     { WIA_COMPRESSION_BI_RLE4, "bi_rle4", },
     { WIA_COMPRESSION_BI_RLE8, "bi_rle8", },
     { WIA_COMPRESSION_G3, "g3", },
@@ -44,7 +43,7 @@ static const struct wia_prop_int g_possible_compression[] = {
 };
 
 static const struct wia_prop_int g_possible_datatype[] = {
-    { WIA_DATA_AUTO, "auto", },
+    { 100 /* WIA_DATA_AUTO ; Visual C++ 2010 doesn't know this value */, "auto", },
     { WIA_DATA_COLOR, "color", },
     { WIA_DATA_COLOR_DITHER, "color_dither", },
     { WIA_DATA_COLOR_THRESHOLD, "color_threshold", },

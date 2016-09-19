@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <atlbase.h>
 #include <comdef.h>
 #include <windows.h>
-#include <atlbase.h>
 #include <wia.h>
 #include <Sti.h>
 
@@ -529,56 +529,137 @@ static void end_scan(PyObject *capsule)
     free(scan);
 }
 
-static PyObject *start_scan(PyObject *, PyObject *args)
+
+struct download {
+    HANDLE mutex; // because it seems that the callbacks can be called from many threads !
+    Py_buffer buffer;
+    PyObject *get_data_cb;
+    PyObject *end_of_page_cb;
+    PyObject *end_of_scan_cb;
+    PyThreadState *_save;
+};
+
+
+static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
 {
-    PyObject *capsule;
-    struct wia_source *src;
-    struct wia_scan *scan;
-    HRESULT hr;
+    struct download *download = (struct download *)cb_data;
+    const char *cdata = (const char *)data; // because Visual C++ says "unknown size" for (void) elements.
+    int nb;
+    PyObject *arglist;
+    PyObject *res;
 
-    if (!PyArg_ParseTuple(args, "O", &capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: start_scan(): Invalid args");
-        return NULL;
+    WaitForSingleObject(download->mutex, 0);
+
+    PyEval_RestoreThread(download->_save);
+
+    for ( ; nb_bytes > 0 ; nb_bytes -= nb, cdata += nb) {
+        nb = WIA_MIN(nb_bytes, download->buffer.len);
+        memcpy(download->buffer.buf, cdata, nb);
+
+        arglist = Py_BuildValue("(i)", nb);
+        res = PyEval_CallObject(download->get_data_cb, arglist);
+        if (res == NULL) {
+            WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->get_data_cb !");
+        }
+        Py_XDECREF(res);
     }
 
-    src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
-    if (src == NULL)
-        Py_RETURN_NONE;
+    download->_save = PyEval_SaveThread();
 
-    scan = (struct wia_scan *)calloc(1, sizeof(struct wia_scan));
-    scan->src = src;
+    ReleaseMutex(download->mutex);
+}
 
-    hr = scan->src->source->QueryInterface(IID_IWiaTransfer, (void**)&scan->transfer);
-    if (FAILED(hr)) {
-        WIA_WARNING("source->QueryInterface(WiaTransfer) failed");
-        free(scan);
-        Py_RETURN_NONE;
+
+static void end_of_page_wrapper(void *cb_data)
+{
+    struct download *download = (struct download *)cb_data;
+    PyObject *res;
+
+    WaitForSingleObject(download->mutex, 0);
+
+    PyEval_RestoreThread(download->_save);
+    res = PyEval_CallObject(download->end_of_page_cb, NULL);
+    if (res == NULL) {
+        WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->end_of_page_cb !");
     }
+    Py_XDECREF(res);
+    download->_save = PyEval_SaveThread();
 
-    scan->callbacks = new PyinsaneWiaTransferCallback();
-    return PyCapsule_New(scan, WIA_PYCAPSULE_SCAN_NAME, end_scan);
+    ReleaseMutex(download->mutex);
+}
+
+
+static void end_of_scan_wrapper(void *cb_data)
+{
+    struct download *download = (struct download *)cb_data;
+    PyObject *res;
+
+    WaitForSingleObject(download->mutex, 0);
+
+    PyEval_RestoreThread(download->_save);
+    res = PyEval_CallObject(download->end_of_scan_cb, NULL);
+    if (res == NULL) {
+        WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->end_of_scan_cb !");
+    }
+    Py_XDECREF(res);
+    download->_save = PyEval_SaveThread();
+
+    ReleaseMutex(download->mutex);
 }
 
 
 static PyObject *download(PyObject *, PyObject *args)
 {
     PyObject *capsule;
-    struct wia_scan *scan;
+    struct download dl_data = { 0 };
+    struct wia_scan scan;
     HRESULT hr;
+    struct wia_source *src;
 
-    if (!PyArg_ParseTuple(args, "O", &capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: scan_read(): Invalid args");
+    if (!PyEval_ThreadsInitialized()) {
+        WIA_WARNING("Python thread not yet initialized ?!");
+        PyEval_InitThreads();
+    }
+
+    if (!PyArg_ParseTuple(args, "OOOOy*",
+                &capsule,
+                &dl_data.get_data_cb, &dl_data.end_of_page_cb, &dl_data.end_of_scan_cb,
+                &dl_data.buffer
+            )) {
+        WIA_WARNING("Pyinsane: WARNING: download(): Invalid args");
         return NULL;
     }
 
-    scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
-    if (scan == NULL) {
+    src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
+    if (src == NULL) {
+        WIA_WARNING("Pyinsane: WARNING: wrong param type. Expected a scan source");
         return NULL;
     }
 
-    Py_BEGIN_ALLOW_THREADS;
-    hr = scan->transfer->Download(0, scan->callbacks);
-    Py_END_ALLOW_THREADS;
+    if (!PyCallable_Check(dl_data.get_data_cb)
+            || !PyCallable_Check(dl_data.end_of_page_cb)
+            || !PyCallable_Check(dl_data.end_of_scan_cb)) {
+        WIA_WARNING("Pyinsane: WARNING: download(): wrong param type. Expected callback(s)");
+        Py_RETURN_NONE;
+    }
+
+    dl_data.mutex = CreateMutex(NULL, FALSE, NULL);
+
+    hr = src->source->QueryInterface(IID_IWiaTransfer, (void**)&scan.transfer);
+    if (FAILED(hr)) {
+        WIA_WARNING("source->QueryInterface(WiaTransfer) failed");
+        Py_RETURN_NONE;
+    }
+
+    scan.callbacks = new PyinsaneWiaTransferCallback(
+        get_data_wrapper, end_of_page_wrapper, end_of_scan_wrapper,
+        &dl_data
+    );
+
+    dl_data._save = PyEval_SaveThread();
+    hr = scan.transfer->Download(0, scan.callbacks);
+    PyEval_RestoreThread(dl_data._save);
+
     if (FAILED(hr)) {
         _com_error err(hr);
         LPCTSTR errMsg = err.ErrorMessage();
@@ -587,61 +668,10 @@ static PyObject *download(PyObject *, PyObject *args)
 
         std::cerr << "Pyinsane: WARNING: source->transfer->Download() failed: " << hr << " ; " << errMsg << std::endl;
 
-        scan->transfer->Release();
+        scan.transfer->Release();
     }
     Py_RETURN_NONE;
 }
-
-
-static PyObject *scan_read(PyObject *, PyObject *args)
-{
-    PyObject *capsule;
-    Py_buffer buf;
-    struct wia_scan *scan;
-    unsigned long urd;
-    HRESULT hr;
-    PyThreadState *_save;
-
-    _save = PyEval_SaveThread();
-
-    if (!PyArg_ParseTuple(args, "Oy*", &capsule, &buf)) {
-        WIA_WARNING("Pyinsane: WARNING: scan_read(): Invalid args");
-        PyEval_RestoreThread(_save);
-        return NULL;
-    }
-
-    scan = (struct wia_scan *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SCAN_NAME);
-    if (scan == NULL) {
-        PyEval_RestoreThread(_save);
-        return NULL;
-    }
-
-    if (scan->current_stream == NULL) {
-        scan->current_stream = scan->callbacks->getCurrentReadStream();
-        if (scan->current_stream == NULL) {
-            PyEval_RestoreThread(_save);
-            return PyLong_FromLong(-1);
-        }
-    }
-
-    urd = (unsigned long)buf.len;
-    hr = scan->current_stream->Read(buf.buf, urd, &urd);
-    if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: Read() failed");
-        PyEval_RestoreThread(_save);
-        Py_RETURN_NONE;
-    }
-
-    if (urd == 0) {
-        // end of page
-        scan->current_stream = NULL;
-        scan->callbacks->popReadStream();
-    }
-
-    PyEval_RestoreThread(_save);
-    return PyLong_FromLong(urd);
-}
-
 
 static PyObject *exit(PyObject *, PyObject* args)
 {
@@ -661,9 +691,7 @@ static PyMethodDef rawapi_methods[] = {
 	{"get_properties", get_properties, METH_VARARGS, NULL},
 	{"get_sources", get_sources, METH_VARARGS, NULL},
 	{"open", open_device, METH_VARARGS, NULL},
-	{"start_scan", start_scan, METH_VARARGS, NULL},
 	{"download", download, METH_VARARGS, NULL},
-	{"read", scan_read, METH_VARARGS, NULL},
 	{"set_property", set_property, METH_VARARGS, NULL},
 	{"exit", exit, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL},
