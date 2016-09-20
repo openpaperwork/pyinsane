@@ -86,8 +86,8 @@ class Scan(object):
             return self._img_size
         options = self._session.scanner.options
         return (
-            int(options['xextend'].value),
-            int(options['yextend'].value)
+            int(options['xextent'].value),
+            int(options['yextent'].value)
         )
 
     expected_size = property(_get_expected_size)
