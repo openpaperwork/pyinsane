@@ -48,6 +48,16 @@ def set_scanner_opt(scanner, opt, values):
                 break
         # otherwise just keep going, it will raise a KeyError anyway
 
+    if not scanner.options[opt].capabilities.is_active():
+        logger.error(
+            "Unable to set scanner option [{}]:"
+            " Option is not active".format(scanner_opt_name)
+        )
+        # this may not be a problem. For instance, 'source' is not active
+        # on all scanners, and there is no point in raising an exception
+        # when trying to set it to 'FlatBed' or 'Auto'
+        return
+
     last_exc = None
     for value in values:
 
