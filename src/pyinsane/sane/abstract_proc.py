@@ -167,7 +167,7 @@ class Scan(object):
 
     expected_size = property(_get_expected_size)
 
-    def get_image(self, start_line, end_line):
+    def get_image(self, start_line=0, end_line=-1):
         img = remote_do(
             'scan_get_image', self._scanner_name, start_line, end_line
         )

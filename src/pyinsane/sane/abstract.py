@@ -257,7 +257,9 @@ class Scan(object):
 
     expected_size = property(_get_expected_size)
 
-    def get_image(self, start_line, end_line):
+    def get_image(self, start_line=0, end_line=-1):
+        if end_line < 0:
+            end_line = len(self.__raw_lines)
         assert(end_line > start_line)
         lines = self.__raw_lines[start_line:end_line]
         lines = b"".join(lines)
