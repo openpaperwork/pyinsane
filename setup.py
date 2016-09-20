@@ -44,9 +44,13 @@ else:
 setup(
     name="pyinsane2",
     version="2.0.0",
-    description=("Python library to access and use image scanners"),
+    description=(
+        "Python library to access and use image scanners (Linux/Windows/etc)"
+    ),
     long_description=(
-        "Python library to access and use image scanners (devices)"
+        "Python library to access and use image scanners (devices)."
+        " Works on GNU/Linux (Sane), *BSD (Sane), Windows >= Vista (WIA 2),"
+        " MacOSX (Sane), etc."
     ),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
