@@ -1,40 +1,26 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
 
-try:
-    import src.abstract as pyinsane
-except ImportError:
-    import pyinsane.abstract as pyinsane
+import pyinsane2
 
 
 def main(args):
     dstdir = args[0]
 
-    devices = pyinsane.get_devices()
+    devices = pyinsane2.get_devices()
     assert(len(devices) > 0)
     device = devices[0]
 
     print("Will use the scanner [%s](%s)"
           % (str(device), device.name))
 
-    possible_srcs = device.options['source'].constraint
-    adf_src = None
-    for src in possible_srcs:
-        if "ADF" in src or "Feeder" in src:
-            adf_src = src
-            break
-
-    if adf_src is None:
-        print("No document feeder found")
-        sys.exit(1)
-
-    print("Will use the source [%s]" % adf_src)
-
-    device.options['source'].value = "ADF"
+    pyinsane2.set_scanner_opt(device, "source", ["ADF", "Feeder"])
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
-    device.options['mode'].value = 'Color'
+    pyinsane2.set_scanner_opt(device, "mode", ["Color"])
+    pyinsane2.maximize_scan_area(device)
+
     scan_session = device.scan(multiple=True)
 
     try:
@@ -58,4 +44,8 @@ if __name__ == "__main__":
         print("Usage:")
         print("  %s <dst directory>" % sys.argv[0])
         sys.exit(1)
-    main(args)
+    pyinsane2.init()
+    try:
+        main(args)
+    finally:
+        pyinsane2.exit()

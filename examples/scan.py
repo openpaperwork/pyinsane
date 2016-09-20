@@ -1,24 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
 from PIL import Image
 
-try:
-    import src.abstract as pyinsane
-except ImportError:
-    import pyinsane.abstract as pyinsane
+import pyinsane2
 
 
-def set_scanner_opt(scanner, opt, value):
-    print("Setting %s to %s" % (opt, str(value)))
-    try:
-        scanner.options[opt].value = value
-    except (KeyError, pyinsane.SaneException) as exc:
-        print("Failed to set %s to %s: %s" % (opt, str(value), str(exc)))
-
-
-if __name__ == "__main__":
+def main():
     steps = False
 
     args = sys.argv[1:]
@@ -40,7 +29,7 @@ if __name__ == "__main__":
     print("Output file: %s" % output_file)
 
     print("Looking for scanners ...")
-    devices = pyinsane.get_devices()
+    devices = pyinsane2.get_devices()
     if (len(devices) <= 0):
         print("No scanner detected !")
         sys.exit(1)
@@ -54,23 +43,11 @@ if __name__ == "__main__":
 
     print("")
 
-    source = 'Auto'
-    # beware: don't select a source that is not in the constraint,
-    # with some drivers (Brother DCP-8025D for instance), it may segfault.
-    if 'source' in device.options:
-        if (device.options['source'].constraint_type
-                == pyinsane.SaneConstraintType.STRING_LIST):
-            if 'Auto' in device.options['source'].constraint:
-                source = 'Auto'
-            elif 'FlatBed' in device.options['source'].constraint:
-                source = 'FlatBed'
-        else:
-            print("Warning: Unknown constraint type on the source: %d"
-                % device.options['source'].constraint_type)
-
-    set_scanner_opt(device, 'resolution', 300)
-    set_scanner_opt(device, 'source', source)
-    set_scanner_opt(device, 'mode', 'Color')
+    pyinsane2.set_scanner_opt(device, 'source', ['Auto', 'FlatBed'])
+    pyinsane2.set_scanner_opt(device, 'resolution', [300])
+    # Beware: Some scanner have "Lineart" or "Gray" as default mode
+    pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
+    pyinsane2.maximize_scan_area(device)
 
     print("")
 
@@ -104,12 +81,12 @@ if __name__ == "__main__":
 
             if steps:
                 next_line = scan_session.scan.available_lines[1]
-                if (next_line > last_line):
+                if (next_line > last_line + 100):
                     subimg = scan_session.scan.get_image(last_line, next_line)
                     img.paste(subimg, (0, last_line))
                     img.save("%s-%05d.%s" % (steps_filename[0], last_line,
                                              steps_filename[1]), "JPEG")
-                last_line = next_line
+                    last_line = next_line
     except EOFError:
         pass
 
@@ -118,3 +95,10 @@ if __name__ == "__main__":
     img = scan_session.images[0]
     img.save(output_file, "JPEG")
     print("Done")
+
+if __name__ == "__main__":
+    pyinsane2.init()
+    try:
+        main()
+    finally:
+        pyinsane2.exit()

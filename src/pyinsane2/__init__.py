@@ -1,0 +1,139 @@
+import logging
+import os
+
+
+logger = logging.getLogger(__name__)
+
+
+__all__ = [
+    'init',
+    'exit',
+    'Scanner',
+    'ScannerOption',
+    'PyinsaneException',
+    'get_devices',
+    'set_scanner_opt',
+    'maximize_scan_area',
+]
+
+from .util import PyinsaneException
+
+if os.name == "nt":
+    from .wia.abstract import *
+else:
+    from .sane.abstract_proc import *
+
+
+def __normalize_value(value):
+    if isinstance(value, str):
+        return value.lower()
+    return value
+
+
+def set_scanner_opt(scanner, opt, values):
+    """
+    Utility function to set most common values easily.
+
+    Examples:
+        set_scanner_opt(scanner, "source", ["flatbed"])
+        set_scanner_opt(scanner, "source", ["ADF", "feeder"])
+    """
+    assert(values is not None and values != [])
+
+    if not opt in scanner.options:
+        # check it's not just a casing problem
+        for key in scanner.options.keys():
+            if opt.lower() == key.lower():
+                opt = key
+                break
+        # otherwise just keep going, it will raise a KeyError anyway
+
+    last_exc = None
+    for value in values:
+
+        # See if we can normalize it first
+        if isinstance(scanner.options[opt].constraint, list):
+            found = False
+            for possible in scanner.options[opt].constraint:
+                if __normalize_value(value) == __normalize_value(possible):
+                    value = possible
+                    found = True
+                    break
+            if not found:
+                # no direct match. See if we have an indirect one
+                # for instance, 'feeder' in 'Automatic Document Feeder'
+                for possible in scanner.options[opt].constraint:
+                    if __normalize_value(value) in __normalize_value(possible):
+                        logger.info(
+                            "Value for [{}] changed from [{}] to [{}]".format(
+                                opt, value, possible
+                            )
+                        )
+                        value = possible
+                        found = True
+                        break
+            # beware: don't select a source that is not in the constraint,
+            # with some drivers (Brother DCP-8025D for instance),
+            # it may segfault.
+            if not found:
+                last_exc = PyinsaneException(
+                    "Invalid value [{}] for option [{}]".format(
+                        value, opt
+                    )
+                )
+                continue
+
+        # Then try to set it
+        try:
+            scanner.options[opt].value = value
+            logger.info("[{}] set to [{}]".format(opt, value))
+            return
+        except (KeyError, pyinsane2.PyinsaneException) as exc:
+            logger.info("Failed to set [{}] to [{}]: [{}]".format(
+                opt, str(value), str(exc))
+            )
+            last_exc = exc
+    logger.warning("Failed to set [{}] to [{}]: [{}]".format(
+        opt, values, last_exc)
+    )
+    raise last_exc
+
+
+def __set_scan_area_pos(options, opt_name, select_value_func, missing_options):
+    if opt_name not in options:
+        if missing_options:
+            missing_options.append(opt_name)
+    else:
+        if not options[opt_name].capabilities.is_active():
+            logger.warning(
+                "Unable to set scanner option [{}]:"
+                " Option is not active".format(opt_name)
+            )
+            return
+        constraint = options[opt_name].constraint
+        if isinstance(constraint, tuple):
+            value = select_value_func(constraint[0], constraint[1])
+        elif isinstance(constraint, list):
+            value = select_value_func(constraint)
+        options[opt_name].value = value
+
+
+def maximize_scan_area(scanner):
+    """
+    Utility function to make sure the scanner scan the biggest area possible.
+    Must be called *after* setting the resolution.
+    """
+    opts = scanner.options
+    missing_opts = []
+    __set_scan_area_pos(opts, "tl-x", min, missing_opts)
+    __set_scan_area_pos(opts, "tl-y", min, missing_opts)
+    __set_scan_area_pos(opts, "br-x", max, missing_opts)
+    __set_scan_area_pos(opts, "br-y", max, missing_opts)
+    __set_scan_area_pos(opts, "page-height", max, None)
+    __set_scan_area_pos(opts, "page-width", max, None)
+    if missing_opts:
+        logger.warning(
+            "Failed to maximize the scan area. Missing options: {}".format(
+                ", ".join(missing_opts)
+            )
+        )

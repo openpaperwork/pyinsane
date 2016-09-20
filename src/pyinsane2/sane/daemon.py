@@ -7,7 +7,7 @@ import shutil
 import struct
 import sys
 
-import pyinsane.abstract as pyinsane
+import pyinsane2.sane.abstract as pyinsane
 
 
 logger = logging.getLogger(__name__)
@@ -89,6 +89,10 @@ def cancel(scanner_name):
     return scan_sessions[scanner_name].scan.cancel()
 
 
+def exit():
+    sys.exit(0)
+
+
 COMMANDS = {
     "get_devices": get_devices,
     "get_options": get_options,
@@ -101,11 +105,14 @@ COMMANDS = {
     "scan_get_expected_size": get_expected_size,
     "scan_get_image": get_image,
     "scan_cancel": cancel,
+    "exit": exit,
 }
 
 
 def main_loop(fifo_dir, fifo_filepaths):
     global COMMANDS
+
+    pyinsane.init()
 
     length_size = len(struct.pack("i", 0))
     fifo_c2s = os.open(fifo_filepaths[0], os.O_RDONLY)

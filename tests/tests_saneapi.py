@@ -1,9 +1,8 @@
-import sys
-sys.path = ["src"] + sys.path
-
+import os
 import unittest
 
-import rawapi
+if os.name != "nt":
+    from pyinsane2.sane import rawapi
 
 
 def get_test_devices():
@@ -21,6 +20,7 @@ class TestSaneInit(unittest.TestCase):
     def setUp(self):
         pass
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_init(self):
         version = rawapi.sane_init()
         self.assertTrue(version.is_current())
@@ -29,10 +29,12 @@ class TestSaneInit(unittest.TestCase):
     def tearDown(self):
         pass
 
+
 class TestSaneGetDevices(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_devices(self):
         devices = get_test_devices()
         self.assertTrue(len(devices) > 0)
@@ -48,9 +50,11 @@ class TestSaneOpen(unittest.TestCase):
         self.assertTrue(len(devices) > 0)
         self.dev_name = devices[0].name
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_open_invalid(self):
         self.assertRaises(rawapi.SaneException, rawapi.sane_open, "whatever")
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_open_valid(self):
         dev_handle = rawapi.sane_open(self.dev_name)
         rawapi.sane_close(dev_handle)
@@ -67,6 +71,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_option_descriptor_0(self):
         opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
         # XXX(Jflesch): The name may vary: sometimes it's empty, sometimes it's
@@ -80,6 +85,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
         self.assertEqual(opt_desc.constraint_type,
                          rawapi.SaneConstraintType.NONE)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_option_descriptor_out_of_bounds(self):
         # XXX(Jflesch): Sane's documentation says get_option_descriptor()
         # should return NULL if the index value is invalid. It seems the actual
@@ -104,6 +110,7 @@ class TestSaneControlOption(unittest.TestCase):
         self.dev_handle = rawapi.sane_open(dev_name)
         self.nb_options = rawapi.sane_get_option_value(self.dev_handle, 0)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_option_value(self):
         for opt_idx in range(0, self.nb_options):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
@@ -114,6 +121,7 @@ class TestSaneControlOption(unittest.TestCase):
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertNotEqual(val, None)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_set_option_value(self):
         for opt_idx in range(0, self.nb_options):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
@@ -125,6 +133,7 @@ class TestSaneControlOption(unittest.TestCase):
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertEqual(val, "Gray")
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_set_option_auto(self):
         # TODO(Jflesch)
         pass
@@ -142,6 +151,7 @@ class TestSaneScan(unittest.TestCase):
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_simple_scan(self):
         # XXX(Jflesch): set_io_mode() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
@@ -165,6 +175,7 @@ class TestSaneScan(unittest.TestCase):
             pass
         rawapi.sane_cancel(self.dev_handle)
 
+    @unittest.skipIf(os.name == "nt", "sane only")
     def test_cancelled_scan(self):
         try:
             rawapi.sane_start(self.dev_handle)
@@ -177,41 +188,3 @@ class TestSaneScan(unittest.TestCase):
     def tearDown(self):
         rawapi.sane_close(self.dev_handle)
         rawapi.sane_exit()
-
-
-def get_all_tests():
-    all_tests = unittest.TestSuite()
-
-    tests = unittest.TestSuite([TestSaneInit("test_init")])
-    all_tests.addTest(tests)
-
-    tests = unittest.TestSuite([TestSaneGetDevices("test_get_devices")])
-    all_tests.addTest(tests)
-
-    tests = unittest.TestSuite([
-        TestSaneOpen("test_open_invalid"),
-        TestSaneOpen("test_open_valid"),
-    ])
-    all_tests.addTest(tests)
-
-    tests = unittest.TestSuite([
-        TestSaneGetOptionDescriptor("test_get_option_descriptor_0"),
-        TestSaneGetOptionDescriptor(
-            "test_get_option_descriptor_out_of_bounds"),
-    ])
-    all_tests.addTest(tests)
-
-    tests = unittest.TestSuite([
-        TestSaneControlOption("test_get_option_value"),
-        TestSaneControlOption("test_set_option_value"),
-        TestSaneControlOption("test_set_option_auto"),
-    ])
-    all_tests.addTest(tests)
-
-    tests = unittest.TestSuite([
-        TestSaneScan("test_simple_scan"),
-        TestSaneScan("test_cancelled_scan"),
-    ])
-    all_tests.addTest(tests)
-
-    return all_tests

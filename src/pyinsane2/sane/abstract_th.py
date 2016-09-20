@@ -87,12 +87,12 @@ sane_thread = SaneWorker()
 sane_thread.start()
 
 
-def sane_init():
-    return SaneAction(abstract.sane_init).wait()
+def init():
+    return SaneAction(abstract.init).wait()
 
 
-def sane_exit():
-    return SaneAction(abstract.sane_exit).wait()
+def exit():
+    return SaneAction(abstract.exit).wait()
 
 
 class ScannerOption(object):
