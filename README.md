@@ -171,7 +171,7 @@ finally:
 
 The options available depends on the backend and on the specific driver used.
 
-The WIA implementation emulates common Sane option ('tl-x', 'br-x', 'tl-y', 'br-y',
+The WIA implementation emulates common Sane options ('tl-x', 'br-x', 'tl-y', 'br-y',
 'color', 'mode', 'source'). So you should use Sane options by default.
 
 See [the Sane documentation](http://www.sane-project.org/html/doc014.html) for the
@@ -210,6 +210,24 @@ When ```pyinsane2.init()``` is called, it will create 2 Unix pipes (FIFO)
 in your temporary directory and a dedicated process. To avoid forking
 other file descriptors from your program, you should initialize pyinsane2
 as soon as possible.
+
+
+### Note regarding the WIA 2 implementation
+
+WIA provides one WiaItem2 by possible source (Flatbed, ADF, etc). And each of
+these items has its own properties.
+
+To make the model consistent with Sane, all the properties have been merged in
+the same list. When you update a property specific to sources, it is updated
+on all the WIAItem2. The update is considered successful if it worked at
+least on one.
+
+Some properties are emulated to make the API behavior consistent with the Sane
+implementation. The WIA implementation emulates common Sane options
+('tl-x', 'br-x', 'tl-y', 'br-y', 'color', 'mode', 'source').
+If your program must be cross-platform, you are strongly advised to use
+these emulated options instead of the WIA ones ('xpos', 'ypos', 'xextent',
+'yextent', etc).
 
 
 ### Other examples
