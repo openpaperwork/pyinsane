@@ -2,7 +2,7 @@ import os
 import unittest
 
 if os.name == "nt":
-    from pyinsane.wia import rawapi
+    from pyinsane2.wia import rawapi
 
 
 class TestInit(unittest.TestCase):

@@ -14,10 +14,10 @@ else:
 if os.name == "nt":
     extensions = [
         Extension(
-            'pyinsane.wia._rawapi', [
-                'src/pyinsane/wia/properties.cpp',
-                'src/pyinsane/wia/rawapi.cpp',
-                'src/pyinsane/wia/transfer.cpp',
+            'pyinsane2.wia._rawapi', [
+                'src/pyinsane2/wia/properties.cpp',
+                'src/pyinsane2/wia/rawapi.cpp',
+                'src/pyinsane2/wia/transfer.cpp',
             ],
             include_dirs=[
                 # Yeah, I know.
@@ -42,7 +42,7 @@ else:
     extensions = []
 
 setup(
-    name="pyinsane",
+    name="pyinsane2",
     version="2.0.0",
     description=("Python library to access and use image scanners"),
     long_description=(
@@ -50,7 +50,7 @@ setup(
     ),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
-    download_url="https://github.com/jflesch/pyinsane/archive/v1.4.0.zip",
+    download_url="https://github.com/jflesch/pyinsane/archive/v2.0.0.zip",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -71,14 +71,14 @@ setup(
     author="Jerome Flesch",
     author_email="jflesch@gmail.com",
     packages=[
-        'pyinsane',
-        'pyinsane.sane',
-        'pyinsane.wia',
+        'pyinsane2',
+        'pyinsane2.sane',
+        'pyinsane2.wia',
     ],
     package_dir={
-        'pyinsane': 'src/pyinsane',
-        'pyinsane.sane': 'src/pyinsane/sane',
-        'pyinsane.wia': 'src/pyinsane/wia',
+        'pyinsane2': 'src/pyinsane2',
+        'pyinsane2.sane': 'src/pyinsane2/sane',
+        'pyinsane2.wia': 'src/pyinsane2/wia',
     },
     data_files=[],
     scripts=[],

@@ -10,7 +10,6 @@ import PIL.Image
 # import basic elements directly, so the caller
 # doesn't have to import rawapi if they need them.
 from . import abstract
-from .abstract_th import ScannerOption
 from .rawapi import SaneCapabilities
 from .rawapi import SaneConstraint
 from .rawapi import SaneConstraintType

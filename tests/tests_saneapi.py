@@ -2,7 +2,7 @@ import os
 import unittest
 
 if os.name != "nt":
-    from pyinsane.sane import rawapi
+    from pyinsane2.sane import rawapi
 
 
 def get_test_devices():

@@ -4,18 +4,7 @@ import sys
 
 from PIL import Image
 
-try:
-    import src as pyinsane
-except ImportError:
-    import pyinsane
-
-
-def set_scanner_opt(scanner, opt, value):
-    print("Setting %s to %s" % (opt, str(value)))
-    try:
-        scanner.options[opt].value = value
-    except (KeyError, pyinsane.SaneException) as exc:
-        print("Failed to set %s to %s: %s" % (opt, str(value), str(exc)))
+import pyinsane2
 
 
 if __name__ == "__main__":
@@ -40,7 +29,7 @@ if __name__ == "__main__":
     print("Output file: %s" % output_file)
 
     print("Looking for scanners ...")
-    devices = pyinsane.get_devices()
+    devices = pyinsane2.get_devices()
     if (len(devices) <= 0):
         print("No scanner detected !")
         sys.exit(1)
@@ -55,22 +44,29 @@ if __name__ == "__main__":
     print("")
 
     source = 'Auto'
-    # beware: don't select a source that is not in the constraint,
-    # with some drivers (Brother DCP-8025D for instance), it may segfault.
     if 'source' in device.options:
-        if (device.options['source'].constraint_type
-                == pyinsane.SaneConstraintType.STRING_LIST):
+        if isinstance(device.options['source'].constraint_type, list):
             if 'Auto' in device.options['source'].constraint:
                 source = 'Auto'
             elif 'FlatBed' in device.options['source'].constraint:
                 source = 'FlatBed'
+            elif 'flatbed' in device.options['source'].constraint:
+                source = 'flatbed'
+            else:
+                print ("Warning: Unknown sources: {}".format(
+                    device.options['source'].constraint
+                ))
         else:
-            print("Warning: Unknown constraint type on the source: %d"
-                % device.options['source'].constraint_type)
+            print(
+                    "Warning: Unknown constraint type on the source: {}".format(
+                        str(type(device.options['source'].constraint_type))
+                    ))
 
-    set_scanner_opt(device, 'resolution', 300)
-    set_scanner_opt(device, 'source', source)
-    set_scanner_opt(device, 'mode', 'Color')
+    pyinsane2.set_scanner_opt(device, 'resolution', [300])
+    pyinsane2.set_scanner_opt(device, 'source', ['Auto', 'FlatBed'])
+    # Beware: Some scanner have "Lineart" or "Gray" as default mode
+    pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
+    pyinsane2.maximize_scan_area(device)
 
     print("")
 
