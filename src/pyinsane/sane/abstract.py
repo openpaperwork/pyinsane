@@ -24,7 +24,8 @@ __all__ = [
     'SaneStatus',
     'SaneValueType',
     'SaneUnit',
-
+    'init',
+    'exit',
     'Scanner',
     'ScannerOption',
     'get_devices',

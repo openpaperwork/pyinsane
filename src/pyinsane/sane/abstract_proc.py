@@ -28,7 +28,8 @@ __all__ = [
     'SaneStatus',
     'SaneValueType',
     'SaneUnit',
-
+    'init',
+    'exit',
     'Scanner',
     'ScannerOption',
     'get_devices',
@@ -97,11 +98,11 @@ def remote_do(command, *args, **kwargs):
 
 
 def init():
-    return SaneAction(abstract.sane_init).wait()
+    pass
 
 
 def exit():
-    return SaneAction(abstract.sane_exit).wait()
+    pass
 
 
 class ScannerOption(object):
