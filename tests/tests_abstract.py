@@ -137,7 +137,7 @@ class TestSaneScan(unittest.TestCase):
         try:
             while True:
                 scan_session.scan.read()
-                nb_lines = scan_session.scan.available_lines
+                nb_lines = scan_session.scan.available_lines[1]
                 if nb_lines:
                     # just making sure it doesn't raise exceptions
                     scan_session.scan.get_image(end_line=nb_lines)
