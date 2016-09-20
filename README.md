@@ -193,8 +193,8 @@ You can set the option values with:
 device.options['option_name'].value = new_value
 # or use the helper:
 pyinsane2.set_scanner_opt(
-device, 'option_name',
-['possible_new_value_1', 'possible_new_value_2']
+    device, 'option_name',
+    ['possible_new_value_1', 'possible_new_value_2']
 )
 ```
 
