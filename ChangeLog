@@ -2,6 +2,8 @@ xxxx-xx-xx : v1.4.0 --> v2.0.0
 - API has been redesigned so it can handle backends other than libsane (rename
   SaneException into PyinsaneException, etc)
 - Add support for Windows Image Acquisition API (v2)
+- pyinsane2.init() + pyinsane2.exit() added
+- pyinsane2.sane.abstract_th removed
 
 2016-07-27 : v1.3.8 --> 1.4.0
 - Add a workaround for Sane driver crashes and memory corruptions ('abstract_proc')
