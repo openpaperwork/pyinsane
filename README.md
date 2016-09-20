@@ -13,7 +13,7 @@ It supports:
 - Automatic Document Feeder
 - While scanning, can provide chunks of the image for on-the-fly preview
   (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
-- Python 3.0
+- Python 3.x
 
 Not tested but should work too:
 - Handheld image scanners
