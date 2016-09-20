@@ -49,7 +49,7 @@ sudo python3 ./setup.py install
 
 ```sh
 python3 ./setup.py nosetests --tests tests.tests_saneapi  # GNU/Linux
-python3 ./setup.py nosetests --tests tests.tests_wiaapi  # GNU/Linux
+python3 ./setup.py nosetests --tests tests.tests_wiaapi  # Windows
 python3 ./setup.py nosetests --tests tests.tests_abstract
 ```
 
