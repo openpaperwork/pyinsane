@@ -198,9 +198,10 @@ process for scanning:
 
 (see [this comment for details](https://github.com/jflesch/paperwork/issues/486#issuecomment-233925642))
 
-When imported, it will create 2 Unix pipes (FIFO) in your temporary directory
-and a dedicated process. To avoid forking useless extra file descriptors, you
-should import this module as soon as possible in your program.
+When ```pyinsane2.init()``` is called, it will create 2 Unix pipes (FIFO)
+in your temporary directory and a dedicated process. To avoid forking
+other file descriptors from your program, you should initialize pyinsane2
+as soon as possible.
 
 
 ### Other examples
@@ -215,31 +216,6 @@ To run one of these scripts, run:
 For instance
 
 	python -m examples.scan toto.png
-
-
-## Details regarding Sane backend
-
-On GNU/Linux, *BSD and MacOSX system, the backend used for scanning is Sane (aka Libsane).
-[Sane (part of the Sane)](http://www.sane-project.org/) provides drivers for scanners
-under GNU/Linux and *BSD systems.
-
-The code in 'pyinsane.sane' is divided in 2 layers:
-- rawapi : Ctypes binding to the raw Sane API
-- abstract : An Object-Oriented layer that simplifies the use of the Sane API
-  and try to avoid possible misuse of the Sane API. When scanning, it also takes
-  care of returning a Pillow image.
-
-Two workaround are provided:
-- abstract\_th : The Sane API is not thread-safe and cannot be used in a
-  multi-threaded environment easily. This layer solves this problem by using
-  a fully dedicated thread. It provides the very same API than 'abstract'
-  (deprecated ; use 'abstract\_proc' instead)
-- abstract\_proc : Some Sane drivers corrupts memory or return uninitalized bytes.
-  (sometimes they even segfault). They usually work well in simple programs but
-  can make bugs on more complex ones (see below). This module, when imported,
-  fork() + exec() a small daemon in charge of doing the scans and return them
-  to the main program using Unix pipes (FIFO). It provides the very same API than
-  'abstract'.
 
 
 ## Licence

@@ -37,10 +37,57 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-start_daemon = os.getenv('PYINSANE_DAEMON', '1')
-start_daemon = True if int(start_daemon) > 0 else False
 
-if start_daemon:
+def remote_do(command, *args, **kwargs):
+    global length_size
+    global fifo_s2c
+    global fifo_c2s
+    global pipe_path_c2s
+    global pipe_path_s2c
+
+    cmd = {
+        'command': command,
+        'args': args,
+        'kwargs': kwargs,
+    }
+
+    cmd = pickle.dumps(cmd)
+    length = struct.pack("i", len(cmd))
+    os.write(fifo_c2s, length)
+    os.write(fifo_c2s, cmd)
+
+    if command == 'exit':
+        # special case. Don't expect return value
+        os.close(fifo_c2s)
+        os.close(fifo_s2c)
+        os.unlink(pipe_path_c2s)
+        os.unlink(pipe_path_s2c)
+        return
+
+    length = os.read(fifo_s2c, length_size)
+    length = struct.unpack("i", length)[0]
+    result = os.read(fifo_s2c, length)
+    assert(len(result) == length)
+    result = pickle.loads(result)
+    if 'exception' in result:
+        exc_class = eval(result['exception'])
+        raise exc_class(*result['exception_args'])
+    return result['out']
+
+
+def init():
+    global length_size
+    global fifo_s2c
+    global fifo_c2s
+    global pipe_path_c2s
+    global pipe_path_s2c
+
+    start_daemon = os.getenv('PYINSANE_DAEMON', '1')
+    start_daemon = True if int(start_daemon) > 0 else False
+
+    if not start_daemon:
+        return
+
     logger.info("Starting Pyinsane subprocess")
 
     pipe_dirpath = tempfile.mkdtemp(prefix="pyinsane_")
@@ -57,7 +104,7 @@ if start_daemon:
         os.putenv('PYINSANE_DAEMON', '0')
         os.execlp(
             sys.executable, sys.executable,
-            "-m", "pyinsane.sane.daemon",
+            "-m", "pyinsane2.sane.daemon",
             pipe_dirpath,
             pipe_path_c2s, pipe_path_s2c
         )
@@ -69,39 +116,8 @@ if start_daemon:
     logger.info("Connected to Pyinsane subprocess")
 
 
-def remote_do(command, *args, **kwargs):
-    global length_size
-    global fifo_s2c
-    global fifo_c2s
-
-    cmd = {
-        'command': command,
-        'args': args,
-        'kwargs': kwargs,
-    }
-
-    cmd = pickle.dumps(cmd)
-    length = struct.pack("i", len(cmd))
-    os.write(fifo_c2s, length)
-    os.write(fifo_c2s, cmd)
-
-    length = os.read(fifo_s2c, length_size)
-    length = struct.unpack("i", length)[0]
-    result = os.read(fifo_s2c, length)
-    assert(len(result) == length)
-    result = pickle.loads(result)
-    if 'exception' in result:
-        exc_class = eval(result['exception'])
-        raise exc_class(*result['exception_args'])
-    return result['out']
-
-
-def init():
-    pass
-
-
 def exit():
-    pass
+    remote_do('exit')
 
 
 class ScannerOption(object):
