@@ -77,7 +77,7 @@ class Scan(object):
         # estimated
         line_size = self._img_size[0] * 3  # rgb
         data = len(self._data) - 1024  # - headers
-        return int(data / line_size)
+        return (0, int(data / line_size))
 
     available_lines = property(_get_available_lines)
 
