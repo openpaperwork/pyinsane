@@ -43,6 +43,13 @@ def main():
 
     print("")
 
+    # For the possible resolutions, look at
+    #   device.options['resolution'].constraint
+    # It will either be:
+    # - None: unknown
+    # - a tuple: (min resolution, max resolution)
+    # - a list: [75, 150, 300, 600, 1200, ...]
+
     pyinsane2.set_scanner_opt(device, 'source', ['Auto', 'FlatBed'])
     pyinsane2.set_scanner_opt(device, 'resolution', [300])
     # Beware: Some scanner have "Lineart" or "Gray" as default mode

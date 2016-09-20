@@ -167,7 +167,7 @@ finally:
 ```
 
 
-### Note regarding the options
+### Scanner's options
 
 The options available depends on the backend and on the specific driver used.
 
@@ -179,6 +179,36 @@ most common options.
 
 Beware options casing can change between WIA and Sane implementation !
 You should use ```pyinsane2.set_scanner_opt()``` whenever possible.
+
+
+You can access the option values with:
+
+```py
+device.options['option_name'].value
+```
+
+You can set the option values with:
+
+```py
+device.options['option_name'].value = new_value
+# or use the helper:
+pyinsane2.set_scanner_opt(
+device, 'option_name',
+['possible_new_value_1', 'possible_new_value_2']
+)
+```
+
+You can get the constraint (accepted values) with:
+
+```py
+device.options['option_name'].constraint
+```
+
+Constraints are usually:
+
+* None : unknown constraints / no constraint
+* tuple : ```(min_value, max_value)```
+* list : possible values (Ex: ```['Flatbed', 'Feeder']``` or ```[75, 150, 300]```)
 
 
 ### Note regarding the Sane implementation
