@@ -30,22 +30,30 @@ Platform specific:
 
 ## Installation
 
-	# recommanded to get the latest stable version
-	$ sudo pip install pyinsane2
+```sh
+# recommanded to get the latest stable version
+sudo pip install pyinsane2
+```
 
 or
 
-	# for the development version
-	$ git clone https://github.com/jflesch/pyinsane.git
-	$ cd pyinsane
-	$ sudo python3 ./setup.py install
+```sh
+# for the development version
+git clone https://github.com/jflesch/pyinsane.git
+cd pyinsane
+sudo python3 ./setup.py install
+```
 
 
-## Unit tests
+## Tests
 
-	$ python3 ./run_tests.py
+```sh
+python3 ./setup.py nosetests --tests tests.tests_saneapi  # GNU/Linux
+python3 ./setup.py nosetests --tests tests.tests_wiaapi  # GNU/Linux
+python3 ./setup.py nosetests --tests tests.tests_abstract
+```
 
-Unit tests require at least one scanner with a flatbed and an ADF (Automatic
+Tests require at least one scanner with a flatbed and an ADF (Automatic
 Document Feeder).
 
 If possible, they should be run with at least 2 scanners connected. The first
