@@ -363,9 +363,8 @@ class MultialiasOption(object):
 
 
 class Scanner(object):
-    def __init__(self, dev):
-        (devid, devname) = dev
-        self._dev = rawapi.open(devid)
+    def __init__(self, name):
+        self._dev = rawapi.open(name)
         self._srcs_list = rawapi.get_sources(self._dev)
         self.srcs = {}
         for (srcid, src) in self._srcs_list:
@@ -374,7 +373,8 @@ class Scanner(object):
         self.options = {}
         self.reload_options()
 
-        self.name = devname
+        self.name = name
+        self.nice_name = self.options['dev_name'].value
         self.vendor = self.options['vend_desc'].value
         self.model = self.options['dev_desc'].value
         self.dev_type = self.options['dev_type'].value
@@ -462,4 +462,4 @@ class Scanner(object):
 
 def get_devices(local_only=False):
     devs = rawapi.get_devices()
-    return [Scanner(dev) for dev in devs]
+    return [Scanner(dev[0]) for dev in devs]
