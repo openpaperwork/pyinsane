@@ -21,7 +21,10 @@ if os.name == "nt":
             ],
             include_dirs=[
                 # Yeah, I know.
-                os.getenv("WINDDK_INCLUDE_DIR", "c:\\winddk\\7600.16385.1\\inc\\atl71"),
+                os.getenv(
+                    "WINDDK_INCLUDE_DIR",
+                    "c:\\winddk\\7600.16385.1\\inc\\atl71"
+                ),
             ],
             library_dirs=[
                 # Yeah, I know.
@@ -35,12 +38,16 @@ if os.name == "nt":
             undef_macros=['NDEBUG'],
         ),
     ]
+else:
+    extensions = []
 
 setup(
     name="pyinsane",
-    version="2.0.0-git",
+    version="2.0.0",
     description=("Python library to access and use image scanners"),
-    long_description=("Python library to access and use image scanners (devices)"),
+    long_description=(
+        "Python library to access and use image scanners (devices)"
+    ),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
     download_url="https://github.com/jflesch/pyinsane/archive/v1.4.0.zip",
