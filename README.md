@@ -241,8 +241,17 @@ in your temporary directory and a dedicated process. To avoid forking
 other file descriptors from your program, you should initialize pyinsane2
 as soon as possible.
 
+Building requires nothing except Python. Libsane is loaded dynamically using ```ctypes```.
+
 
 ### Note regarding the WIA 2 implementation
+
+Build requires:
+
+* Either Python 3.4 + Windows SDK 7.1 (Visual C++ 2010) + Windows DDK (aka WDK)
+* Or Python 3.5 + Visual C++ 2016 (included in Visual Studio 2016)
+
+(see [the Python wiki for more information](https://wiki.python.org/moin/WindowsCompilers))
 
 WIA provides one WiaItem2 by possible source (Flatbed, ADF, etc). And each of
 these items has its own properties.
