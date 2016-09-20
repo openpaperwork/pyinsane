@@ -131,12 +131,14 @@ class TestSaneScan(unittest.TestCase):
         self.dev.options['resolution'].value = 300
         scan_session = self.dev.scan(multiple=False)
         try:
+            last_line = 0
             while True:
                 scan_session.scan.read()
                 nb_lines = scan_session.scan.available_lines[1]
-                if nb_lines:
+                if nb_lines > last_line + 100:
                     # just making sure it doesn't raise exceptions
                     scan_session.scan.get_image(end_line=nb_lines)
+                    last_line = nb_lines
         except EOFError:
             pass
         img = scan_session.images[0]
@@ -216,11 +218,12 @@ class TestSaneScan(unittest.TestCase):
                 self.assertEqual(scan_session.scan.available_lines[0], 0)
                 current_line = scan_session.scan.available_lines[1]
                 self.assertTrue(last_line <= current_line)
-                last_line = current_line
 
-                img = scan_session.scan.get_image(0, current_line)
-                self.assertEqual(img.size[0], expected_size[0])
-                self.assertEqual(img.size[1], current_line)
+                if current_line >= last_line + 100:
+                    img = scan_session.scan.get_image(0, current_line)
+                    self.assertEqual(img.size[0], expected_size[0])
+                    self.assertEqual(img.size[1], current_line)
+                    last_line = current_line
         except EOFError:
             pass
         self.assertTrue(last_line <= current_line)
