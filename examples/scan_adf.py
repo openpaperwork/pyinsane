@@ -19,7 +19,7 @@ def main(args):
     pyinsane2.set_scanner_opt(device, "source", ["ADF", "Feeder"])
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
     pyinsane2.set_scanner_opt(device, "mode", ["Color"])
-    pyinsane2.maximize_scan_area()
+    pyinsane2.maximize_scan_area(device)
 
     scan_session = device.scan(multiple=True)
 
@@ -44,4 +44,8 @@ if __name__ == "__main__":
         print("Usage:")
         print("  %s <dst directory>" % sys.argv[0])
         sys.exit(1)
-    main(args)
+    pyinsane2.init()
+    try:
+        main(args)
+    finally:
+        pyinsane2.exit()

@@ -12,6 +12,8 @@ __all__ = [
     'ScannerOption',
     'PyinsaneException',
     'get_devices',
+    'set_scanner_opt',
+    'maximize_scan_area',
 ]
 
 from .util import PyinsaneException
@@ -20,6 +22,12 @@ if os.name == "nt":
     from .wia.abstract import *
 else:
     from .sane.abstract_proc import *
+
+
+def __normalize_value(value):
+    if isinstance(value, str):
+        return value.lower()
+    return value
 
 
 def set_scanner_opt(scanner, opt, values):
@@ -32,14 +40,22 @@ def set_scanner_opt(scanner, opt, values):
     """
     assert(values is not None and values != [])
 
+    if not opt in scanner.options:
+        # check it's not just a casing problem
+        for key in scanner.options.keys():
+            if opt.lower() == key.lower():
+                opt = key
+                break
+        # otherwise just keep going, it will raise a KeyError anyway
+
     last_exc = None
-    for val in values:
+    for value in values:
 
         # See if we can normalize it first
         if isinstance(scanner.options[opt].constraint, list):
             found = False
             for possible in scanner.options[opt].constraint:
-                if value.lower() == possible.lower():
+                if __normalize_value(value) == __normalize_value(possible):
                     value = possible
                     found = True
                     break
@@ -47,7 +63,7 @@ def set_scanner_opt(scanner, opt, values):
                 # no direct match. See if we have an indirect one
                 # for instance, 'feeder' in 'Automatic Document Feeder'
                 for possible in scanner.options[opt].constraint:
-                    if value.lower() in possible.lower():
+                    if __normalize_value(value) in __normalize_value(possible):
                         logger.info(
                             "Value for [{}] changed from [{}] to [{}]".format(
                                 opt, value, possible

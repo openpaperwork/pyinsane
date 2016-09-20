@@ -7,7 +7,7 @@ from PIL import Image
 import pyinsane2
 
 
-if __name__ == "__main__":
+def main():
     steps = False
 
     args = sys.argv[1:]
@@ -43,27 +43,8 @@ if __name__ == "__main__":
 
     print("")
 
-    source = 'Auto'
-    if 'source' in device.options:
-        if isinstance(device.options['source'].constraint_type, list):
-            if 'Auto' in device.options['source'].constraint:
-                source = 'Auto'
-            elif 'FlatBed' in device.options['source'].constraint:
-                source = 'FlatBed'
-            elif 'flatbed' in device.options['source'].constraint:
-                source = 'flatbed'
-            else:
-                print ("Warning: Unknown sources: {}".format(
-                    device.options['source'].constraint
-                ))
-        else:
-            print(
-                    "Warning: Unknown constraint type on the source: {}".format(
-                        str(type(device.options['source'].constraint_type))
-                    ))
-
-    pyinsane2.set_scanner_opt(device, 'resolution', [300])
     pyinsane2.set_scanner_opt(device, 'source', ['Auto', 'FlatBed'])
+    pyinsane2.set_scanner_opt(device, 'resolution', [300])
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
     pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
     pyinsane2.maximize_scan_area(device)
@@ -100,12 +81,12 @@ if __name__ == "__main__":
 
             if steps:
                 next_line = scan_session.scan.available_lines[1]
-                if (next_line > last_line):
+                if (next_line > last_line + 100):
                     subimg = scan_session.scan.get_image(last_line, next_line)
                     img.paste(subimg, (0, last_line))
                     img.save("%s-%05d.%s" % (steps_filename[0], last_line,
                                              steps_filename[1]), "JPEG")
-                last_line = next_line
+                    last_line = next_line
     except EOFError:
         pass
 
@@ -114,3 +95,10 @@ if __name__ == "__main__":
     img = scan_session.images[0]
     img.save(output_file, "JPEG")
     print("Done")
+
+if __name__ == "__main__":
+    pyinsane2.init()
+    try:
+        main()
+    finally:
+        pyinsane2.exit()

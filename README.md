@@ -1,16 +1,19 @@
-# PyInsane
+# PyInsane 2
 
 ## Description
 
 Python library to access and use image scanners.
 
-Currently, it only support the Sane API (available on GNU/Linux, *BSD, MacOSX, etc). Windows APIs (twain and WIA) are not supported yet.
+Support for:
+- [Sane](http://www.sane-project.org/) (Scanners on GNU/Linux, *BSD, MacOSX, etc)
+- WIA 2 (Windows Image Acquisition ; Scanners on Microsoft Windows >= Vista)
 
 It supports:
 - Flatbed
 - Automatic Document Feeder
-- While scanning, can provide chunks of the image for on-the-fly preview (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
-- Python 2.7 and Python 3
+- While scanning, can provide chunks of the image for on-the-fly preview
+  (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
+- Python 3.0
 
 Not tested but should work too:
 - Handheld image scanners
@@ -28,7 +31,7 @@ Platform specific:
 ## Installation
 
 	# recommanded to get the latest stable version
-	$ sudo pip install pyinsane
+	$ sudo pip install pyinsane2
 
 or
 
@@ -58,81 +61,123 @@ For reference, my current setup is:
 ### Scanner detection
 
 ```py
-import pyinsane
+import pyinsane2
 
-devices = pyinsane.get_devices()
-assert(len(devices) > 0)
-device = devices[0]
+pyinsane2.init()
+try:
+	devices = pyinsane2.get_devices()
+	assert(len(devices) > 0)
+	device = devices[0]
 
-print("I'm going to use the following scanner: %s" % (str(device)))
-scanner_id = device.name
+	print("I'm going to use the following scanner: %s" % (str(device)))
+	scanner_id = device.name
+finally:
+	pyinsane2.exit()
 ```
 
 or if you already know its name/id:
 
 ```py
-import pyinsane
+import pyinsane2
 
-device = pyinsane.Scanner(name="somethingsomething")
-print("I'm going to use the following scanner: %s" % (str(device)))
+pyinsane2.init()
+try:
+	device = pyinsane2.Scanner(name="somethingsomething")
+	print("I'm going to use the following scanner: %s" % (str(device)))
+finally:
+	pyinsane2.exit()
 ```
 
 
 ### Simple scan
 
 ```py
-device.options['resolution'].value = 300
-# Beware: Some scanner have "Lineart" or "Gray" as default mode
-device.options['mode'].value = 'Color'
-scan_session = device.scan(multiple=False)
+import pyinsane2
+
+pyinsane2.init()
 try:
-	while True:
-		scan_session.scan.read()
-except EOFError:
-	pass
-image = scan_session.images[0]
+	pyinsane2.set_scanner_opt(device, 'resolution', [300])
+
+# Beware: Some scanner have "Lineart" or "Gray" as default mode
+# better set the mode everytime
+	pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
+
+# Beware: by default, some scanners only scan part of the area
+# they could scan.
+	pyinsane2.maximize_scan_area(device)
+
+	scan_session = device.scan(multiple=False)
+	try:
+		while True:
+			scan_session.scan.read()
+	except EOFError:
+		pass
+	image = scan_session.images[-1]
+finally:
+	pyinsane2.exit()
 ```
+
+See examples/scan.py for a more complete example.
 
 
 ### Multiple scans using an automatic document feeder (ADF)
 
 ```py
-if not "ADF" in device.options['source'].constraint:
-	print("No document feeder found")
-	return
+import pyinsane2
 
-device.options['source'].value = "ADF"
-# Beware: Some scanner have "Lineart" or "Gray" as default mode
-device.options['mode'].value = 'Color'
-scan_session = device.scan(multiple=True)
+pyinsane2.init()
 try:
-	while True:
-		try:
-			scan_session.scan.read()
-		except EOFError:
-			print ("Got a page ! (current number of pages read: %d)"
-				   % (len(scan_session.images)))
-except StopIteration:
-	print("Document feeder is now empty. Got %d pages"
-	      % len(scan_session.images))
-for idx in range(0, len(scan_session.images)):
-	image = scan_session.images[idx]
+	try:
+		pyinsane2.set_scanner_opt(device, 'source', ['ADF', 'Feeder'])
+	except PyinsaneException:
+		print("No document feeder found")
+		return
+
+# Beware: Some scanner have "Lineart" or "Gray" as default mode
+# better set the mode everytime
+	pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
+
+# Beware: by default, some scanners only scan part of the area
+# they could scan.
+	pyinsane2.maximize_scan_area(device)
+
+	scan_session = device.scan(multiple=True)
+	try:
+		while True:
+			try:
+				scan_session.scan.read()
+			except EOFError:
+				print ("Got a page ! (current number of pages read: %d)"
+					% (len(scan_session.images)))
+	except StopIteration:
+		print("Document feeder is now empty. Got %d pages"
+		% len(scan_session.images))
+	for idx in range(0, len(scan_session.images)):
+		image = scan_session.images[idx]
+finally:
+	pyinsane2.exit()
 ```
+
 
 ### Note regarding the options
 
 The options available depends on the backend and on the specific driver used.
 
+The WIA implementation emulates common Sane option ('tl-x', 'br-x', 'tl-y', 'br-y',
+'color', 'mode', 'source'). So you should use Sane options by default.
+
 See [the Sane documentation](http://www.sane-project.org/html/doc014.html) for the
 most common options.
 
-Backends other than Sane emulate basic Sane options.
+Beware options casing can change between WIA and Sane implementation !
+You should use ```pyinsane2.set_scanner_opt()``` whenever possible.
 
 
-### Note regarding the default API for the Sane backend ('pyinsane.sane.abstract\_proc')
+### Note regarding the Sane implementation
 
-Some issues with some Sane drivers can become obvious in complex programs
-(uninitialized memory bytes, segfault, etc).
+When using the Sane API as is, some issues with some Sane drivers can become
+obvious in complex programs (uninitialized memory bytes, segfault, etc).
+You can get corrupted images or even crash your program.
 
 This module works around issues like the following one by using a dedicated
 process for scanning:
