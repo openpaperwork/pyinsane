@@ -21,9 +21,12 @@ def main(args):
     pyinsane2.set_scanner_opt(device, "mode", ["Color"])
     pyinsane2.maximize_scan_area(device)
 
-    scan_session = device.scan(multiple=True)
+    # Note: If there is no page in the feeder, the behavior of device.scan()
+    # is not guaranteed : It may raise StopIteration() immediately
+    # or it may raise it when scan.read() is called
 
     try:
+        scan_session = device.scan(multiple=True)
         print("Scanning ...")
         while True:
             try:
