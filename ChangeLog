@@ -1,3 +1,6 @@
+2016-09-22 : v2.0.1 --> v2.0.2:
+- Add MANIFEST.in (.cpp and .h files were not included in package ...)
+
 2016-09-22 : v2.0.0 --> v2.0.1:
 - pyinsane2.set_scanner_opt(): Check the option is active before trying
   setting it
