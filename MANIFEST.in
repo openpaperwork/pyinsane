@@ -1,0 +1,6 @@
+recursive-include src *.py *.glade *.xml *.css *.cpp *.h
+include AUTHORS
+include *.md
+include example-paperwork.conf
+include setup.cfg
+include COPYING
