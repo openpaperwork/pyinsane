@@ -106,7 +106,7 @@ pyinsane2.init()
 try:
 	pyinsane2.set_scanner_opt(device, 'resolution', [300])
 
-# Beware: Some scanner have "Lineart" or "Gray" as default mode
+# Beware: Some scanners have "Lineart" or "Gray" as default mode
 # better set the mode everytime
 	pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
 
@@ -141,7 +141,7 @@ try:
 		print("No document feeder found")
 		return
 
-# Beware: Some scanner have "Lineart" or "Gray" as default mode
+# Beware: Some scanners have "Lineart" or "Gray" as default mode
 # better set the mode everytime
 	pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
 
