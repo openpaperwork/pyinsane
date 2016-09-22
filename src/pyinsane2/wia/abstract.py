@@ -457,7 +457,7 @@ class Scanner(object):
 
     def __str__(self):
         return ("Scanner '%s' (%s, %s, %s)"
-                % (self.name, self.vendor, self.model, self.dev_type))
+                % (self.nice_name, self.vendor, self.model, self.dev_type))
 
 
 def get_devices(local_only=False):
