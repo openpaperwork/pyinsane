@@ -456,7 +456,7 @@ class Scanner(object):
         return ScanSession(self, self.options['source'].value)
 
     def __str__(self):
-        return ("Scanner '%s' (%s, %s, %s)"
+        return ("'%s' (%s, %s, %s)"
                 % (self.nice_name, self.vendor, self.model, self.dev_type))
 
 

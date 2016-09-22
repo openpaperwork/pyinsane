@@ -236,6 +236,7 @@ class Scanner(object):
             dev_type = abstract_dev.dev_type
         self._abstract_dev = abstract_dev
         self.name = name
+        self.nice_name = name  # for WIA compatibility
         self.vendor = vendor
         self.model = model
         self.dev_type = dev_type
@@ -257,7 +258,7 @@ class Scanner(object):
         return ScanSession(self, multiple)
 
     def __str__(self):
-        return ("Scanner '%s' (%s, %s, %s)"
+        return ("'%s' (%s, %s, %s)"
                 % (self.name, self.vendor, self.model, self.dev_type))
 
 
