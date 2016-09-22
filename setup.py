@@ -43,7 +43,7 @@ else:
 
 setup(
     name="pyinsane2",
-    version="2.0.0",
+    version="2.0.1",
     description=(
         "Python library to access and use image scanners (Linux/Windows/etc)"
     ),
@@ -54,7 +54,7 @@ setup(
     ),
     keywords="sane scanner",
     url="https://github.com/jflesch/pyinsane",
-    download_url="https://github.com/jflesch/pyinsane/archive/v2.0.0.zip",
+    download_url="https://github.com/jflesch/pyinsane/archive/2.0.1.zip",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
