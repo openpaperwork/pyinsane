@@ -169,7 +169,7 @@ try:
 					% (len(scan_session.images)))
 	except StopIteration:
 		print("Document feeder is now empty. Got %d pages"
-		% len(scan_session.images))
+			% len(scan_session.images))
 	for idx in range(0, len(scan_session.images)):
 		image = scan_session.images[idx]
 finally:
