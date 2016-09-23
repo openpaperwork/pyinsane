@@ -104,6 +104,11 @@ import pyinsane2
 
 pyinsane2.init()
 try:
+	devices = pyinsane2.get_devices()
+	assert(len(devices) > 0)
+	device = devices[0]
+	print("I'm going to use the following scanner: %s" % (str(device)))
+
 	pyinsane2.set_scanner_opt(device, 'resolution', [300])
 
 # Beware: Some scanners have "Lineart" or "Gray" as default mode
@@ -135,6 +140,11 @@ import pyinsane2
 
 pyinsane2.init()
 try:
+	devices = pyinsane2.get_devices()
+	assert(len(devices) > 0)
+	device = devices[0]
+	print("I'm going to use the following scanner: %s" % (str(device)))
+
 	try:
 		pyinsane2.set_scanner_opt(device, 'source', ['ADF', 'Feeder'])
 	except PyinsaneException:
