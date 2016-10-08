@@ -40,7 +40,7 @@ def set_scanner_opt(scanner, opt, values):
     """
     assert(values is not None and values != [])
 
-    if not opt in scanner.options:
+    if opt not in scanner.options:
         # check it's not just a casing problem
         for key in scanner.options.keys():
             if opt.lower() == key.lower():
@@ -87,8 +87,9 @@ def set_scanner_opt(scanner, opt, values):
             # it may segfault.
             if not found:
                 last_exc = PyinsaneException(
-                    "Invalid value [{}] for option [{}]".format(
-                        value, opt
+                    "Invalid value [{}] for option [{}]."
+                    " Valid values are [{}]".format(
+                        value, opt, scanner.options[opt].constraint
                     )
                 )
                 continue
