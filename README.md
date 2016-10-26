@@ -293,6 +293,12 @@ For instance
 	python -m examples.scan toto.png
 
 
+## Contact
+
+* [Mailing-list](https://github.com/jflesch/paperwork/wiki/Contact#mailing-list)
+* [Bug tracker](https://github.com/jflesch/pyinsane/issues/)
+
+
 ## Licence
 
 GPL v3
