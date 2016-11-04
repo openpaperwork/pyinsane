@@ -34,7 +34,7 @@ if os.name == "nt":
                 "ole32",
                 "wiaguid",
             ],
-            extra_compile_args=['/W4'],
+            # extra_compile_args=['/W4'],
             undef_macros=['NDEBUG'],
         ),
     ]
