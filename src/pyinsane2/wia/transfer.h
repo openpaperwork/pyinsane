@@ -47,8 +47,8 @@ public:
     ~PyinsaneWiaTransferCallback();
 
     // interface methods
-    virtual HRESULT GetNextStream(LONG lFlags, BSTR bstrItemName, BSTR bstrFullItemName, IStream **ppDestination);
-    virtual HRESULT TransferCallback(LONG lFlags, WiaTransferParams *pWiaTransferParams);
+    virtual HRESULT STDMETHODCALLTYPE GetNextStream(LONG lFlags, BSTR bstrItemName, BSTR bstrFullItemName, IStream **ppDestination);
+    virtual HRESULT STDMETHODCALLTYPE TransferCallback(LONG lFlags, WiaTransferParams *pWiaTransferParams);
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef();
     virtual ULONG STDMETHODCALLTYPE Release();
