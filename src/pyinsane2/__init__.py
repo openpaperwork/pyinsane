@@ -51,7 +51,7 @@ def set_scanner_opt(scanner, opt, values):
     if not scanner.options[opt].capabilities.is_active():
         logger.error(
             "Unable to set scanner option [{}]:"
-            " Option is not active".format(scanner_opt_name)
+            " Option is not active".format(opt)
         )
         # this may not be a problem. For instance, 'source' is not active
         # on all scanners, and there is no point in raising an exception
