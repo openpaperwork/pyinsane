@@ -1,3 +1,8 @@
+2016-11-10 : v2.0.3:
+- Windows/WIA: Fix build
+- set_scanner_opt(): Fix exception raised when trying to set an option that is
+  not active
+
 2016-09-22 : v2.0.1 --> v2.0.2:
 - Add MANIFEST.in (.cpp and .h files were not included in package ...)
 
