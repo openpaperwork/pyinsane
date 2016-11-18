@@ -120,7 +120,7 @@ static PyObject *get_devices(PyObject *, PyObject* args)
         Py_RETURN_NONE;
     }
 
-    hr = wia_dev_manager->EnumDeviceInfo(WIA_DEVINFO_ENUM_LOCAL, &wia_dev_info_enum);
+    hr = wia_dev_manager->EnumDeviceInfo(WIA_DEVINFO_ENUM_ALL, &wia_dev_info_enum);
     if (FAILED(hr)) {
         WIA_WARNING("Pyinsane: WARNING: WiaDevMgr->EnumDviceInfo() failed");
         Py_RETURN_NONE;
