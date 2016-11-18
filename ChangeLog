@@ -1,5 +1,8 @@
-2016-11-18 : v2.0.4:
+2016-11-18 : v2.0.5:
 - Windows/WIA: Also look for network scanners
+
+2016-11-18 : v2.0.4:
+- Released not done correctly. No changes with 2.0.3
 
 2016-11-10 : v2.0.3:
 - Windows/WIA: Fix build
