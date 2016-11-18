@@ -1,3 +1,6 @@
+2016-11-18 : v2.0.4:
+- Windows/WIA: Also look for network scanners
+
 2016-11-10 : v2.0.3:
 - Windows/WIA: Fix build
 - set_scanner_opt(): Fix exception raised when trying to set an option that is
