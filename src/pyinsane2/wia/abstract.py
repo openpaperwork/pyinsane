@@ -1,6 +1,5 @@
 import io
 import logging
-import sys
 
 import PIL.Image
 import PIL.ImageFile
@@ -31,7 +30,8 @@ def exit():
 
 class Scan(object):
 
-    # WORKAROUND(Jflesch)> When using the ADF with HP drivers, even if there is no paper in the ADF
+    # WORKAROUND(Jflesch)> When using the ADF with HP drivers, even if there is
+    # no paper in the ADF
     # The driver will write about 56 bytes in the stream (BMP headers ?)
     # --> We ignore BMP too small
     MIN_BYTES = 1024
@@ -73,6 +73,7 @@ class Scan(object):
             try:
                 self._get_current_image()
             except:
+                # assumes we just got truncated headers for now
                 return (0, 0)
         # estimated
         line_size = self._img_size[0] * 3  # rgb
@@ -143,10 +144,11 @@ class ScannerOption(object):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
-    def __init__(self, scanner, objsrc, name, value, possible_values, accessright):
+    def __init__(self, scanner, objsrc, name, value, possible_values,
+                 accessright):
         self.objsrc = objsrc
         self.scanner = scanner
         self.name = name
@@ -160,7 +162,9 @@ class ScannerOption(object):
 
     def _set_value(self, new_value):
         if self.accessright != 'rw':
-            raise rawapi.WIAException("Property {} is read-only".format(self.name))
+            raise rawapi.WIAException("Property {} is read-only".format(
+                self.name
+            ))
         has_success = False
         exc = None
         for obj in self.objsrc:
@@ -187,7 +191,7 @@ class SourceOption(ScannerOption):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
     def __init__(self, sources):
@@ -201,7 +205,7 @@ class SourceOption(ScannerOption):
         return self._value
 
     def _set_value(self, new_value):
-        if not new_value in self.constraint:
+        if new_value not in self.constraint:
             raise WIAException("Invalid source: {}".format(new_value))
         self._value = new_value
 
@@ -218,7 +222,7 @@ class ModeOption(object):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
     def __init__(self, scanner):
@@ -250,7 +254,9 @@ class ModeOption(object):
             opts['depth'].value = 24
             self.scanner.reload_options()
             return
-        raise WIAException("Unknown value '{}' for option 'mode'".format(new_value))
+        raise WIAException("Unknown value '{}' for option 'mode'".format(
+            new_value
+        ))
 
     value = property(_get_value, _set_value)
 
@@ -275,10 +281,11 @@ class PosOption(object):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
-    def __init__(self, scanner, name, base_name, options, opt_min, opt_max, opt_res):
+    def __init__(self, scanner, name, base_name, options, opt_min, opt_max,
+                 opt_res):
         self.name = name
         self.base_name = base_name
         self.capabilities = ScannerCapabilities(self)
@@ -308,10 +315,11 @@ class ExtendOption(object):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
-    def __init__(self, scanner, name, base_name, options, opt_min, opt_max, opt_res):
+    def __init__(self, scanner, name, base_name, options, opt_min, opt_max,
+                 opt_res):
         self.name = name
         self.base_name = base_name
         self.capabilities = ScannerCapabilities(self)
@@ -320,8 +328,8 @@ class ExtendOption(object):
         self.constraint = get_pos_constraint(options, opt_min, opt_max, opt_res)
 
     def _get_value(self):
-        return (self._options[self.base_name + 'extent'].value
-                + self._options[self.base_name + 'pos'].value)
+        return (self._options[self.base_name + 'extent'].value +
+                self._options[self.base_name + 'pos'].value)
 
     def _set_value(self, new_value):
         new_value -= self._options[self.base_name + 'pos'].value
@@ -340,7 +348,7 @@ class MultialiasOption(object):
     size = 4
     capabilities = None
 
-    constraint_type = None # TODO
+    constraint_type = None  # TODO
     constraint = None
 
     def __init__(self, scanner, name, alias_for, options):
@@ -359,7 +367,6 @@ class MultialiasOption(object):
             self._options[opt_name].value = new_value
 
     value = property(_get_value, _set_value)
-
 
 
 class Scanner(object):
@@ -411,7 +418,8 @@ class Scanner(object):
                 opt_name, opt_infos['value'], opt_infos['possible_values'],
                 opt_infos['accessright']
             )
-        # generate list of options from all the sources, and try to apply them on all the sources
+        # generate list of options from all the sources, and try to apply them
+        # on all the sources
         for (srcid, opts) in src_properties.items():
             for (opt_name, opt_infos) in opts.items():
                 if opt_name in self.options:
@@ -426,17 +434,21 @@ class Scanner(object):
         # aliases to match Sane
         if "xpos" in self.options.keys() and "xextent" in self.options.keys():
             self.options['tl-x'] = PosOption(
-                self, "tl-x", "x", self.options, "min_horizontal_size", "max_horizontal_size", "xres"
+                self, "tl-x", "x", self.options, "min_horizontal_size",
+                "max_horizontal_size", "xres"
             )
             self.options['br-x'] = ExtendOption(
-                self, "br-x", "x", self.options, "min_horizontal_size", "max_horizontal_size", "xres"
+                self, "br-x", "x", self.options, "min_horizontal_size",
+                "max_horizontal_size", "xres"
             )
         if "ypos" in self.options.keys() and "yextent" in self.options.keys():
             self.options['tl-y'] = PosOption(
-                self, "tl-y", "y", self.options, "min_vertical_size", "max_vertical_size", "yres"
+                self, "tl-y", "y", self.options, "min_vertical_size",
+                "max_vertical_size", "yres"
             )
             self.options['br-y'] = ExtendOption(
-                self, "br-y", "y", self.options, "min_vertical_size", "max_vertical_size", "yres"
+                self, "br-y", "y", self.options, "min_vertical_size",
+                "max_vertical_size", "yres"
             )
         if "xres" in self.options.keys() and "yres" in self.options.keys():
             self.options['resolution'] = MultialiasOption(

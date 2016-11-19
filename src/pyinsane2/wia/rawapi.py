@@ -1,5 +1,4 @@
 import queue
-import sys
 import threading
 
 from . import _rawapi
