@@ -196,9 +196,6 @@ HRESULT PyinsaneWiaTransferCallback::TransferCallback(LONG, WiaTransferParams *p
     TRACE();
     if (params->lMessage == WIA_TRANSFER_MSG_END_OF_TRANSFER) {
         mEop(mCbData); // mark the current page as finished
-        mEos(mCbData);
-    } else if (params->lMessage == WIA_TRANSFER_MSG_NEW_PAGE) {
-        mEop(mCbData);
     }
     return S_OK;
 }

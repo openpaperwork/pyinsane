@@ -36,11 +36,12 @@ class Scan(object):
     # --> We ignore BMP too small
     MIN_BYTES = 1024
 
-    def __init__(self, session):
+    def __init__(self, session, source):
         self._session = session
-        self.scan = session._rawapi_scan
+        self.source = source
         self._data = b""
         self._img_size = None
+        self.scan = rawapi.start_scan(self.source)
 
     def read(self):
         # will raise EOFError at the end of each page
@@ -57,6 +58,7 @@ class Scan(object):
             else:
                 # Too small. Scrap the crap from the drivers.
                 self._data = b""
+                raise StopIteration()
 
     def _get_current_image(self):
         # We get the image as a truncated bitmap.
@@ -112,15 +114,14 @@ class ScanSession(object):
     def __init__(self, scanner, srcid):
         self.scanner = scanner
         self.source = scanner.srcs[srcid]
-        self._rawapi_scan = rawapi.start_scan(self.source)
         self.images = []
-        self.scan = Scan(self)
+        self.scan = Scan(self, self.source)
 
     def _add_image(self, img):
         self.images.append(img)
 
     def _next(self):
-        self.scan = Scan(self)
+        self.scan = Scan(self, self.source)
 
 
 class ScannerCapabilities(object):
