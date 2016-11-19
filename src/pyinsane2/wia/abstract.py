@@ -474,4 +474,12 @@ class Scanner(object):
 
 def get_devices(local_only=False):
     devs = rawapi.get_devices()
-    return [Scanner(dev[0]) for dev in devs]
+    out = []
+    for dev in devs:
+        try:
+            scanner = Scanner(dev[0])
+            out.append(scanner)
+        except Exception as exc:
+            logger.warning("Failed to access scanner {} : {}".format(dev, exc))
+            logger.exception(exc)
+    return out
