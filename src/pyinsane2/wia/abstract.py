@@ -73,7 +73,7 @@ class Scan(object):
             try:
                 self._get_current_image()
             except:
-                return 0
+                return (0, 0)
         # estimated
         line_size = self._img_size[0] * 3  # rgb
         data = len(self._data) - 1024  # - headers
