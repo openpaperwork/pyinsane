@@ -1,3 +1,7 @@
+2016-11-19 : v2.0.6:
+- Windows/WIA: Fix ADF support
+- Windows/WIA: Fix support of some flatbed scanners
+
 2016-11-18 : v2.0.5:
 - Windows/WIA: Also look for network scanners
 
