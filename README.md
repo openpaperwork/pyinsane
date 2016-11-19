@@ -61,7 +61,7 @@ If possible, they should be run with at least 2 scanners connected. The first
 that appear in "scanimage -L" must be the one with the ADF.
 
 For reference, my current setup is:
-- HP Officejet 4500 G510g (Flatbed + ADF)
+- HP Officejet 4620 (Flatbed + ADF)
 - HP Deskjet 2050 J510 series (Flatbed)
 
 
