@@ -43,9 +43,9 @@ static PyObject *init(PyObject *, PyObject* args)
 {
     HRESULT hr;
 
-	if (!PyArg_ParseTuple(args, "")) {
-		return NULL;
-	}
+    if (!PyArg_ParseTuple(args, "")) {
+        return NULL;
+    }
 
     hr = CoInitialize(NULL);
     if (FAILED(hr)) {
@@ -53,7 +53,7 @@ static PyObject *init(PyObject *, PyObject* args)
         Py_RETURN_NONE;
     }
 
-	Py_RETURN_NONE;
+    Py_RETURN_NONE;
 }
 
 
@@ -109,9 +109,9 @@ static PyObject *get_devices(PyObject *, PyObject* args)
     PyObject *dev_infos;
     PyObject *all_devs;
 
-	if (!PyArg_ParseTuple(args, "")) {
-		return NULL;
-	}
+    if (!PyArg_ParseTuple(args, "")) {
+        return NULL;
+    }
 
     // Create a connection to the local WIA device manager
     hr = wia_dev_manager.CoCreateInstance(CLSID_WiaDevMgr2);
@@ -676,25 +676,25 @@ static PyObject *download(PyObject *, PyObject *args)
 static PyObject *exit(PyObject *, PyObject* args)
 {
     if (!PyArg_ParseTuple(args, "")) {
-		return NULL;
-	}
+        return NULL;
+    }
 
     CoUninitialize();
 
-	Py_RETURN_NONE;
+    Py_RETURN_NONE;
 }
 
 
 static PyMethodDef rawapi_methods[] = {
-	{"init", init, METH_VARARGS, NULL},
-	{"get_devices", get_devices, METH_VARARGS, NULL},
-	{"get_properties", get_properties, METH_VARARGS, NULL},
-	{"get_sources", get_sources, METH_VARARGS, NULL},
-	{"open", open_device, METH_VARARGS, NULL},
-	{"download", download, METH_VARARGS, NULL},
-	{"set_property", set_property, METH_VARARGS, NULL},
-	{"exit", exit, METH_VARARGS, NULL},
-	{NULL, NULL, 0, NULL},
+    {"init", init, METH_VARARGS, NULL},
+    {"get_devices", get_devices, METH_VARARGS, NULL},
+    {"get_properties", get_properties, METH_VARARGS, NULL},
+    {"get_sources", get_sources, METH_VARARGS, NULL},
+    {"open", open_device, METH_VARARGS, NULL},
+    {"download", download, METH_VARARGS, NULL},
+    {"set_property", set_property, METH_VARARGS, NULL},
+    {"exit", exit, METH_VARARGS, NULL},
+    {NULL, NULL, 0, NULL},
 };
 
 #if PY_VERSION_HEX < 0x03000000
@@ -708,16 +708,16 @@ init_rawapi(void)
 #else
 
 static struct PyModuleDef rawapi_module = {
-	PyModuleDef_HEAD_INIT,
-	"_rawapi",
-	NULL /* doc */,
-	-1,
-	rawapi_methods,
+    PyModuleDef_HEAD_INIT,
+    "_rawapi",
+    NULL /* doc */,
+    -1,
+    rawapi_methods,
 };
 
 PyMODINIT_FUNC PyInit__rawapi(void)
 {
-	return PyModule_Create(&rawapi_module);
+    return PyModule_Create(&rawapi_module);
 }
 
 #endif
