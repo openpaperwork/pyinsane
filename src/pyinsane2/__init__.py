@@ -99,7 +99,7 @@ def set_scanner_opt(scanner, opt, values):
             scanner.options[opt].value = value
             logger.info("[{}] set to [{}]".format(opt, value))
             return
-        except (KeyError, pyinsane2.PyinsaneException) as exc:
+        except (KeyError, PyinsaneException) as exc:
             logger.info("Failed to set [{}] to [{}]: [{}]".format(
                 opt, str(value), str(exc))
             )
