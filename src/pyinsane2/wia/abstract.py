@@ -176,11 +176,16 @@ class ScannerOption(object):
                 rawapi.set_property(obj, self.name, new_value)
                 has_success = True
             except rawapi.WIAException as _exc:
+                logger.warning("Exception while setting {}: {}".format(self.name, _exc))
+                logger.exception(_exc)
                 exc = _exc
+        self._value = new_value
+        try:
+            self.scanner.reload_options()
+        except:
+            pass
         if not has_success:
             raise exc
-        self._value = new_value
-        self.scanner.reload_options()
 
     value = property(_get_value, _set_value)
 
@@ -367,8 +372,18 @@ class MultialiasOption(object):
         return self._options[self.alias_for[0]].value
 
     def _set_value(self, new_value):
+        last_exc = None
         for opt_name in self.alias_for:
-            self._options[opt_name].value = new_value
+            try:
+                self._options[opt_name].value = new_value
+            except Exception as exc:
+                # keep trying to set the options for consistancy
+                # (some driver may return an error while accepting the value ...)
+                logger.warning("Failed to set option {}: {}".format(self.name, exc))
+                logger.exception(exc)
+                last_exc = exc
+        if last_exc:
+            raise last_exc
 
     value = property(_get_value, _set_value)
 
