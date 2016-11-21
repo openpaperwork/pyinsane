@@ -442,13 +442,17 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
     switch(property_spec->vartype) {
         case VT_I4:
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
-            if (propvalue.lVal == -1)
+            if (propvalue.lVal == -1) {
+                WIA_WARNING("Pyinsane: pyobject_to_int() failed");
                 return 0;
+            }
             break;
         case VT_UI4:
             propvalue.ulVal = pyobject_to_int(property_spec, pyvalue, 0xFFFFFF);
-            if (propvalue.ulVal == 0xFFFFFF)
+            if (propvalue.ulVal == 0xFFFFFF) {
+                WIA_WARNING("Pyinsane: pyobject_to_int() failed");
                 return 0;
+            }
             break;
         case VT_VECTOR | VT_UI2:
         case VT_UI1 | VT_VECTOR:
@@ -460,8 +464,10 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
             // TODO
             return 0;
         case VT_CLSID:
-            if (!pyobject_to_clsid(property_spec, pyvalue, &propvalue.puuid))
+            if (!pyobject_to_clsid(property_spec, pyvalue, &propvalue.puuid)) {
+                WIA_WARNING("Pyinsane: pyobject_to_clsid() failed");
                 return 0;
+            }
             break;
         default:
             WIA_WARNING("Pyinsane: WARNING: Unknown var type");
