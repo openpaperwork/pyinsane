@@ -282,7 +282,7 @@ class ModeOption(object):
 
     def _get_accessright(self):
         opts = self.scanner.options
-        return cd ..opts['depth'].accessright
+        return opts['depth'].accessright
 
     accessright = property(_get_accessright)
 
