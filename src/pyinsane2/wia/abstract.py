@@ -111,6 +111,9 @@ class Scan(object):
         # TODO
         raise NotImplementedError()
 
+    def __str__(self):
+        return ("Scan instance for session {}".format(self._session))
+
 
 class ScanSession(object):
     def __init__(self, scanner, srcid, multiple):
@@ -137,10 +140,12 @@ class ScannerCapabilities(object):
     def is_settable(self):
         return self.opt.accessright == "rw"
 
+    def __str__(self):
+        return ("Access: {}".format(self.opt.accessright))
+
 
 class ScannerOption(object):
     idx = -1
-    name = ""
     title = ""
     desc = ""
     val_type = None  # TODO
@@ -189,10 +194,12 @@ class ScannerOption(object):
 
     value = property(_get_value, _set_value)
 
+    def __str__(self):
+        return ("Option [{}] (basic)".format(self.name))
+
 
 class SourceOption(ScannerOption):
     idx = -1
-    name = ""
     title = ""
     desc = ""
     val_type = None  # TODO
@@ -202,6 +209,8 @@ class SourceOption(ScannerOption):
 
     constraint_type = None  # TODO
     constraint = None
+
+    accessright = "rw"
 
     def __init__(self, sources):
         self.name = "source"
@@ -220,10 +229,12 @@ class SourceOption(ScannerOption):
 
     value = property(_get_value, _set_value)
 
+    def __str__(self):
+        return ("Option [{}] (source)".format(self.name))
+
 
 class ModeOption(object):
     idx = -1
-    name = ""
     title = ""
     desc = ""
     val_type = None  # TODO
@@ -269,6 +280,15 @@ class ModeOption(object):
 
     value = property(_get_value, _set_value)
 
+    def _get_accessright(self):
+        opts = self.scanner.options
+        return cd ..opts['depth'].accessright
+
+    accessright = property(_get_accessright)
+
+    def __str__(self):
+        return ("Option [{}] (mode)".format(self.name))
+
 
 def get_pos_constraint(options, opt_min, opt_max, opt_res):
     if (opt_min not in options or
@@ -282,7 +302,6 @@ def get_pos_constraint(options, opt_min, opt_max, opt_res):
 
 class PosOption(object):
     idx = -1
-    name = ""
     title = ""
     desc = ""
     val_type = None  # TODO
@@ -313,10 +332,22 @@ class PosOption(object):
 
     value = property(_get_value, _set_value)
 
+    def _get_accessright(self):
+        rw = True
+        if self._options[self.base_name + 'pos'].accessright != 'rw':
+            rw = False
+        elif self._options[self.base_name + 'extent'].accessright != 'rw':
+            rw = False
+        return "rw" if rw else "ro"
+
+    accessright = property(_get_accessright)
+
+    def __str__(self):
+        return ("Option [{}] (position for [{}])".format(self.name, self.base_name))
+
 
 class ExtendOption(object):
     idx = -1
-    name = ""
     title = ""
     desc = ""
     val_type = None  # TODO
@@ -345,6 +376,19 @@ class ExtendOption(object):
         self._options[self.base_name + 'extent'].value = new_value
 
     value = property(_get_value, _set_value)
+
+    def _get_accessright(self):
+        rw = True
+        if self._options[self.base_name + 'pos'].accessright != 'rw':
+            rw = False
+        elif self._options[self.base_name + 'extent'].accessright != 'rw':
+            rw = False
+        return "rw" if rw else "ro"
+
+    accessright = property(_get_accessright)
+
+    def __str__(self):
+        return ("Option [{}] (extent for [{}])".format(self.name, self.base_name))
 
 
 class MultialiasOption(object):
@@ -386,6 +430,18 @@ class MultialiasOption(object):
             raise last_exc
 
     value = property(_get_value, _set_value)
+
+    def _get_accessright(self):
+        rw = True
+        for opt_name in self.alias_for:
+            if self._options[opt_name].accessright != 'rw':
+                rw = False
+        return "rw" if rw else "ro"
+
+    accessright = property(_get_accessright)
+
+    def __str__(self):
+        return ("Option [{}] (multialias for {})".format(self.name, self.alias_for))
 
 
 class Scanner(object):
