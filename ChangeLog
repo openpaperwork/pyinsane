@@ -1,3 +1,9 @@
+2016-11-22 : v2.0.7:
+- set_scanner_opt(): Fix the list of exceptions to catch when actually setting the option
+- Windows/WIA: Fix: If scanning only one page, at the end of page, don't request the next page
+- Windows/WIA: Make setting options more resilient to crappy drivers
+- Windows/WIA: Add __str__() on most objects (useful for diagnostic)
+
 2016-11-19 : v2.0.6:
 - Windows/WIA: Fix ADF support
 - Windows/WIA: Fix support of some flatbed scanners
