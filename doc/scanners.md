@@ -27,3 +27,4 @@ If your scanner is not in the list:
 
 * HP OfficeJet 4620 (USB, Flatbed + ADF)
 * HP Deskjet 2050 J510 series (Flatbed)
+* Canon pixma MG2150 (2016/11/22)
