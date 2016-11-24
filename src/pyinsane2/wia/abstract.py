@@ -5,7 +5,9 @@ import PIL.Image
 import PIL.ImageFile
 
 from . import rawapi
+from .. import util
 from .rawapi import WIAException
+
 
 __all__ = [
     'init',
@@ -392,60 +394,9 @@ class ExtendOption(object):
     accessright = property(_get_accessright)
 
     def __str__(self):
-        return ("Option [{}] (extent for [{}])".format(self.name, self.base_name))
-
-
-class MultialiasOption(object):
-    idx = -1
-    name = ""
-    title = ""
-    desc = ""
-    val_type = None  # TODO
-    unit = None  # TODO
-    size = 4
-    capabilities = None
-
-    constraint_type = None  # TODO
-    constraint = None
-
-    def __init__(self, scanner, name, alias_for, options):
-        self.name = name
-        self.scanner = scanner
-        self.capabilities = ScannerCapabilities(self)
-        self.scanner = scanner
-        self.alias_for = alias_for
-        self._options = options
-
-    def _get_value(self):
-        return self._options[self.alias_for[0]].value
-
-    def _set_value(self, new_value):
-        last_exc = None
-        for opt_name in self.alias_for:
-            try:
-                self._options[opt_name].value = new_value
-            except Exception as exc:
-                # keep trying to set the options for consistancy
-                # (some driver may return an error while accepting the value ...)
-                logger.warning("Failed to set option {}: {}".format(self.name, exc))
-                logger.exception(exc)
-                last_exc = exc
-        if last_exc:
-            raise last_exc
-
-    value = property(_get_value, _set_value)
-
-    def _get_accessright(self):
-        rw = True
-        for opt_name in self.alias_for:
-            if self._options[opt_name].accessright != 'rw':
-                rw = False
-        return "rw" if rw else "ro"
-
-    accessright = property(_get_accessright)
-
-    def __str__(self):
-        return ("Option [{}] (multialias for {})".format(self.name, self.alias_for))
+        return ("Option [{}] (extent for [{}])".format(
+            self.name, self.base_name
+        ))
 
 
 class Scanner(object):
@@ -530,8 +481,8 @@ class Scanner(object):
                 "max_vertical_size", "yres"
             )
         if "xres" in self.options.keys() and "yres" in self.options.keys():
-            self.options['resolution'] = MultialiasOption(
-                self, "resolution", ["xres", "yres"], self.options
+            self.options['resolution'] = util.AliasOption(
+                "resolution", ["xres", "yres"], self.options
             )
 
         if 'source' in original:

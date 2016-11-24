@@ -3,6 +3,7 @@ import sys
 from PIL import Image
 
 from . import rawapi
+from .. import util
 
 # import basic elements directly, so the caller
 # doesn't have to import rawapi if they need them.
@@ -416,6 +417,15 @@ class Scanner(object):
                 continue
             opt = ScannerOption.build_from_rawapi(self, opt_idx, opt_desc)
             self.__options[opt.name] = opt
+
+        # WORKAROUND(Jflesch):
+        # Lexmark MFP CX510de: option 'resolution' has been mistakenly named
+        # 'scan-resolution'
+        if ('scan-resolution' in self.__options and
+                'resolution' not in self.__options):
+            self.__options['resolution'] = util.AliasOption(
+                'resolution', ['scan-resolution'], self.__options
+            )
 
     def _get_options(self):
         self.__load_options()
