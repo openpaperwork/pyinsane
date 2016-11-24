@@ -181,7 +181,9 @@ class ScannerOption(object):
                 rawapi.set_property(obj, self.name, new_value)
                 has_success = True
             except rawapi.WIAException as _exc:
-                logger.warning("Exception while setting {}: {}".format(self.name, _exc))
+                logger.warning("Exception while setting {}: {}".format(
+                    self.name, _exc
+                ))
                 logger.exception(_exc)
                 exc = _exc
         self._value = new_value
@@ -343,7 +345,9 @@ class PosOption(object):
     accessright = property(_get_accessright)
 
     def __str__(self):
-        return ("Option [{}] (position for [{}])".format(self.name, self.base_name))
+        return ("Option [{}] (position for [{}])".format(
+            self.name, self.base_name
+        ))
 
 
 class ExtendOption(object):

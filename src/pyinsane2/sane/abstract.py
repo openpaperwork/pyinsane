@@ -202,8 +202,8 @@ class Scan(object):
             line_size = self.parameters.bytes_per_line
             for line in self.__raw_lines:
                 if len(line) != line_size:
-                    print (("Pyinsane: Warning: Unexpected line size: %d"
-                            " instead of %d") % (len(line), line_size))
+                    print(("Pyinsane: Warning: Unexpected line size: %d"
+                           " instead of %d") % (len(line), line_size))
             raw = (b'').join(self.__raw_lines)
             # don't do purge the lines here. wait for the next call to read()
             # because, in the meantime, the caller might use get_image()
