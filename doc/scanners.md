@@ -21,6 +21,7 @@ If your scanner is not in the list:
 * [HP Photosmart 6520](https://github.com/jflesch/paperwork/issues/353#issuecomment-66992507)
 * [HP ScanJet 3400C](https://github.com/jflesch/paperwork/issues/344#issuecomment-64187186)
 * [Brother MFC-J6920](https://github.com/jflesch/paperwork/issues/318#issuecomment-57952223)
+* [Lexmark CX510de](https://github.com/jflesch/paperwork/issues/533#issuecomment-262770843)
 
 
 ## Windows Image Acquisition
