@@ -73,7 +73,7 @@ def set_scanner_opt(scanner, opt, values):
                 # no direct match. See if we have an indirect one
                 # for instance, 'feeder' in 'Automatic Document Feeder'
                 for possible in scanner.options[opt].constraint:
-                    if __normalize_value(value) in __normalize_value(possible):
+                    if isinstance(possible, str) and __normalize_value(value) in __normalize_value(possible):
                         logger.info(
                             "Value for [{}] changed from [{}] to [{}]".format(
                                 opt, value, possible

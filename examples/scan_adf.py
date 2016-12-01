@@ -19,6 +19,7 @@ def main(args):
     pyinsane2.set_scanner_opt(device, "source", ["ADF", "Feeder"])
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
     pyinsane2.set_scanner_opt(device, "mode", ["Color"])
+    pyinsane2.set_scanner_opt(device, "resolution", [300])
     pyinsane2.maximize_scan_area(device)
 
     # Note: If there is no page in the feeder, the behavior of device.scan()

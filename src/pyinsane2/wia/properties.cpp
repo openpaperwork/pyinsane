@@ -866,6 +866,47 @@ PyObject *clsid_to_pyobject(const struct wia_property *property, CLSID value)
     return NULL;
 }
 
+PyObject *int_vector_to_pyobject_list(const CAL *values)
+{
+    PyObject *out = PyList_New(values->cElems);
+    PyObject *val;
+    ULONG i;
+    
+    for (i = 0 ; i < values->cElems ; i++) {
+        val = PyLong_FromLong(values->pElems[i]);
+        PyList_SetItem(out, i, val);
+    }
+
+    return out;
+}
+
+PyObject *int_vector_to_pyobject_tuple(const CAL *values)
+{
+    PyObject *out;
+    PyObject *val[2];
+    if (values->cElems < 2) {
+        WIA_WARNING("Got a range with not enough elements !");
+        return NULL;
+    }
+    val[0] = PyLong_FromLong(values->pElems[0]);
+    val[1] = PyLong_FromLong(values->pElems[1]);
+    return PyTuple_Pack(2, val[0], val[1]);
+}
+
+PyObject *str_vector_to_pyobject(const CABSTR *values)
+{
+    PyObject *out = PyList_New(values->cElems);
+    PyObject *val;
+    ULONG i;
+    
+    for (i = 0 ; i < values->cElems ; i++) {
+        //val = PyLong_FromLong(values->pElems[i]);
+        val = PyUnicode_FromWideChar(SysAllocString(values->pElems[i]), SysStringLen(values->pElems[i]));
+        PyList_SetItem(out, i, val);
+    }
+
+    return out;
+}
 
 int pyobject_to_int(const struct wia_property *property_spec, PyObject *pyvalue, int fail_value)
 {

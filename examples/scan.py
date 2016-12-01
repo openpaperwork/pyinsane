@@ -52,9 +52,12 @@ def main():
 
     pyinsane2.set_scanner_opt(device, 'source', ['Auto', 'FlatBed'])
     pyinsane2.set_scanner_opt(device, 'resolution', [300])
+    try:
+        pyinsane2.maximize_scan_area(device)
+    except Exception  as exc:
+        print("Failed to maximize scan area: {}".format(exc))
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
     pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
-    pyinsane2.maximize_scan_area(device)
 
     print("")
 

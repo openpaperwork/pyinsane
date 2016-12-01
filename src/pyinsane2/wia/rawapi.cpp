@@ -122,7 +122,7 @@ static PyObject *get_devices(PyObject *, PyObject* args)
 
     hr = wia_dev_manager->EnumDeviceInfo(WIA_DEVINFO_ENUM_ALL, &wia_dev_info_enum);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: WiaDevMgr->EnumDviceInfo() failed");
+        WIA_WARNING("Pyinsane: WARNING: WiaDevMgr->EnumDeviceInfo() failed");
         Py_RETURN_NONE;
     }
 
@@ -381,9 +381,6 @@ static PyObject *get_properties(PyObject *, PyObject *args)
             continue;
         if (output[i].vt != g_wia_all_properties[i].vartype) {
             WIA_WARNING("Pyinsane: WARNING: A property has a type different from the one expected");
-            fprintf(stderr, "Pyinsane: WARNING: Got type %d instead of %d for property \"%s\"\n",
-                output[i].vt, g_wia_all_properties[i].vartype, g_wia_all_properties[i].name
-            );
             continue;
         }
         switch(output[i].vt) {
@@ -428,6 +425,110 @@ static PyObject *get_properties(PyObject *, PyObject *args)
     return all_props;
 }
 
+static PyObject *get_constraints(PyObject *, PyObject *args)
+{
+    PyObject *capsule;
+    IWiaItem2 *item;
+    PROPSPEC *input;
+    ULONG *prop_attributes;
+    PROPVARIANT *output;
+    int i;
+    int nb_properties;
+    HRESULT hr;
+    PyObject *all_constraints;
+    PyObject *constraint;
+    PyObject *propname;
+    PyObject *prop;
+
+    if (!PyArg_ParseTuple(args, "O", &capsule)) {
+        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
+        return NULL;
+    }
+
+    item = capsule2item(capsule);
+    if (item == NULL)
+        Py_RETURN_NONE;
+
+    for (nb_properties = 0 ; g_wia_all_properties[nb_properties].name != NULL ; nb_properties++)
+    { }
+
+    input = (PROPSPEC *)calloc(nb_properties, sizeof(PROPSPEC));
+    prop_attributes = (ULONG *)calloc(nb_properties, sizeof(ULONG));
+    output = (PROPVARIANT *)calloc(nb_properties, sizeof(PROPVARIANT));
+
+    for (i = 0 ; i < nb_properties ; i++) {
+        input[i].ulKind = PRSPEC_PROPID;
+        input[i].propid = g_wia_all_properties[i].id;
+    }
+
+    CComQIPtr<IWiaPropertyStorage> properties(item);
+    hr = properties->GetPropertyAttributes(nb_properties, input, prop_attributes, output);
+    if (FAILED(hr)) {
+        WIA_WARNING("Pyinsane: WARNING: WiaPropertyStorage->GetPropertyAttribute() failed. Will use defaults");
+        free(input);
+        free(prop_attributes);
+        free(output);
+        Py_RETURN_NONE;
+    }
+    free(input);
+
+    all_constraints = PyList_New(0);
+    for (i = 0 ; i < nb_properties ; i++) {
+        if (output[i].vt == 0) {
+            continue;
+        }
+        constraint = NULL;
+        switch(output[i].vt) {
+            case VT_I4:
+                constraint = int_to_pyobject(&g_wia_all_properties[i], output[i].lVal);
+                break;
+            case VT_UI4:
+                constraint = int_to_pyobject(&g_wia_all_properties[i], output[i].ulVal);
+                break;
+            case VT_VECTOR | VT_UI4: /* FALLTHROUGH */
+            case VT_VECTOR | VT_I4:
+                if (prop_attributes[i] & WIA_PROP_RANGE)
+                    constraint = int_vector_to_pyobject_tuple(&output[i].cal);
+                else
+                    constraint = int_vector_to_pyobject_list(&output[i].cal);
+                break;
+            case VT_VECTOR | VT_UI2:
+                WIA_WARNING("Pyinsane: WARNING: Got VECTOR|UI2 as constraint. Not supported yet");
+                // TODO
+                continue;
+            case VT_UI1 | VT_VECTOR:
+                WIA_WARNING("Pyinsane: WARNING: Got VECTOR|UI1 as constraint. Not supported yet");
+                // TODO
+                continue;
+            case VT_BSTR:
+                constraint = PyUnicode_FromWideChar(SysAllocString(output[i].bstrVal), SysStringLen(output[i].bstrVal));
+                break;
+            case VT_BSTR | VT_VECTOR:
+                constraint = str_vector_to_pyobject(&output[i].cabstr);
+                break;
+            case VT_CLSID:
+                constraint = clsid_to_pyobject(&g_wia_all_properties[i], *output[i].puuid);
+                break;
+            default:
+                WIA_WARNING("Pyinsane: WARNING: Unknown var type for constraint");
+                continue;
+        }
+        if (constraint == NULL) {
+            fprintf(stderr, "Pyinsane: Failed to parse constraint of [%s]\n", g_wia_all_properties[i].name);
+            continue;
+        }
+        propname = PyUnicode_FromString(g_wia_all_properties[i].name);
+        prop = PyTuple_Pack(2, propname, constraint);
+        PyList_Append(all_constraints, prop);
+        Py_DECREF(prop);
+    }
+
+    free(prop_attributes);
+    free(output);
+    return all_constraints;
+}
+
+
 static int _set_property(IWiaItem2 *item, const struct wia_property *property_spec, PyObject *pyvalue)
 {
     HRESULT hr;
@@ -437,8 +538,9 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
     propspec.ulKind = PRSPEC_PROPID;
     propspec.propid = property_spec->id;
 
+    PropVariantInit(&propvalue);
     propvalue.vt = property_spec->vartype;
-
+    
     switch(property_spec->vartype) {
         case VT_I4:
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
@@ -448,8 +550,9 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
             }
             break;
         case VT_UI4:
-            propvalue.ulVal = pyobject_to_int(property_spec, pyvalue, 0xFFFFFF);
-            if (propvalue.ulVal == 0xFFFFFF) {
+            propvalue.vt = VT_I4;
+            propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
+            if (propvalue.lVal == -1) {
                 WIA_WARNING("Pyinsane: pyobject_to_int() failed");
                 return 0;
             }
@@ -476,9 +579,10 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
     }
 
     CComQIPtr<IWiaPropertyStorage> properties(item);
-    hr = properties->WriteMultiple(1, &propspec, &propvalue, property_spec->id);
+    hr = properties->WriteMultiple(1, &propspec, &propvalue, WIA_IPA_FIRST);
     if (FAILED(hr)) {
         WIA_WARNING("Pyinsane: WARNING: properties->WriteMultiple() failed");
+        fprintf(stderr, "Pyinsane: WARNING: properties->WriteMultiple() failed: %s : 0x%X\n", property_spec->name, hr);
         return 0;
     }
 
@@ -559,7 +663,7 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
     PyEval_RestoreThread(download->_save);
 
     for ( ; nb_bytes > 0 ; nb_bytes -= nb, cdata += nb) {
-        nb = WIA_MIN(nb_bytes, download->buffer.len);
+        nb = (int)WIA_MIN(nb_bytes, download->buffer.len);
         memcpy(download->buffer.buf, cdata, nb);
 
         arglist = Py_BuildValue("(i)", nb);
@@ -695,6 +799,7 @@ static PyMethodDef rawapi_methods[] = {
     {"init", init, METH_VARARGS, NULL},
     {"get_devices", get_devices, METH_VARARGS, NULL},
     {"get_properties", get_properties, METH_VARARGS, NULL},
+    {"get_constraints", get_constraints, METH_VARARGS, NULL},
     {"get_sources", get_sources, METH_VARARGS, NULL},
     {"open", open_device, METH_VARARGS, NULL},
     {"download", download, METH_VARARGS, NULL},

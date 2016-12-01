@@ -110,7 +110,18 @@ def _get_properties(dev_or_src):
 def get_properties(dev_or_src):
     return WiaAction(_get_properties, dev_or_src=dev_or_src).wait()
 
+    
+def _get_constraints(dev_or_src):
+    constraints = _rawapi.get_constraints(dev_or_src)
+    if constraints is None:
+        raise WIAException("Failed to get properties constraints")
+    return constraints
 
+    
+def get_constraints(dev_or_src):
+    return WiaAction(_get_constraints, dev_or_src=dev_or_src).wait()
+
+    
 def _set_property(dev_or_src, propname, propvalue):
     ret = _rawapi.set_property(dev_or_src, propname, propvalue)
     if not ret:

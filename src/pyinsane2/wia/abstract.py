@@ -159,12 +159,15 @@ class ScannerOption(object):
     constraint = None
 
     def __init__(self, scanner, objsrc, name, value, possible_values,
-                 accessright):
+                 accessright, constraint):
         self.objsrc = objsrc
         self.scanner = scanner
         self.name = name
         self._value = value
-        self.constraint = possible_values
+        if constraint:
+            self.constraint = constraint
+        else:
+            self.constraint = possible_values
         self.accessright = accessright
         self.capabilities = ScannerCapabilities(self)
 
@@ -201,6 +204,9 @@ class ScannerOption(object):
     def __str__(self):
         return ("Option [{}] (basic)".format(self.name))
 
+    def __eq__(self, other):
+        return (self.name == other.name and self.constraint == other.constraint)
+
 
 class SourceOption(ScannerOption):
     idx = -1
@@ -235,6 +241,9 @@ class SourceOption(ScannerOption):
 
     def __str__(self):
         return ("Option [{}] (source)".format(self.name))
+
+    def __eq__(self, other):
+        return isinstance(other, SourceOption)
 
 
 class ModeOption(object):
@@ -416,6 +425,21 @@ class Scanner(object):
         self.model = self.options['dev_desc'].value
         self.dev_type = self.options['dev_type'].value
 
+        for (opt, val) in [
+            ('current_intent', 'image_type_color,maximize_quality'),
+            ('format', 'bmp'),
+            ('preferred_format', 'bmp'),
+            ('page_size', 'a4'),
+            ('depth', 24),
+        ]:
+            if opt not in self.options:
+                continue
+            try:
+                self.options[opt].value = val
+                logger.warning("Option '{}' preset to '{}' on [{}]".format(opt, val, self))
+            except:
+                logger.warning("Failed to pre-set option '{}' on [{}]".format(opt, self))
+
     @staticmethod
     def _convert_prop_list_to_dict(props):
         out = {}
@@ -427,6 +451,16 @@ class Scanner(object):
             }
         return out
 
+    @staticmethod
+    def _merge_constraints(props, constraints):
+        for (propname, constraint) in constraints:
+            if propname not in props:
+                logger.warning("Constraint found on property [{}] but property not found".format(propname))
+                continue
+            if isinstance(constraint, list):
+                constraint.sort()
+            props[propname]['constraint'] = constraint
+
     def reload_options(self):
         original = self.options
 
@@ -435,31 +469,40 @@ class Scanner(object):
         dev_properties = self._convert_prop_list_to_dict(
             rawapi.get_properties(self._dev)
         )
+        dev_constraints = rawapi.get_constraints(self._dev)
+        self._merge_constraints(dev_properties, dev_constraints)
+
         src_properties = {}
         for (srcid, src) in self._srcs_list:
             src_properties[srcid] = self._convert_prop_list_to_dict(
                 rawapi.get_properties(src)
             )
+            src_constraints = rawapi.get_constraints(src)
+            self._merge_constraints(src_properties[srcid], src_constraints)
 
         for (opt_name, opt_infos) in dev_properties.items():
             self.options[opt_name] = ScannerOption(
                 self,
                 [self._dev],
                 opt_name, opt_infos['value'], opt_infos['possible_values'],
-                opt_infos['accessright']
+                opt_infos['accessright'],
+                opt_infos['constraint'] if 'constraint' in opt_infos else None
             )
         # generate list of options from all the sources, and try to apply them
         # on all the sources
         for (srcid, opts) in src_properties.items():
             for (opt_name, opt_infos) in opts.items():
-                if opt_name in self.options:
-                    continue
-                self.options[opt_name] = ScannerOption(
+                opt = ScannerOption(
                     self,
                     self.srcs.values(),
                     opt_name, opt_infos['value'], opt_infos['possible_values'],
-                    opt_infos['accessright']
+                    opt_infos['accessright'],
+                    opt_infos['constraint'] if 'constraint' in opt_infos else None
                 )
+                if opt_name in self.options:
+                    if self.options[opt_name] != opt:
+                        logger.warning("Got multiple time the option [{}], but they are not identical".format(opt_name))
+                self.options[opt_name] = opt
 
         # aliases to match Sane
         if "xpos" in self.options.keys() and "xextent" in self.options.keys():
@@ -480,9 +523,14 @@ class Scanner(object):
                 self, "br-y", "y", self.options, "min_vertical_size",
                 "max_vertical_size", "yres"
             )
-        if "xres" in self.options.keys() and "yres" in self.options.keys():
+        res_alias_for = []
+        if "xres" in self.options.keys():
+            res_alias_for.append("xres")
+        if "yres" in self.options.keys():
+            res_alias_for.append("yres")
+        if res_alias_for != []:
             self.options['resolution'] = util.AliasOption(
-                "resolution", ["xres", "yres"], self.options
+                "resolution", res_alias_for, self.options
             )
 
         if 'source' in original:
@@ -495,6 +543,15 @@ class Scanner(object):
             self.options['mode'] = ModeOption(self)
 
     def scan(self, multiple=False):
+        if 'pages' in self.options:
+            try:
+                # Even with an ADF, Pyinsane actually request one page
+                # after the other.
+                # This is not orthodox at all, but still, it has proven to be
+                # the most reliable way.
+                self.options['pages'].value = 1
+            except:
+                logger.exception("Failed to set options [pages]")
         return ScanSession(self, self.options['source'].value, multiple)
 
     def __str__(self):

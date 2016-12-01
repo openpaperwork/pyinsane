@@ -28,6 +28,9 @@ extern const struct wia_property *g_wia_all_properties;
 
 PyObject *int_to_pyobject(const struct wia_property *property, long value);
 PyObject *clsid_to_pyobject(const struct wia_property *property, CLSID value);
+PyObject *int_vector_to_pyobject_list(const CAL *values);
+PyObject *int_vector_to_pyobject_tuple(const CAL *values);
+PyObject *str_vector_to_pyobject(const CABSTR *values);
 int pyobject_to_int(const struct wia_property *property_spec, PyObject *pyvalue, int fail_value);
 int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalue, CLSID **out);
 
