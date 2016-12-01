@@ -29,6 +29,17 @@ Platform specific:
 - GNU/Linux, *BSD, MacOSX, etc: [libsane](http://www.sane-project.org/)
 
 
+## Supported scanners
+
+In theory, all scanners supported by Sane or WIA should work.
+
+In practice, each driver tends to have
+[its own quirks](https://github.com/jflesch/paperwork/issues/533#issuecomment-262777789).
+Pyinsane [tries to include most of the workarounds you may need](/src/pyinsane2/__init__.py#L33).
+
+[There is a list of scanners known to work (or to have worked at some point)](doc/scanners.md).
+
+
 ## Installation
 
 ```sh
