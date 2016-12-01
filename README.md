@@ -44,7 +44,7 @@ Pyinsane [tries to include most of the workarounds you may need](/src/pyinsane2/
 
 ```sh
 # recommanded to get the latest stable version
-sudo pip install pyinsane2
+sudo pip3 install pyinsane2
 ```
 
 or
