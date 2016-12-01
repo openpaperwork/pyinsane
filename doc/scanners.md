@@ -8,7 +8,7 @@ Here is a list of scanners that are known to work with Pyinsane2.
 If your scanner is not in the list:
 
 * Either it works, in which case feel free to report it (by pull request or [email](mailto:jflesch@openpaper.work))
-* Or it doesn't, in which case please open an [ticket](https://github.com/jflesch/pyinsane/issues/new) with a maximum of information
+* Or it doesn't, in which case please open a [ticket](https://github.com/jflesch/pyinsane/issues/new) with a maximum of information
 
 
 ## Sane
