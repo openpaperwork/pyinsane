@@ -43,7 +43,7 @@ else:
 
 setup(
     name="pyinsane2",
-    version="2.0.7",
+    version="2.0.8",
     description=(
         "Python library to access and use image scanners (Linux/Windows/etc)"
     ),

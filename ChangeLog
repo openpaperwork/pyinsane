@@ -1,3 +1,14 @@
+2016-12-04 : 2.0.8:
+- WIA: Set various options to default values to avoid problems when scanning
+- WIA: Fix ADF support: clearly tell the driver we intend to scan pages one
+  by one (required for support of Brother MFC-7360N)
+- WIA: Workaround: Prioritize source options over scanner options (required
+  for support of Brother MFC-7360N)
+- WIA: Fix behavior of PyinsaneImageStream::Write() (required for support of
+  Brother MFC-7360N)
+- Sane/Add workaround for Lexmark MFP: the option "resolution" is actually
+  called "scan-resolution"
+
 2016-11-22 : v2.0.7:
 - set_scanner_opt(): Fix the list of exceptions to catch when actually setting the option
 - Windows/WIA: Fix: If scanning only one page, at the end of page, don't request the next page
