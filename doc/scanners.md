@@ -27,5 +27,6 @@ If your scanner is not in the list:
 ## Windows Image Acquisition
 
 * HP OfficeJet 4620 (USB, Flatbed + ADF)
-* HP Deskjet 2050 J510 series (Flatbed)
+* HP Deskjet 2050 J510 series (USB, Flatbed)
 * Canon pixma MG2150 (2016/11/22)
+* Brother MFC-7360N (Network, Flatbed + ADF) (2016/12/03)
