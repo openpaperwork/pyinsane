@@ -427,6 +427,14 @@ class Scanner(object):
                 'resolution', ['scan-resolution'], self.__options
             )
 
+        # WORKAROUND(Jflesch):
+        # Samsung M288x: option 'source' is actually called 'doc-source'
+        if ('doc-source' in self.__options and
+                'source' not in self.__options):
+            self.__options['source'] = util.AliasOption(
+                'source', ['doc-source'], self.__options
+            )
+
     def _get_options(self):
         self.__load_options()
         return self.__options
