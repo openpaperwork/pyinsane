@@ -1,3 +1,7 @@
+2016-12-06 : 2.0.9:
+- Sane: Add workaround for scanners Samsung M288x: Option 'source' is actually
+  called 'doc-source'
+
 2016-12-04 : 2.0.8:
 - WIA: Set various options to default values to avoid problems when scanning
 - WIA: Fix ADF support: clearly tell the driver we intend to scan pages one
