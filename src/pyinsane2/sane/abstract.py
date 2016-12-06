@@ -449,7 +449,8 @@ class Scanner(object):
             value = self.options['source'].value
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
-        if (not multiple or ("ADF" not in value and "Feeder" not in value)):
+        if (not multiple or
+                ("adf" not in value.lower() and "feeder" not in value.lower())):
             # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will
