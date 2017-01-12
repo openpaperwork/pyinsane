@@ -311,6 +311,14 @@ For instance
 * [Bug tracker](https://github.com/jflesch/pyinsane/issues/)
 
 
+## Application that uses Pyinsane
+
+* [Paperwork](https://github.com/jflesch/paperwork#readme)
+
+If you know of any other applications that use Pyinsane, please
+[tell us](https://github.com/jflesch/paperwork/wiki/Contact#mailing-list) :-)
+
+
 ## Licence
 
 GPL v3
