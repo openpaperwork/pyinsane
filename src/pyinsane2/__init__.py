@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,9 @@ from .util import PyinsaneException
 
 if os.name == "nt":
     from .wia.abstract import *
+elif sys.platform == "darwin":
+    # The dedicated process appear to crash on MacOSX. Don't know why.
+    from .sane.abstract import *
 else:
     from .sane.abstract_proc import *
 
