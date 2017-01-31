@@ -768,9 +768,13 @@ static PyObject *download(PyObject *, PyObject *args)
 
     dl_data._save = PyEval_SaveThread();
     hr = scan.transfer->Download(0, scan.callbacks);
-    PyEval_RestoreThread(dl_data._save);
 
-    if (FAILED(hr)) {
+    if (hr == WIA_ERROR_PAPER_EMPTY) {
+        end_of_scan_wrapper((void *)&dl_data);
+        PyEval_RestoreThread(dl_data._save);
+        Py_RETURN_NONE;
+    } else if (FAILED(hr)) {
+        PyEval_RestoreThread(dl_data._save);
         _com_error err(hr);
         LPCTSTR errMsg = err.ErrorMessage();
 
@@ -779,6 +783,8 @@ static PyObject *download(PyObject *, PyObject *args)
         std::cerr << "Pyinsane: WARNING: source->transfer->Download() failed: " << hr << " ; " << errMsg << std::endl;
 
         scan.transfer->Release();
+    } else {
+        PyEval_RestoreThread(dl_data._save);
     }
     Py_RETURN_NONE;
 }
