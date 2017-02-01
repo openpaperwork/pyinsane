@@ -75,7 +75,7 @@ setup(
     ],
     license="GPLv3+",
     author="Jerome Flesch",
-    author_email="jflesch@gmail.com",
+    author_email="jflesch@openpaper.work",
     packages=[
         'pyinsane2',
         'pyinsane2.sane',
