@@ -4,7 +4,7 @@ import os
 import platform
 
 from setuptools import Extension
-from setuptools import setup
+from setuptools import setup, find_packages
 
 if platform.architecture()[0] == '32bit':
     DEFAULT_ATL_WINDDK_LIB_DIR = "c:\\winddk\\7600.16385.1\\lib\\ATL\\amd64"
@@ -76,16 +76,7 @@ setup(
     license="GPLv3+",
     author="Jerome Flesch",
     author_email="jflesch@openpaper.work",
-    packages=[
-        'pyinsane2',
-        'pyinsane2.sane',
-        'pyinsane2.wia',
-    ],
-    package_dir={
-        'pyinsane2': 'src/pyinsane2',
-        'pyinsane2.sane': 'src/pyinsane2/sane',
-        'pyinsane2.wia': 'src/pyinsane2/wia',
-    },
+    packages=find_packages(),
     data_files=[],
     scripts=[],
     install_requires=[
