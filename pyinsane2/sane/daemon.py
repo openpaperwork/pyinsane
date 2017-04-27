@@ -137,7 +137,7 @@ def main_loop(fifo_dir, fifo_filepaths):
             result = {}
             try:
                 result['out'] = f(*cmd['args'], **cmd['kwargs'])
-            except Exception as exc:
+            except BaseException as exc:
                 result['exception'] = str(exc.__class__.__name__)
                 result['exception_args'] = exc.args
             logger.debug("< {}".format(result))
