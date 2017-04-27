@@ -3,7 +3,6 @@
 import logging
 import os
 import pickle
-import shutil
 import struct
 import sys
 
@@ -90,7 +89,7 @@ def cancel(scanner_name):
 
 
 def exit():
-    sys.exit(0)
+    pass
 
 
 COMMANDS = {
@@ -147,11 +146,13 @@ def main_loop(fifo_dir, fifo_filepaths):
             length = struct.pack("i", length)
             os.write(fifo_s2c, length)
             os.write(fifo_s2c, result)
+
+            if cmd['command'] == 'exit':
+                break
     finally:
         os.close(fifo_s2c)
         os.close(fifo_c2s)
 
-    shutil.rmtree(fifo_dir)
     logger.info("Daemon stopped")
 
 

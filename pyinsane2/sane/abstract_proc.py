@@ -1,6 +1,7 @@
 import logging
 import os
 import pickle
+import shutil
 import struct
 import sys
 import tempfile
@@ -37,6 +38,13 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+length_size = None
+fifo_s2c = None
+fifo_c2s = None
+pipe_path_c2s = None
+pipe_path_s2c = None
+pipe_dirpath = None
+
 
 def remote_do(command, *args, **kwargs):
     global length_size
@@ -56,14 +64,6 @@ def remote_do(command, *args, **kwargs):
     os.write(fifo_c2s, length)
     os.write(fifo_c2s, cmd)
 
-    if command == 'exit':
-        # special case. Don't expect return value
-        os.close(fifo_c2s)
-        os.close(fifo_s2c)
-        os.unlink(pipe_path_c2s)
-        os.unlink(pipe_path_s2c)
-        return
-
     length = os.read(fifo_s2c, length_size)
     length = struct.unpack("i", length)[0]
     result = os.read(fifo_s2c, length)
@@ -72,6 +72,15 @@ def remote_do(command, *args, **kwargs):
     if 'exception' in result:
         exc_class = eval(result['exception'])
         raise exc_class(*result['exception_args'])
+
+    if command == 'exit':
+        os.close(fifo_c2s)
+        os.close(fifo_s2c)
+        os.unlink(pipe_path_c2s)
+        os.unlink(pipe_path_s2c)
+        shutil.rmtree(pipe_dirpath)
+        return
+
     return result['out']
 
 
@@ -81,6 +90,7 @@ def init():
     global fifo_c2s
     global pipe_path_c2s
     global pipe_path_s2c
+    global pipe_dirpath
 
     start_daemon = os.getenv('PYINSANE_DAEMON', '1')
     start_daemon = True if int(start_daemon) > 0 else False
