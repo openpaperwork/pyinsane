@@ -15,9 +15,9 @@ if os.name == "nt":
     extensions = [
         Extension(
             'pyinsane2.wia._rawapi', [
-                'src/pyinsane2/wia/properties.cpp',
-                'src/pyinsane2/wia/rawapi.cpp',
-                'src/pyinsane2/wia/transfer.cpp',
+                'pyinsane2/wia/properties.cpp',
+                'pyinsane2/wia/rawapi.cpp',
+                'pyinsane2/wia/transfer.cpp',
             ],
             include_dirs=[
                 # Yeah, I know.
