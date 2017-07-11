@@ -45,7 +45,7 @@ setup(
     name="pyinsane2",
     # If you change this version, please:
     # - update the ChangeLog file
-    version="2.0.9",
+    version="2.0.10",
     description=(
         "Python library to access and use image scanners (Linux/Windows/etc)"
     ),
