@@ -76,7 +76,7 @@ setup(
     license="GPLv3+",
     author="Jerome Flesch",
     author_email="jflesch@openpaper.work",
-    packages=find_packages(),
+    packages=find_packages(exclude=['examples','tests']),
     data_files=[],
     scripts=[],
     install_requires=[
