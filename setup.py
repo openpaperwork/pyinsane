@@ -83,5 +83,6 @@ setup(
         "Pillow",
     ],
     ext_modules=extensions,
+    zip_safe=(os.name != "nt"),
     setup_requires=['nose>=1.0'],
 )
