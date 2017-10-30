@@ -268,12 +268,22 @@ Building requires nothing except Python. Libsane is loaded dynamically using ```
 
 ### Note regarding the WIA 2 implementation
 
+#### Build
+
 Build requires:
 
 * Either Python 3.4 + Windows SDK 7.1 (Visual C++ 2010) + Windows DDK (aka WDK)
-* Or Python 3.5 + Visual C++ 2016 (included in Visual Studio 2016)
+* Or Python 3.5 + Visual C++ 2016 + Windows DDK (aka WDK) (included in Visual Studio 2016)
 
 (see [the Python wiki for more information](https://wiki.python.org/moin/WindowsCompilers))
+
+You must define the following environment values before calling ```python setup.py install```:
+
+- WINDDK_INCLUDE_DIR (default value: c:\winddk\7600.16385.1\inc\atl71)
+- WINDDK_LIB_DIR (default value: c:\winddk\7600.16385.1\lib\ATL\amd64)
+
+
+#### Usage
 
 WIA provides one WiaItem2 by possible source (Flatbed, ADF, etc). And each of
 these items has its own properties.
