@@ -12,7 +12,7 @@ It supports:
 - Flatbed
 - Automatic Document Feeder
 - While scanning, can provide chunks of the image for on-the-fly preview
-  (see [Paperwork](https://github.com/jflesch/paperwork/) for instance)
+  (see [Paperwork](https://github.com/openpaperwork/paperwork/) for instance)
 - Python 2.7 (GNU/Linux only)
 - Python 3.x (GNU/Linux and Windows)
 
@@ -34,7 +34,7 @@ Platform specific:
 In theory, all scanners supported by Sane or WIA should work.
 
 In practice, each driver tends to have
-[its own quirks](https://github.com/jflesch/paperwork/issues/533#issuecomment-262777789).
+[its own quirks](https://github.com/openpaperwork/paperwork/issues/533#issuecomment-262777789).
 Pyinsane [tries to include most of the workarounds you may need](/src/pyinsane2/__init__.py#L33).
 
 [There is a list of scanners known to work (or to have worked at some point)](doc/scanners.md).
@@ -51,7 +51,7 @@ or
 
 ```sh
 # for the development version
-git clone https://github.com/jflesch/pyinsane.git
+git clone https://github.com/openpaperwork/pyinsane.git
 cd pyinsane
 sudo python3 ./setup.py install
 ```
@@ -245,18 +245,18 @@ process for scanning:
 <table border="0">
 	<tr>
 		<td>
-			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/stable/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" width="359" height="300" />
+			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/stable/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" width="359" height="300" />
 		</td>
 		<td>
 			--&gt;
 		</td>
 		<td>
-			<img src="https://raw.githubusercontent.com/jflesch/pyinsane/stable/doc/sane_proc_workaround.png" alt="scan fine" width="352" height="308" />
+			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/stable/doc/sane_proc_workaround.png" alt="scan fine" width="352" height="308" />
 		</td>
 	</tr>
 </table>
 
-(see [this comment for details](https://github.com/jflesch/paperwork/issues/486#issuecomment-233925642))
+(see [this comment for details](https://github.com/openpaperwork/paperwork/issues/486#issuecomment-233925642))
 
 When ```pyinsane2.init()``` is called, it will create 2 Unix pipes (FIFO)
 in your temporary directory and a dedicated process. To avoid forking
@@ -317,16 +317,16 @@ For instance
 
 ## Contact
 
-* [Mailing-list](https://github.com/jflesch/paperwork/wiki/Contact#mailing-list)
-* [Bug tracker](https://github.com/jflesch/pyinsane/issues/)
+* [Mailing-list](https://github.com/openpaperwork/paperwork/wiki/Contact#mailing-list)
+* [Bug tracker](https://github.com/openpaperwork/pyinsane/issues/)
 
 
 ## Application that uses Pyinsane
 
-* [Paperwork](https://github.com/jflesch/paperwork#readme)
+* [Paperwork](https://github.com/openpaperwork/paperwork#readme)
 
 If you know of any other applications that use Pyinsane, please
-[tell us](https://github.com/jflesch/paperwork/wiki/Contact#mailing-list) :-)
+[tell us](https://github.com/openpaperwork/paperwork/wiki/Contact#mailing-list) :-)
 
 
 ## Licence

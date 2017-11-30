@@ -55,8 +55,8 @@ setup(
         " MacOSX (Sane), etc."
     ),
     keywords="sane scanner",
-    url="https://github.com/jflesch/pyinsane",
-    download_url="https://github.com/jflesch/pyinsane/archive/2.0.2.zip",
+    url="https://github.com/openpaperwork/pyinsane",
+    download_url="https://github.com/openpaperwork/pyinsane/archive/2.0.2.zip",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
