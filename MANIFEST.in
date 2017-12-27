@@ -1,6 +1,6 @@
-recursive-include src *.py *.glade *.xml *.css *.cpp *.h
+recursive-include pyinsane2 *.py *.glade *.xml *.css *.cpp *.h
 include AUTHORS
-include *.md
-include example-paperwork.conf
+include ChangeLog
+include README.md
 include setup.cfg
-include COPYING
+include LICENSE
