@@ -4,6 +4,17 @@ import unittest
 import pyinsane2
 
 
+def get_devices():
+    '''Return devices, perhaps after creating a test device.'''
+    devices = pyinsane2.get_devices()
+    if len(devices) == 0:
+        # if there are no devices found, create a virtual device.
+        # see sane-test(5) and /etc/sane.d/test.conf
+        pyinsane2.Scanner("test").scan()
+        devices = pyinsane2.get_devices()
+    return devices
+
+
 class TestSaneGetDevices(unittest.TestCase):
     module = None
 
@@ -11,12 +22,7 @@ class TestSaneGetDevices(unittest.TestCase):
         pyinsane2.init()
 
     def test_get_devices(self):
-        devices = pyinsane2.get_devices()
-        if len(devices) == 0:
-            # if there are no devices found, create a virtual device.
-            # see sane-test(5) and /etc/sane.d/test.conf
-            pyinsane2.Scanner("test")._open()
-            devices = pyinsane2.get_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
@@ -28,7 +34,7 @@ class TestSaneOptions(unittest.TestCase):
 
     def setUp(self):
         pyinsane2.init()
-        self.devices = pyinsane2.get_devices()
+        self.devices = get_devices()
         self.assertTrue(len(self.devices) > 0)
 
     def test_get_option(self):
@@ -89,7 +95,7 @@ class TestSaneScan(unittest.TestCase):
 
     def setUp(self):
         pyinsane2.init()
-        devices = pyinsane2.get_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
         self.dev = devices[0]
 
