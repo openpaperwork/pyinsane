@@ -5,7 +5,7 @@ if os.name != "nt":
     from pyinsane2.sane import rawapi
 
 
-def get_test_devices():
+def get_devices():
     '''Return SANE devices, perhaps after creating a test device.'''
     devices = rawapi.sane_get_devices()
     if len(devices) == 0:
@@ -36,7 +36,7 @@ class TestSaneGetDevices(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "sane only")
     def test_get_devices(self):
-        devices = get_test_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
 
     def tearDown(self):
@@ -46,7 +46,7 @@ class TestSaneGetDevices(unittest.TestCase):
 class TestSaneOpen(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = get_test_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
         self.dev_name = devices[0].name
 
@@ -66,7 +66,7 @@ class TestSaneOpen(unittest.TestCase):
 class TestSaneGetOptionDescriptor(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = get_test_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -104,7 +104,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
 class TestSaneControlOption(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = get_test_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
@@ -146,7 +146,7 @@ class TestSaneControlOption(unittest.TestCase):
 class TestSaneScan(unittest.TestCase):
     def setUp(self):
         rawapi.sane_init()
-        devices = get_test_devices()
+        devices = get_devices()
         self.assertTrue(len(devices) > 0)
         dev_name = devices[0].name
         self.dev_handle = rawapi.sane_open(dev_name)
