@@ -9,7 +9,7 @@ import sys
 import pyinsane2.sane.abstract as pyinsane
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Pyinsane_daemon")
 
 
 device_cache = {}
@@ -137,6 +137,9 @@ def main_loop(fifo_dir, fifo_filepaths):
             try:
                 result['out'] = f(*cmd['args'], **cmd['kwargs'])
             except BaseException as exc:
+                if (not isinstance(exc, EOFError) and
+                        not isinstance(exc, StopIteration)):
+                    logger.warning("Exception", exc_info=exc)
                 result['exception'] = str(exc.__class__.__name__)
                 result['exception_args'] = exc.args
             logger.debug("< {}".format(result))
@@ -157,4 +160,13 @@ def main_loop(fifo_dir, fifo_filepaths):
 
 
 if __name__ == "__main__":
+    formatter = logging.Formatter(
+        '%(levelname)-6s %(name)-10s %(message)s'
+    )
+    l = logging.getLogger()
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    l.addHandler(handler)
+    l.setLevel(logging.INFO)
+
     main_loop(sys.argv[1], sys.argv[2:4])
