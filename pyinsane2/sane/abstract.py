@@ -279,7 +279,7 @@ class SingleScan(Scan):
         self._init()
 
     def read(self):
-        if self.is_scanning:
+        if not self.is_scanning:
             raise StopIteration()
 
         try:
