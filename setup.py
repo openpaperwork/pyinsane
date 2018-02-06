@@ -44,6 +44,7 @@ else:
 setup(
     name="pyinsane2",
     # If you change this version, please:
+    # - update pyinsane2/__init__.py:__version__
     # - update the ChangeLog file
     version="2.0.10",
     description=(

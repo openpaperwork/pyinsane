@@ -28,6 +28,9 @@ else:
     from .sane.abstract_proc import *
 
 
+__version__ = "2.0.10"
+
+
 def __normalize_value(value):
     if isinstance(value, str):
         return value.lower()
