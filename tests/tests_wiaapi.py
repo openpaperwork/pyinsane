@@ -11,7 +11,7 @@ class TestInit(unittest.TestCase):
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_init(self):
-        version = rawapi.init()
+        rawapi.init()
         rawapi.exit()
 
     def tearDown(self):
@@ -46,7 +46,6 @@ class TestOpenDevice(unittest.TestCase):
         dev = rawapi.open(devid)
         self.assertNotEqual(dev, None)
         del dev
-        dev = None
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_invalid_open_device(self):
@@ -108,7 +107,8 @@ class TestGetProperties(unittest.TestCase):
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_invalid_get_properties(self):
-        self.assertRaises(rawapi.WIAException, rawapi.get_properties, "crappy_obj")
+        self.assertRaises(rawapi.WIAException, rawapi.get_properties,
+                          "crappy_obj")
 
     def tearDown(self):
         if os.name != "nt":
@@ -169,9 +169,12 @@ class TestSetProperty(unittest.TestCase):
 
     @unittest.skipIf(os.name != "nt", "Windows only")
     def test_invalid_set_src_property_depth(self):
-        self.assertRaises(rawapi.WIAException, rawapi.set_property, "crapobj", "depth", 8)
-        self.assertRaises(rawapi.WIAException, rawapi.set_property, self.sources[0][1], "crapproperty", 8)
-        self.assertRaises(rawapi.WIAException, rawapi.set_property, self.sources[0][1], "depth", "crapvalue")
+        self.assertRaises(rawapi.WIAException, rawapi.set_property,
+                          "crapobj", "depth", 8)
+        self.assertRaises(rawapi.WIAException, rawapi.set_property,
+                          self.sources[0][1], "crapproperty", 8)
+        self.assertRaises(rawapi.WIAException, rawapi.set_property,
+                          self.sources[0][1], "depth", "crapvalue")
 
     def tearDown(self):
         if os.name != "nt":
@@ -199,7 +202,8 @@ class TestScan(unittest.TestCase):
                 self.assertTrue(len(buf) > 0)
         except EOFError:
             pass
-        self.assertRaises(StopIteration, scan.read)  # no more than one page expected
+        # no more than one page expected
+        self.assertRaises(StopIteration, scan.read)
 
     def tearDown(self):
         if os.name != "nt":

@@ -76,7 +76,7 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
         opt_desc = rawapi.sane_get_option_descriptor(self.dev_handle, 0)
         # XXX(Jflesch): The name may vary: sometimes it's empty, sometimes it's
         # "option-cnt"
-        #self.assertEqual(opt_desc.name, "")
+        # self.assertEqual(opt_desc.name, "")
         self.assertEqual(opt_desc.title, b"Number of options")
         self.assertEqual(opt_desc.type, rawapi.SaneValueType.INT)
         self.assertEqual(opt_desc.unit, rawapi.SaneUnit.NONE)
@@ -91,9 +91,9 @@ class TestSaneGetOptionDescriptor(unittest.TestCase):
         # should return NULL if the index value is invalid. It seems the actual
         # implementation prefers to segfault.
 
-        #self.assertRaises(rawapi.SaneException,
-        #                  rawapi.sane_get_option_descriptor, self.dev_handle,
-        #                  999999)
+        # self.assertRaises(rawapi.SaneException,
+        #                   rawapi.sane_get_option_descriptor, self.dev_handle,
+        #                   999999)
         pass
 
     def tearDown(self):
@@ -116,7 +116,7 @@ class TestSaneControlOption(unittest.TestCase):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
             if not rawapi.SaneValueType(desc.type).can_getset_opt():
                 continue
-            if desc.cap|rawapi.SaneCapabilities.INACTIVE == desc.cap:
+            if desc.cap | rawapi.SaneCapabilities.INACTIVE == desc.cap:
                 continue
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertNotEqual(val, None)
@@ -126,9 +126,10 @@ class TestSaneControlOption(unittest.TestCase):
         for opt_idx in range(0, self.nb_options):
             desc = rawapi.sane_get_option_descriptor(self.dev_handle, opt_idx)
             if (desc.name != "mode"
-                or not rawapi.SaneValueType(desc.type).can_getset_opt()):
+                    or not rawapi.SaneValueType(desc.type).can_getset_opt()):
                 continue
-            info = rawapi.sane_set_option_value(self.dev_handle, opt_idx, "Gray")
+            info = rawapi.sane_set_option_value(self.dev_handle, opt_idx,
+                                                "Gray")
             self.assertFalse(rawapi.SaneInfo.INEXACT in info)
             val = rawapi.sane_get_option_value(self.dev_handle, opt_idx)
             self.assertEqual(val, "Gray")
@@ -155,7 +156,7 @@ class TestSaneScan(unittest.TestCase):
     def test_simple_scan(self):
         # XXX(Jflesch): set_io_mode() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
-        #rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
+        # rawapi.sane_set_io_mode(self.dev_handle, non_blocking=False)
 
         try:
             rawapi.sane_start(self.dev_handle)
@@ -164,8 +165,8 @@ class TestSaneScan(unittest.TestCase):
 
         # XXX(Jflesch): get_select_fd() always return SANE_STATUS_UNSUPPORTED
         # with my scanner
-        #fd = rawapi.sane_get_select_fd(self.dev_handle)
-        #self.assertTrue(fd > 0)
+        # fd = rawapi.sane_get_select_fd(self.dev_handle)
+        # self.assertTrue(fd > 0)
 
         try:
             while True:

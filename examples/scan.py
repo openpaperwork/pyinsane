@@ -54,7 +54,7 @@ def main():
     pyinsane2.set_scanner_opt(device, 'resolution', [300])
     try:
         pyinsane2.maximize_scan_area(device)
-    except Exception  as exc:
+    except Exception as exc:
         print("Failed to maximize scan area: {}".format(exc))
     # Beware: Some scanner have "Lineart" or "Gray" as default mode
     pyinsane2.set_scanner_opt(device, 'mode', ['Color'])
@@ -105,6 +105,7 @@ def main():
     img = scan_session.images[0]
     img.save(output_file, "JPEG")
     print("Done")
+
 
 if __name__ == "__main__":
     pyinsane2.init()

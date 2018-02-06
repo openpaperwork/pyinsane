@@ -224,7 +224,7 @@ class Scan(object):
 
         range_func = range
         if sys.version_info.major < 3:
-            range_func = xrange
+            range_func = xrange  # noqa (non-valid in Python 3)
 
         for _ in range_func(0, len(read), line_size):
             self.__raw_lines.append(read[:line_size])
@@ -453,7 +453,8 @@ class Scanner(object):
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
         if (not multiple or
-                ("adf" not in value.lower() and "feeder" not in value.lower())):
+                ("adf" not in value.lower() and
+                 "feeder" not in value.lower())):
             # XXX(Jflesch): We cannot use MultipleScan() with something
             # else than an ADF. If we try, we will never get
             # SANE_STATUS_NO_DOCS from sane_start()/sane_read() and we will

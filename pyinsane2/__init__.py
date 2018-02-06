@@ -2,9 +2,18 @@ import logging
 import os
 import sys
 
+from .util import PyinsaneException
+
+if os.name == "nt":
+    from .wia.abstract import *  # noqa
+elif sys.platform == "darwin":
+    # The dedicated process appear to crash on MacOSX. Don't know why.
+    from .sane.abstract import *  # noqa
+else:
+    from .sane.abstract_proc import *  # noqa
+
 
 logger = logging.getLogger(__name__)
-
 
 __all__ = [
     'init',
@@ -16,17 +25,6 @@ __all__ = [
     'set_scanner_opt',
     'maximize_scan_area',
 ]
-
-from .util import PyinsaneException
-
-if os.name == "nt":
-    from .wia.abstract import *
-elif sys.platform == "darwin":
-    # The dedicated process appear to crash on MacOSX. Don't know why.
-    from .sane.abstract import *
-else:
-    from .sane.abstract_proc import *
-
 
 __version__ = "2.0.10"
 
@@ -80,7 +78,9 @@ def set_scanner_opt(scanner, opt, values):
                 # no direct match. See if we have an indirect one
                 # for instance, 'feeder' in 'Automatic Document Feeder'
                 for possible in scanner.options[opt].constraint:
-                    if isinstance(possible, str) and __normalize_value(value) in __normalize_value(possible):
+                    if (isinstance(possible, str) and
+                            __normalize_value(value) in
+                            __normalize_value(possible)):
                         logger.info(
                             "Value for [{}] changed from [{}] to [{}]".format(
                                 opt, value, possible

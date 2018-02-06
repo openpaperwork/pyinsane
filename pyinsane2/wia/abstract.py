@@ -31,7 +31,6 @@ def exit():
 
 
 class Scan(object):
-
     # WORKAROUND(Jflesch)> When using the ADF with HP drivers, even if there is
     # no paper in the ADF
     # The driver will write about 56 bytes in the stream (BMP headers ?)
@@ -205,7 +204,8 @@ class ScannerOption(object):
         return ("Option [{}] (basic)".format(self.name))
 
     def __eq__(self, other):
-        return (self.name == other.name and self.constraint == other.constraint)
+        return (self.name == other.name and
+                self.constraint == other.constraint)
 
 
 class SourceOption(ScannerOption):
@@ -332,7 +332,9 @@ class PosOption(object):
         self.capabilities = ScannerCapabilities(self)
         self.scanner = scanner
         self._options = options
-        self.constraint = get_pos_constraint(options, opt_min, opt_max, opt_res)
+        self.constraint = get_pos_constraint(
+            options, opt_min, opt_max, opt_res
+        )
 
     def _get_value(self):
         return self._options[self.base_name + 'pos'].value
@@ -380,7 +382,9 @@ class ExtendOption(object):
         self.capabilities = ScannerCapabilities(self)
         self.scanner = scanner
         self._options = options
-        self.constraint = get_pos_constraint(options, opt_min, opt_max, opt_res)
+        self.constraint = get_pos_constraint(
+            options, opt_min, opt_max, opt_res
+        )
 
     def _get_value(self):
         return (self._options[self.base_name + 'extent'].value +
@@ -436,9 +440,13 @@ class Scanner(object):
                 continue
             try:
                 self.options[opt].value = val
-                logger.warning("Option '{}' preset to '{}' on [{}]".format(opt, val, self))
+                logger.warning("Option '{}' preset to '{}' on [{}]".format(
+                    opt, val, self
+                ))
             except:
-                logger.warning("Failed to pre-set option '{}' on [{}]".format(opt, self))
+                logger.warning("Failed to pre-set option '{}' on [{}]".format(
+                    opt, self
+                ))
 
     @staticmethod
     def _convert_prop_list_to_dict(props):
@@ -455,7 +463,10 @@ class Scanner(object):
     def _merge_constraints(props, constraints):
         for (propname, constraint) in constraints:
             if propname not in props:
-                logger.warning("Constraint found on property [{}] but property not found".format(propname))
+                logger.warning(
+                    "Constraint found on property [{}] but property "
+                    "not found".format(propname)
+                )
                 continue
             if isinstance(constraint, list):
                 constraint.sort()
@@ -497,11 +508,14 @@ class Scanner(object):
                     self.srcs.values(),
                     opt_name, opt_infos['value'], opt_infos['possible_values'],
                     opt_infos['accessright'],
-                    opt_infos['constraint'] if 'constraint' in opt_infos else None
+                    opt_infos['constraint']
+                    if 'constraint' in opt_infos else None
                 )
                 if opt_name in self.options:
                     if self.options[opt_name] != opt:
-                        logger.warning("Got multiple time the option [{}], but they are not identical".format(opt_name))
+                        logger.warning("Got multiple time the option [{}],"
+                                       " but they are not identical".format(
+                                           opt_name))
                 self.options[opt_name] = opt
 
         # aliases to match Sane

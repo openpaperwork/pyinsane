@@ -90,7 +90,7 @@ class SaneFlags(object):
         return hex(self.__flags)
 
     def __cmp__(self, other):
-        return cmp(self.__flags, other.__flags)
+        return cmp(self.__flags, other.__flags)  # noqa
 
     def __str__(self):
         txt = "%s :" % (type(self))
@@ -446,8 +446,8 @@ for libname in ["libsane.so.1", "libsane.1.dylib"]:
         pass
 
 if sane_available:
-    AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p,
-                                         ctypes.c_char_p)
+    AUTH_CALLBACK_DEF = ctypes.CFUNCTYPE(None, ctypes.c_char_p,
+                                         ctypes.c_char_p, ctypes.c_char_p)
     SANE_LIB.sane_init.argtypes = [
         ctypes.POINTER(ctypes.c_int), AUTH_CALLBACK_DEF
     ]
