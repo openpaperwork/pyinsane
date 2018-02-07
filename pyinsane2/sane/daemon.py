@@ -142,7 +142,7 @@ def main_loop(fifo_dir, fifo_filepaths):
                     logger.warning("Exception", exc_info=exc)
                 result['exception'] = str(exc.__class__.__name__)
                 result['exception_args'] = exc.args
-            logger.debug("< {}".format(result))
+                logger.debug("< {}".format(result))
 
             result = pickle.dumps(result)
             length = len(result)
