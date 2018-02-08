@@ -2,6 +2,7 @@
 
 import os
 import platform
+import sys
 
 from setuptools import Extension
 from setuptools import setup, find_packages
@@ -10,6 +11,19 @@ if platform.architecture()[0] == '32bit':
     DEFAULT_ATL_WINDDK_LIB_DIR = "c:\\winddk\\7600.16385.1\\lib\\ATL\\amd64"
 else:
     DEFAULT_ATL_WINDDK_LIB_DIR = "c:\\winddk\\7600.16385.1\\lib\\ATL\\i386"
+
+
+try:
+    from pyinsane2 import _version
+    version = _version.version
+    print("Pyinsane version: {}".format(version))
+    if "-" in version:
+        version = version.split("-")[0]
+except ImportError as exc:
+    print("ERROR: _version.py file is missing")
+    print("ERROR: Please run 'make version' first")
+    raise
+
 
 if os.name == "nt":
     extensions = [
@@ -43,10 +57,7 @@ else:
 
 setup(
     name="pyinsane2",
-    # If you change this version, please:
-    # - update pyinsane2/__init__.py:__version__
-    # - update the ChangeLog file
-    version="2.0.10",
+    version=version,
     description=(
         "Python library to access and use image scanners (Linux/Windows/etc)"
     ),

@@ -24,6 +24,7 @@ __all__ = [
     'get_devices',
     'set_scanner_opt',
     'maximize_scan_area',
+    '__version__',
 ]
 
 __version__ = "2.0.10"
@@ -155,3 +156,9 @@ def maximize_scan_area(scanner):
                 ", ".join(missing_opts)
             )
         )
+
+def get_version():
+    from . import _version
+    return _version.version
+
+__version__ = get_version()

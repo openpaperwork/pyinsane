@@ -2,7 +2,7 @@
 venv*/
 
 # Packages
-*.egg
+*.egg*/
 *.egg-info
 dist
 build
