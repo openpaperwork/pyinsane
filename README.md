@@ -53,16 +53,20 @@ or
 # for the development version
 git clone https://github.com/openpaperwork/pyinsane.git
 cd pyinsane
-sudo python3 ./setup.py install
+sudo make install
 ```
+
+Installation on GNU/Linux should work out-of-the-box.
+
+Installation on Windows will require Python, Visual C++ and WinDDK (see below
+for details).
 
 
 ## Tests
 
 ```sh
-python3 ./setup.py nosetests --tests tests.tests_saneapi  # GNU/Linux
-python3 ./setup.py nosetests --tests tests.tests_wiaapi  # Windows
-python3 ./setup.py nosetests --tests tests.tests_abstract
+make check  # check style + static analysis
+make test  # run tests
 ```
 
 Tests require at least one scanner with a flatbed and an ADF (Automatic
@@ -74,6 +78,8 @@ that appear in "scanimage -L" must be the one with the ADF.
 For reference, my current setup is:
 - HP Officejet 4620 (Flatbed + ADF)
 - HP Deskjet 2050 J510 series (Flatbed)
+
+On GNU/Linux, you can simply enable the Sane backend 'test'.
 
 
 ## Usage
