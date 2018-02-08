@@ -4,6 +4,7 @@ venv*/
 # Packages
 *.egg*/
 *.egg-info
+_version.py
 dist
 build
 eggs

@@ -24,7 +24,7 @@ doc: install_py
 check:
 	flake8
 
-test:
+test: version
 	tox
 
 exe:
