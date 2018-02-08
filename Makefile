@@ -20,6 +20,7 @@ version: ${VERSION_FILE}
 
 doc: install_py
 	(cd doc && make html)
+	cp doc/index.html doc/build/index.html
 
 check:
 	flake8
