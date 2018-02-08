@@ -15,6 +15,7 @@ else:
 
 try:
     from pyinsane2 import _version
+    sys.path += ['.']
     version = _version.version
     print("Pyinsane version: {}".format(version))
     if "-" in version:
