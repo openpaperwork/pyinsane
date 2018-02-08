@@ -157,8 +157,10 @@ def maximize_scan_area(scanner):
             )
         )
 
+
 def get_version():
     from . import _version
     return _version.version
+
 
 __version__ = get_version()
