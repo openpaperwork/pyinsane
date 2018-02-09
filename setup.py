@@ -68,7 +68,10 @@ setup(
     ),
     keywords="sane scanner",
     url="https://github.com/openpaperwork/pyinsane",
-    download_url="https://github.com/openpaperwork/pyinsane/archive/2.0.2.zip",
+    download_url=(
+        "https://github.com/openpaperwork/pyinsane/archive/"
+        "{}.zip".format(version)
+    ),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
