@@ -41,6 +41,7 @@ else
 	grep ${RELEASE} ChangeLog
 	@echo "Releasing ..."
 	git tag -a ${RELEASE} -m ${RELEASE}
+	git push origin ${RELEASE}
 	make clean
 	make version
 	python3 ./setup.py sdist upload
