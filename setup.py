@@ -2,6 +2,7 @@
 
 import os
 import platform
+import sys
 
 from setuptools import Extension
 from setuptools import setup, find_packages
@@ -19,10 +20,10 @@ try:
     print("Pyinsane version: {}".format(version))
     if "-" in version:
         version = version.split("-")[0]
-except ImportError as exc:
+except FileNotFoundError:
     print("ERROR: _version.py file is missing")
     print("ERROR: Please run 'make version' first")
-    raise
+    sys.exit(1)
 
 
 if os.name == "nt":
