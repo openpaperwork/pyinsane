@@ -53,7 +53,7 @@ or
 # for the development version
 git clone https://github.com/openpaperwork/pyinsane.git
 cd pyinsane
-sudo make install
+sudo make install  # will run 'python3 ./setup.py install'
 ```
 
 Installation on GNU/Linux should work out-of-the-box.
