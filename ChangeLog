@@ -1,3 +1,11 @@
+2018-02-22 : 2.0.11:
+- Add pyinsane2.__version__
+- Sane: Normalize behavior between single and multi scan: Single scan must raise a StopIteration
+  after the first EOFError
+- Sane/daemon: remove trace that reduced badly the performances
+- Build: Add Makefile (if working directly on the Git version, please use now
+  'make install' instead of 'python3 ./setup.py install')
+
 2017-07-11 : 2.0.10:
 - Now works with 'setup.py develop' (thanks to Matthieu Coudron)
 - WIA: Some drivers (Lexmark for instance) returns WIA_ERROR_PAPER_EMPTY when
