@@ -25,6 +25,7 @@ enum wia_log_level {
 
 #define wia_log(lvl, fmt, ...) do { \
     fprintf(stderr, fmt, __VA_ARGS__); \
+    fprintf(stderr, "\n"); \
     _wia_log(lvl, __FILE__, __LINE__, fmt, __VA_ARGS__); \
 } while(0)
 

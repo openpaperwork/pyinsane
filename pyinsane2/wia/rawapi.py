@@ -9,7 +9,7 @@ from .. import util
 logger = logging.getLogger(__name__)
 
 
-_rawapi.register_log_callback(0, logger)
+_rawapi.register_logger(0, logger)
 
 
 class WIAException(util.PyinsaneException):

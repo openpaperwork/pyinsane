@@ -34,7 +34,7 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
 
     level = g_levels[lvl];
 
-    res = PyObject_CallMethodObjArgs(g_log_obj, level, NULL);
+    res = PyObject_CallMethodObjArgs(g_log_obj, level, msg, NULL);
     if (res != NULL) {
         Py_DECREF(res);
     }
