@@ -1,13 +1,19 @@
+#include <atlbase.h>
+#include <atlconv.h>
+#include <comdef.h>
+
 #include "trace.h"
 
 
 static PyObject *g_log_obj = NULL;
 static PyObject *g_levels[WIA_MAX_LEVEL + 1] = { 0 }; // pre-allocated strings
 static int g_min_level = WIA_DEBUG;
+
 static char g_log_buffer[1024];
+static char g_log_buffer2[1024];
 
 
-void wia_log(enum wia_log_level lvl, LPCSTR fmt, ...)
+void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ...)
 {
     PyObject *res;
     PyObject *level;
@@ -21,7 +27,10 @@ void wia_log(enum wia_log_level lvl, LPCSTR fmt, ...)
 
     memset(g_log_buffer, 0, sizeof(g_log_buffer));
     vsnprintf_s(g_log_buffer, _countof(g_log_buffer), _TRUNCATE, fmt, args);
-    msg = PyUnicode_FromString(g_log_buffer);
+    g_log_buffer[_countof(g_log_buffer) - 1] = '\0';
+    _snprintf_s(g_log_buffer2, sizeof(g_log_buffer2), _TRUNCATE, "%s(L%d): %s", file, line, g_log_buffer);
+    g_log_buffer2[_countof(g_log_buffer2) - 1] = '\0';
+    msg = PyUnicode_FromString(g_log_buffer2);
 
     level = g_levels[lvl];
 
@@ -29,6 +38,19 @@ void wia_log(enum wia_log_level lvl, LPCSTR fmt, ...)
     if (res != NULL) {
         Py_DECREF(res);
     }
+}
+
+void _wia_log_hresult(enum wia_log_level lvl, const char *file, int line, HRESULT hr)
+{
+    const char *msg = NULL;
+    LPCTSTR errMsg;
+
+    _com_error err(hr);
+    errMsg = err.ErrorMessage();
+
+    msg = CT2CA(errMsg);
+
+    _wia_log(lvl, file, line, "HResult error code 0x%lX: %s", hr, msg);
 }
 
 PyObject *register_logger(PyObject *, PyObject *args)
@@ -58,6 +80,5 @@ PyObject *register_logger(PyObject *, PyObject *args)
         g_log_obj = log_obj;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }

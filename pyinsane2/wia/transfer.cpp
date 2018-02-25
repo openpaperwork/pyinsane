@@ -6,15 +6,14 @@
 
 #include <Shlwapi.h>
 
+#include "trace.h"
 #include "transfer.h"
 #include "util.h"
 
 
-/* #define TRACE() do { \
-    fprintf(stderr, "DEBUG: L%d : %s\n", __LINE__, __FUNCTION__); \
-    fflush(stderr); \
-} while(0) */
-#define TRACE()
+#define TRACE() do { \
+        wia_log(WIA_DEBUG, "%s()", __FUNCTION__); \
+    } while(0)
 
 
 PyinsaneImageStream::PyinsaneImageStream(
@@ -33,7 +32,7 @@ PyinsaneImageStream::~PyinsaneImageStream()
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Clone(IStream **)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::Clone() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Clone() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
@@ -47,28 +46,28 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Commit(DWORD)
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::CopyTo() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::CopyTo() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::LockRegion() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::LockRegion() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::UnlockRegion() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::UnlockRegion() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void *, ULONG, ULONG *)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::Read() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Read() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
@@ -91,7 +90,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Revert()
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::Revert() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Revert() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
@@ -106,14 +105,14 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(
         plibNewPosition->QuadPart = mWritten;
         return S_OK;
     }
-    fprintf(stderr, "Pyinsane: WARNING: IStream::Seek() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Seek() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER)
 {
-    fprintf(stderr, "Pyinsane: WARNING: IStream::SetSize() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::SetSize() not implemented but called !\n");
     return E_NOTIMPL;
 }
 
@@ -122,11 +121,11 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Stat(STATSTG *pstatstg, DWORD)
 {
     SYSTEMTIME systemTime;
     FILETIME fileTime;
-    
-    GetSystemTime(&systemTime);
-    SystemTimeToFileTime(&systemTime, &fileTime);
 
     TRACE();
+
+    GetSystemTime(&systemTime);
+    SystemTimeToFileTime(&systemTime, &fileTime);
 
     memset(pstatstg, 0, sizeof(STATSTG));
 
@@ -156,7 +155,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void 
     else
     {
         *ppvObject = NULL;
-        fprintf(stderr, "Pyinsane: Stream::QueryInterface(): Unknown interface requested\n");
+        wia_log(WIA_WARNING, "Stream::QueryInterface(): Unknown interface requested\n");
         return E_NOINTERFACE;
     }
 
@@ -208,7 +207,6 @@ HRESULT PyinsaneWiaTransferCallback::GetNextStream(
 #else
     TRACE();
     *ppDestination = new PyinsaneImageStream(mGetData, mCbData);
-    TRACE();
     return S_OK;
 #endif
 }
