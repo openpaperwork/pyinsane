@@ -1,7 +1,7 @@
 #ifndef __PYINSANE_WIA_TRACE_H
 #define __PYINSANE_WIA_TRACE_H
 
-#define ENABLE_STDIO
+/* #define ENABLE_STDIO */
 
 #ifdef ENABLE_STDIO
 #include <stdio.h>
