@@ -32,6 +32,7 @@ if os.name == "nt":
             'pyinsane2.wia._rawapi', [
                 'pyinsane2/wia/properties.cpp',
                 'pyinsane2/wia/rawapi.cpp',
+                'pyinsane2/wia/trace.cpp',
                 'pyinsane2/wia/transfer.cpp',
             ],
             include_dirs=[

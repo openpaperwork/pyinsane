@@ -11,6 +11,7 @@
 #include <Python.h>
 
 #include "properties.h"
+#include "trace.h"
 #include "util.h"
 
 static const struct wia_prop_int g_possible_connect_status[] = {
@@ -862,7 +863,7 @@ PyObject *clsid_to_pyobject(const struct wia_property *property, CLSID value)
         if (values[i].value == value)
             return PyUnicode_FromString(values[i].name);
     }
-    WIA_WARNING("Pyinsane: WARNING: Got unknown clsid from driver");
+    wia_log(WIA_WARNING, "Pyinsane: WARNING: Got unknown clsid from driver");
     return NULL;
 }
 
@@ -871,7 +872,7 @@ PyObject *int_vector_to_pyobject_list(const CAL *values)
     PyObject *out = PyList_New(values->cElems);
     PyObject *val;
     ULONG i;
-    
+
     for (i = 0 ; i < values->cElems ; i++) {
         val = PyLong_FromLong(values->pElems[i]);
         PyList_SetItem(out, i, val);
@@ -885,7 +886,7 @@ PyObject *int_vector_to_pyobject_tuple(const CAL *values)
     PyObject *out;
     PyObject *val[2];
     if (values->cElems < 2) {
-        WIA_WARNING("Got a range with not enough elements !");
+        wia_log(WIA_WARNING, "Got a range with not enough elements !");
         return NULL;
     }
     val[0] = PyLong_FromLong(values->pElems[0]);
@@ -948,7 +949,7 @@ int pyobject_to_int(const struct wia_property *property_spec, PyObject *pyvalue,
         }
     }
 
-    WIA_WARNING("Pyinsane: WARNING: set_property(): Failed to parse value");
+    wia_log(WIA_WARNING, "Pyinsane: WARNING: set_property(): Failed to parse value");
     return fail_value;
 }
 
@@ -959,7 +960,7 @@ int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalu
     const char *value;
 
     if (!PyUnicode_Check(pyvalue)) {
-        WIA_WARNING("Pyinsane: WARNING: set_property(): Invalid type for clsid property");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: set_property(): Invalid type for clsid property");
         return 0;
     }
 
@@ -975,6 +976,6 @@ int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalu
         }
     }
 
-    WIA_WARNING("Pyinsane: WARNING: set_property(): Invalid value for clsid property");
+    wia_log(WIA_WARNING, "Pyinsane: WARNING: set_property(): Invalid value for clsid property");
     return 0;
 }

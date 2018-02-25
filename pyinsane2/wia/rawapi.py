@@ -1,9 +1,15 @@
 from collections import deque
+import logging
 import queue
 import threading
 
 from . import _rawapi
 from .. import util
+
+logger = logging.getLogger(__name__)
+
+
+_rawapi.register_log_callback(0, logger)
 
 
 class WIAException(util.PyinsaneException):

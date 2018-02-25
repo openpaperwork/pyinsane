@@ -14,6 +14,7 @@
 #include <Python.h>
 
 #include "properties.h"
+#include "trace.h"
 #include "transfer.h"
 #include "util.h"
 
@@ -49,7 +50,7 @@ static PyObject *init(PyObject *, PyObject* args)
 
     hr = CoInitialize(NULL);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: CoInitialize() failed !");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: CoInitialize() failed !");
         Py_RETURN_NONE;
     }
 
@@ -76,7 +77,7 @@ static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
 
     hr = properties->ReadMultiple(3 /* nb_properties */, input, output);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WiaPropertyStorage->ReadMultiple() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WiaPropertyStorage->ReadMultiple() failed");
         return hr;
     }
 
@@ -116,13 +117,13 @@ static PyObject *get_devices(PyObject *, PyObject* args)
     // Create a connection to the local WIA device manager
     hr = wia_dev_manager.CoCreateInstance(CLSID_WiaDevMgr2);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: CoCreateInstance failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: CoCreateInstance failed");
         Py_RETURN_NONE;
     }
 
     hr = wia_dev_manager->EnumDeviceInfo(WIA_DEVINFO_ENUM_ALL, &wia_dev_info_enum);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: WiaDevMgr->EnumDeviceInfo() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: WiaDevMgr->EnumDeviceInfo() failed");
         Py_RETURN_NONE;
     }
 
@@ -130,7 +131,7 @@ static PyObject *get_devices(PyObject *, PyObject* args)
 
     hr = wia_dev_info_enum->GetCount(&nb_devices);
     if (FAILED(hr)) {
-        WIA_WARNING("PyInsane: WARNING: GetCount() failed !");
+        wia_log(WIA_WARNING, "PyInsane: WARNING: GetCount() failed !");
         Py_RETURN_NONE;
     }
 
@@ -184,7 +185,7 @@ static PyObject *open_device(PyObject *, PyObject *args)
 
     hr = wia_dev_manager.CoCreateInstance(CLSID_WiaDevMgr2);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: CoCreateInstance failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: CoCreateInstance failed");
         Py_RETURN_NONE;
     }
 
@@ -194,7 +195,7 @@ static PyObject *open_device(PyObject *, PyObject *args)
     bstr_devid = SysAllocString(A2W(devid)); // TODO(Jflesch): Does any of this allocate anything ? oO
     hr = wia_dev_manager->CreateDevice(0, bstr_devid, &dev->device);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: WiaDevMgr->CreateDevice() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: WiaDevMgr->CreateDevice() failed");
         free(dev);
         Py_RETURN_NONE;
     }
@@ -231,16 +232,16 @@ static PyObject *get_sources(PyObject *, PyObject *args)
     input[1].propid = WIA_IPA_ITEM_CATEGORY;
 
     if (!PyArg_ParseTuple(args, "O", &capsule)) {
-        WIA_WARNING("Pyinsane: get_sources(): Invalid args");
+        wia_log(WIA_WARNING, "Pyinsane: get_sources(): Invalid args");
         return NULL;
     }
     if (!PyCapsule_CheckExact(capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: get_sources(): invalid argument type (not a pycapsule)");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: get_sources(): invalid argument type (not a pycapsule)");
         Py_RETURN_NONE;
     }
 
     if ((dev = (struct wia_device *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_DEV_NAME)) == NULL) {
-        WIA_WARNING("Pyinsane: WARNING: get_sources(): invalid argument type");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: get_sources(): invalid argument type");
         Py_RETURN_NONE;
     }
 
@@ -261,7 +262,7 @@ static PyObject *get_sources(PyObject *, PyObject *args)
 
         hr = child_properties->ReadMultiple(2 /* nb_properties */, input, output);
         if (FAILED(hr)) {
-            WIA_WARNING("Pyinsane: WiaPropertyStorage->ReadMultiple() failed");
+            wia_log(WIA_WARNING, "Pyinsane: WiaPropertyStorage->ReadMultiple() failed");
             child->Release();
             continue;
         }
@@ -302,7 +303,7 @@ static IWiaItem2 *capsule2item(PyObject *capsule)
     struct wia_source *wia_src;
 
     if (!PyCapsule_CheckExact(capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: invalid argument type (not a pycapsule)");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: invalid argument type (not a pycapsule)");
         return NULL;
     }
 
@@ -318,7 +319,7 @@ static IWiaItem2 *capsule2item(PyObject *capsule)
             return wia_src->source;
     }
 
-    WIA_WARNING("Pyinsane: WARNING: Invalid argument type (not a known pycapsule type)");
+    wia_log(WIA_WARNING, "Pyinsane: WARNING: Invalid argument type (not a known pycapsule type)");
     return NULL;
 }
 
@@ -343,7 +344,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
 
 
     if (!PyArg_ParseTuple(args, "O", &capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: get_sources(): Invalid args");
         return NULL;
     }
 
@@ -365,7 +366,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
     CComQIPtr<IWiaPropertyStorage> properties(item);
     hr = properties->ReadMultiple(nb_properties, input, output);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: WiaPropertyStorage->ReadMultiple() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: WiaPropertyStorage->ReadMultiple() failed");
         free(input);
         free(output);
         Py_RETURN_NONE;
@@ -380,7 +381,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
         if (output[i].vt == 0)
             continue;
         if (output[i].vt != g_wia_all_properties[i].vartype) {
-            WIA_WARNING("Pyinsane: WARNING: A property has a type different from the one expected");
+            wia_log(WIA_WARNING, "Pyinsane: WARNING: A property has a type different from the one expected");
             continue;
         }
         switch(output[i].vt) {
@@ -403,7 +404,7 @@ static PyObject *get_properties(PyObject *, PyObject *args)
                 propvalue = clsid_to_pyobject(&g_wia_all_properties[i], *output[i].puuid);
                 break;
             default:
-                WIA_WARNING("Pyinsane: WARNING: Unknown var type");
+                wia_log(WIA_WARNING, "Pyinsane: WARNING: Unknown var type");
                 assert(0);
                 continue;
         }
@@ -441,7 +442,7 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
     PyObject *prop;
 
     if (!PyArg_ParseTuple(args, "O", &capsule)) {
-        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: get_sources(): Invalid args");
         return NULL;
     }
 
@@ -464,7 +465,7 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
     CComQIPtr<IWiaPropertyStorage> properties(item);
     hr = properties->GetPropertyAttributes(nb_properties, input, prop_attributes, output);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: WiaPropertyStorage->GetPropertyAttribute() failed. Will use defaults");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: WiaPropertyStorage->GetPropertyAttribute() failed. Will use defaults");
         free(input);
         free(prop_attributes);
         free(output);
@@ -493,11 +494,11 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
                     constraint = int_vector_to_pyobject_list(&output[i].cal);
                 break;
             case VT_VECTOR | VT_UI2:
-                WIA_WARNING("Pyinsane: WARNING: Got VECTOR|UI2 as constraint. Not supported yet");
+                wia_log(WIA_WARNING, "Pyinsane: WARNING: Got VECTOR|UI2 as constraint. Not supported yet");
                 // TODO
                 continue;
             case VT_UI1 | VT_VECTOR:
-                WIA_WARNING("Pyinsane: WARNING: Got VECTOR|UI1 as constraint. Not supported yet");
+                wia_log(WIA_WARNING, "Pyinsane: WARNING: Got VECTOR|UI1 as constraint. Not supported yet");
                 // TODO
                 continue;
             case VT_BSTR:
@@ -510,7 +511,7 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
                 constraint = clsid_to_pyobject(&g_wia_all_properties[i], *output[i].puuid);
                 break;
             default:
-                WIA_WARNING("Pyinsane: WARNING: Unknown var type for constraint");
+                wia_log(WIA_WARNING, "Pyinsane: WARNING: Unknown var type for constraint");
                 continue;
         }
         if (constraint == NULL) {
@@ -540,12 +541,12 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
 
     PropVariantInit(&propvalue);
     propvalue.vt = property_spec->vartype;
-    
+
     switch(property_spec->vartype) {
         case VT_I4:
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
             if (propvalue.lVal == -1) {
-                WIA_WARNING("Pyinsane: pyobject_to_int() failed");
+                wia_log(WIA_WARNING, "Pyinsane: pyobject_to_int() failed");
                 return 0;
             }
             break;
@@ -553,27 +554,27 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
             propvalue.vt = VT_I4;
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
             if (propvalue.lVal == -1) {
-                WIA_WARNING("Pyinsane: pyobject_to_int() failed");
+                wia_log(WIA_WARNING, "Pyinsane: pyobject_to_int() failed");
                 return 0;
             }
             break;
         case VT_VECTOR | VT_UI2:
         case VT_UI1 | VT_VECTOR:
-            WIA_WARNING("Pyinsane: WARNING: Vector not supported yet");
+            wia_log(WIA_WARNING, "Pyinsane: WARNING: Vector not supported yet");
             // TODO
             return 0;
         case VT_BSTR:
-            WIA_WARNING("Pyinsane: WARNING: String not supported yet");
+            wia_log(WIA_WARNING, "Pyinsane: WARNING: String not supported yet");
             // TODO
             return 0;
         case VT_CLSID:
             if (!pyobject_to_clsid(property_spec, pyvalue, &propvalue.puuid)) {
-                WIA_WARNING("Pyinsane: pyobject_to_clsid() failed");
+                wia_log(WIA_WARNING, "Pyinsane: pyobject_to_clsid() failed");
                 return 0;
             }
             break;
         default:
-            WIA_WARNING("Pyinsane: WARNING: Unknown var type");
+            wia_log(WIA_WARNING, "Pyinsane: WARNING: Unknown var type");
             assert(0);
             return 0;
     }
@@ -581,7 +582,7 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
     CComQIPtr<IWiaPropertyStorage> properties(item);
     hr = properties->WriteMultiple(1, &propspec, &propvalue, WIA_IPA_FIRST);
     if (FAILED(hr)) {
-        WIA_WARNING("Pyinsane: WARNING: properties->WriteMultiple() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: properties->WriteMultiple() failed");
         fprintf(stderr, "Pyinsane: WARNING: properties->WriteMultiple() failed: %s : 0x%X\n", property_spec->name, hr);
         return 0;
     }
@@ -599,7 +600,7 @@ static PyObject *set_property(PyObject *, PyObject *args)
     int i;
 
     if (!PyArg_ParseTuple(args, "OOO", &capsule, &py_propname, &py_propvalue)) {
-        WIA_WARNING("Pyinsane: WARNING: get_sources(): Invalid args");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: get_sources(): Invalid args");
         return NULL;
     }
     item = capsule2item(capsule);
@@ -616,7 +617,7 @@ static PyObject *set_property(PyObject *, PyObject *args)
         Py_RETURN_TRUE;
     }
 
-    WIA_WARNING("Pyinsame: WARNING: set_property(): Property not found");
+    wia_log(WIA_WARNING, "Pyinsame: WARNING: set_property(): Property not found");
     Py_RETURN_FALSE;
 }
 
@@ -669,7 +670,7 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
         arglist = Py_BuildValue("(i)", nb);
         res = PyEval_CallObject(download->get_data_cb, arglist);
         if (res == NULL) {
-            WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->get_data_cb !");
+            wia_log(WIA_WARNING, "Pyinsane: WARNING: Got exception from callback download->get_data_cb !");
         }
         Py_XDECREF(res);
     }
@@ -690,7 +691,7 @@ static void end_of_page_wrapper(void *cb_data)
     PyEval_RestoreThread(download->_save);
     res = PyEval_CallObject(download->end_of_page_cb, NULL);
     if (res == NULL) {
-        WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->end_of_page_cb !");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: Got exception from callback download->end_of_page_cb !");
     }
     Py_XDECREF(res);
     download->_save = PyEval_SaveThread();
@@ -709,7 +710,7 @@ static void end_of_scan_wrapper(void *cb_data)
     PyEval_RestoreThread(download->_save);
     res = PyEval_CallObject(download->end_of_scan_cb, NULL);
     if (res == NULL) {
-        WIA_WARNING("Pyinsane: WARNING: Got exception from callback download->end_of_scan_cb !");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: Got exception from callback download->end_of_scan_cb !");
     }
     Py_XDECREF(res);
     download->_save = PyEval_SaveThread();
@@ -727,7 +728,7 @@ static PyObject *download(PyObject *, PyObject *args)
     struct wia_source *src;
 
     if (!PyEval_ThreadsInitialized()) {
-        WIA_WARNING("Python thread not yet initialized ?!");
+        wia_log(WIA_WARNING, "Python thread not yet initialized ?!");
         PyEval_InitThreads();
     }
 
@@ -736,20 +737,20 @@ static PyObject *download(PyObject *, PyObject *args)
                 &dl_data.get_data_cb, &dl_data.end_of_page_cb, &dl_data.end_of_scan_cb,
                 &dl_data.buffer
             )) {
-        WIA_WARNING("Pyinsane: WARNING: download(): Invalid args");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: download(): Invalid args");
         return NULL;
     }
 
     src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
     if (src == NULL) {
-        WIA_WARNING("Pyinsane: WARNING: wrong param type. Expected a scan source");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: wrong param type. Expected a scan source");
         return NULL;
     }
 
     if (!PyCallable_Check(dl_data.get_data_cb)
             || !PyCallable_Check(dl_data.end_of_page_cb)
             || !PyCallable_Check(dl_data.end_of_scan_cb)) {
-        WIA_WARNING("Pyinsane: WARNING: download(): wrong param type. Expected callback(s)");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: download(): wrong param type. Expected callback(s)");
         Py_RETURN_NONE;
     }
 
@@ -757,7 +758,7 @@ static PyObject *download(PyObject *, PyObject *args)
 
     hr = src->source->QueryInterface(IID_IWiaTransfer, (void**)&scan.transfer);
     if (FAILED(hr)) {
-        WIA_WARNING("source->QueryInterface(WiaTransfer) failed");
+        wia_log(WIA_WARNING, "source->QueryInterface(WiaTransfer) failed");
         Py_RETURN_NONE;
     }
 
@@ -778,7 +779,7 @@ static PyObject *download(PyObject *, PyObject *args)
         _com_error err(hr);
         LPCTSTR errMsg = err.ErrorMessage();
 
-        WIA_WARNING("Pyinsane: WARNING: source->transfer->Download() failed");
+        wia_log(WIA_WARNING, "Pyinsane: WARNING: source->transfer->Download() failed");
 
         std::cerr << "Pyinsane: WARNING: source->transfer->Download() failed: " << hr << " ; " << errMsg << std::endl;
 
@@ -802,15 +803,16 @@ static PyObject *exit(PyObject *, PyObject* args)
 
 
 static PyMethodDef rawapi_methods[] = {
-    {"init", init, METH_VARARGS, NULL},
+    {"download", download, METH_VARARGS, NULL},
+    {"exit", exit, METH_VARARGS, NULL},
+    {"get_constraints", get_constraints, METH_VARARGS, NULL},
     {"get_devices", get_devices, METH_VARARGS, NULL},
     {"get_properties", get_properties, METH_VARARGS, NULL},
-    {"get_constraints", get_constraints, METH_VARARGS, NULL},
     {"get_sources", get_sources, METH_VARARGS, NULL},
+    {"init", init, METH_VARARGS, NULL},
     {"open", open_device, METH_VARARGS, NULL},
-    {"download", download, METH_VARARGS, NULL},
+    {"register_logger", register_logger, METH_VARARGS, NULL},
     {"set_property", set_property, METH_VARARGS, NULL},
-    {"exit", exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL},
 };
 
