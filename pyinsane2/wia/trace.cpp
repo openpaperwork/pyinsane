@@ -3,6 +3,7 @@
 #include <comdef.h>
 
 #include "trace.h"
+#include "util.h"
 
 
 static PyObject *g_log_obj = NULL;
@@ -26,10 +27,13 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
     }
 
     memset(g_log_buffer, 0, sizeof(g_log_buffer));
+
     vsnprintf_s(g_log_buffer, _countof(g_log_buffer), _TRUNCATE, fmt, args);
-    g_log_buffer[_countof(g_log_buffer) - 1] = '\0';
+    g_log_buffer[WIA_COUNT_OF(g_log_buffer) - 1] = '\0';
+
     _snprintf_s(g_log_buffer2, sizeof(g_log_buffer2), _TRUNCATE, "%s(L%d): %s", file, line, g_log_buffer);
-    g_log_buffer2[_countof(g_log_buffer2) - 1] = '\0';
+    g_log_buffer2[WIA_COUNT_OF(g_log_buffer2) - 1] = '\0';
+
     msg = PyUnicode_FromString(g_log_buffer2);
 
     level = g_levels[lvl];

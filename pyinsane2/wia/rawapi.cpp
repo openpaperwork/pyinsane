@@ -94,7 +94,7 @@ static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
         CW2A dev_id_str(output[0].bstrVal);
         CW2A dev_name_str(output[0].bstrVal);
         wia_log(WIA_INFO, "[%s, %s] --> not a scanner --> ignored",
-                dev_id_str, dev_name_str);
+                (char *)dev_id_str, (char *)dev_name_str);
         *out_tuple = NULL;
         return S_OK;
     }
@@ -313,7 +313,7 @@ static PyObject *get_sources(PyObject *, PyObject *args)
         }
 
         CW2A source_name_str(output[0].bstrVal);
-        wia_log(WIA_INFO, "Got source [%s]", source_name_str);
+        wia_log(WIA_INFO, "Got source [%s]", (char *)source_name_str);
 
         source_name = PyUnicode_FromWideChar(output[0].bstrVal, -1);
         capsule = PyCapsule_New(source, WIA_PYCAPSULE_SRC_NAME, free_source);
