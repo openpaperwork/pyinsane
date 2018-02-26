@@ -863,7 +863,7 @@ PyObject *clsid_to_pyobject(const struct wia_property *property, CLSID value)
         if (values[i].value == value)
             return PyUnicode_FromString(values[i].name);
     }
-    wia_log(WIA_WARNING, "Got unknown clsid from driver");
+    wia_log(WIA_WARNING, "Got unknown clsid from driver (property=%s)", property->name);
     return NULL;
 }
 
@@ -949,7 +949,7 @@ int pyobject_to_int(const struct wia_property *property_spec, PyObject *pyvalue,
         }
     }
 
-    wia_log(WIA_WARNING, "set_property(): Failed to parse value");
+    wia_log(WIA_WARNING, "set_property(%s): Failed to parse value", property_spec->name);
     return fail_value;
 }
 
@@ -960,7 +960,7 @@ int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalu
     const char *value;
 
     if (!PyUnicode_Check(pyvalue)) {
-        wia_log(WIA_WARNING, "set_property(): Invalid type for clsid property");
+        wia_log(WIA_WARNING, "set_property(%s): Invalid type for clsid property", property_spec->name);
         return 0;
     }
 
@@ -976,6 +976,6 @@ int pyobject_to_clsid(const struct wia_property *property_spec, PyObject *pyvalu
         }
     }
 
-    wia_log(WIA_WARNING, "set_property(): Invalid value for clsid property");
+    wia_log(WIA_WARNING, "set_property(%s): Invalid value for clsid property", property_spec->name);
     return 0;
 }
