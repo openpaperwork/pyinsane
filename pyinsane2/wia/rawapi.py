@@ -57,6 +57,9 @@ class WiaAction(object):
         try:
             self.result = self.func(**self.kwargs)
         except Exception as exc:
+            if (not isinstance(exc, EOFError) and
+                    not isinstance(exc, StopIteration)):
+                logger.error("Unexpected exception", exc_info=exc)
             self.exception = exc
         self.__sem.release()
 
