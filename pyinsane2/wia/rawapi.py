@@ -34,18 +34,19 @@ class WiaAction(object):
         wia_action_queue.put(self)
 
     def wait(self):
-        self.start()
-        self.__sem.acquire()
-        if self.exception is not None:
-            raise self.exception
+        self.do()
+        # self.start()
+        # self.__sem.acquire()
+        # if self.exception is not None:
+        #     raise self.exception
         return self.result
 
     def do(self):
-        try:
-            self.result = self.func(**self.kwargs)
-        except Exception as exc:
-            self.exception = exc
-        self.__sem.release()
+        # try:
+        self.result = self.func(**self.kwargs)
+        # except Exception as exc:
+        #     self.exception = exc
+        # self.__sem.release()
 
 
 class WiaWorker(threading.Thread):
