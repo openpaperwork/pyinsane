@@ -93,7 +93,8 @@ static HRESULT get_device_basic_infos(IWiaPropertyStorage *properties,
     if (GET_STIDEVICE_TYPE(output[2].lVal) != StiDeviceTypeScanner) {
         CW2A dev_id_str(output[0].bstrVal);
         CW2A dev_name_str(output[0].bstrVal);
-        wia_log(WIA_INFO, "[%s, %s] --> not a scanner --> ignored", dev_id_str, dev_name_str);
+        wia_log(WIA_INFO, "[%s, %s] --> not a scanner --> ignored",
+                dev_id_str, dev_name_str);
         *out_tuple = NULL;
         return S_OK;
     }
@@ -212,7 +213,7 @@ static PyObject *open_device(PyObject *, PyObject *args)
     dev = (struct wia_device *)calloc(1, sizeof(struct wia_device));
     dev->dev_manager = wia_dev_manager;
 
-    bstr_devid = SysAllocString(A2W(devid)); // TODO(Jflesch): Does any of this allocate anything ? oO
+    bstr_devid = SysAllocString(A2W(devid));
     hr = wia_dev_manager->CreateDevice(0, bstr_devid, &dev->device);
     if (FAILED(hr)) {
         wia_log(WIA_WARNING, "WiaDevMgr->CreateDevice() failed");
@@ -542,7 +543,10 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
                 // TODO
                 continue;
             case VT_BSTR:
-                constraint = PyUnicode_FromWideChar(SysAllocString(output[i].bstrVal), SysStringLen(output[i].bstrVal));
+                constraint = PyUnicode_FromWideChar(
+                        SysAllocString(output[i].bstrVal),
+                        SysStringLen(output[i].bstrVal)
+                    );
                 break;
             case VT_BSTR | VT_VECTOR:
                 constraint = str_vector_to_pyobject(&output[i].cabstr);
@@ -555,7 +559,8 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
                 continue;
         }
         if (constraint == NULL) {
-            wia_log(WIA_WARNING, "Failed to parse constraint of [%s]\n", g_wia_all_properties[i].name);
+            wia_log(WIA_WARNING, "Failed to parse constraint of [%s]\n",
+                    g_wia_all_properties[i].name);
             continue;
         }
         propname = PyUnicode_FromString(g_wia_all_properties[i].name);
@@ -588,7 +593,8 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
         case VT_I4:
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
             if (propvalue.lVal == -1) {
-                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_int() failed", property_spec->name);
+                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_int() failed",
+                        property_spec->name);
                 return 0;
             }
             break;
@@ -596,27 +602,32 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
             propvalue.vt = VT_I4;
             propvalue.lVal = pyobject_to_int(property_spec, pyvalue, -1);
             if (propvalue.lVal == -1) {
-                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_int() failed", property_spec->name);
+                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_int() failed",
+                        property_spec->name);
                 return 0;
             }
             break;
         case VT_VECTOR | VT_UI2:
         case VT_UI1 | VT_VECTOR:
-            wia_log(WIA_WARNING, "Setting property [%s]: Vector not supported yet", property_spec->name);
+            wia_log(WIA_WARNING, "Setting property [%s]: Vector not supported yet",
+                    property_spec->name);
             // TODO
             return 0;
         case VT_BSTR:
-            wia_log(WIA_WARNING, "Setting property [%s]: String not supported yet", property_spec->name);
+            wia_log(WIA_WARNING, "Setting property [%s]: String not supported yet",
+                    property_spec->name);
             // TODO
             return 0;
         case VT_CLSID:
             if (!pyobject_to_clsid(property_spec, pyvalue, &propvalue.puuid)) {
-                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_clsid() failed", property_spec->name);
+                wia_log(WIA_WARNING, "Setting property [%s]: pyobject_to_clsid() failed",
+                        property_spec->name);
                 return 0;
             }
             break;
         default:
-            wia_log(WIA_WARNING, "Setting property [%s]: Unknown var type", property_spec->name);
+            wia_log(WIA_WARNING, "Setting property [%s]: Unknown var type",
+                    property_spec->name);
             assert(0);
             return 0;
     }
@@ -624,7 +635,8 @@ static int _set_property(IWiaItem2 *item, const struct wia_property *property_sp
     CComQIPtr<IWiaPropertyStorage> properties(item);
     hr = properties->WriteMultiple(1, &propspec, &propvalue, WIA_IPA_FIRST);
     if (FAILED(hr)) {
-        wia_log(WIA_WARNING, "Setting property [%s]: properties->WriteMultiple() failed", property_spec->name);
+        wia_log(WIA_WARNING, "Setting property [%s]: properties->WriteMultiple() failed",
+                property_spec->name);
         wia_log_hresult(WIA_WARNING, hr);
         return 0;
     }
