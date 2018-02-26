@@ -1,5 +1,6 @@
 from collections import deque
 import logging
+import os
 import queue
 import threading
 
@@ -10,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 _rawapi.register_logger(0, logger)
+
+
+SINGLE_THREAD = bool(int(os.getenv("PYINSANE_SINGLE_THREAD", 0)))
 
 
 class WIAException(util.PyinsaneException):
@@ -26,6 +30,9 @@ class WiaAction(object):
         self.__sem = threading.Semaphore(0)
 
     def start(self):
+        if SINGLE_THREAD:
+            return self.do()
+
         global wia_thread
         global wia_action_queue
 
@@ -34,13 +41,19 @@ class WiaAction(object):
         wia_action_queue.put(self)
 
     def wait(self):
-        self.start()
+        ret = self.start()
+        if SINGLE_THREAD:
+            return ret
+
         self.__sem.acquire()
         if self.exception is not None:
             raise self.exception
         return self.result
 
     def do(self):
+        if SINGLE_THREAD:
+            return self.func(**self.kwargs)
+
         try:
             self.result = self.func(**self.kwargs)
         except Exception as exc:
@@ -60,10 +73,11 @@ class WiaWorker(threading.Thread):
                     return
 
 
-parent_thread = threading.current_thread()
-wia_action_queue = queue.Queue()
-wia_thread = WiaWorker()
-wia_thread.start()
+if not SINGLE_THREAD:
+    parent_thread = threading.current_thread()
+    wia_action_queue = queue.Queue()
+    wia_thread = WiaWorker()
+    wia_thread.start()
 
 
 def _init():

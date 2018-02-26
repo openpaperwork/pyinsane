@@ -4,9 +4,11 @@ import sys
 
 from .util import PyinsaneException
 
+SINGLE_THREAD = bool(int(os.getenv("PYINSANE_SINGLE_THREAD", 0)))
+
 if os.name == "nt":
     from .wia.abstract import *  # noqa
-elif sys.platform == "darwin":
+elif sys.platform == "darwin" or SINGLE_THREAD:
     # The dedicated process appear to crash on MacOSX. Don't know why.
     from .sane.abstract import *  # noqa
 else:
