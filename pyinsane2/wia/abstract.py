@@ -54,7 +54,15 @@ class Scan(object):
             self._got_data = True
         except EOFError:
             if len(self._data) >= self.MIN_BYTES:
-                self._session._add_image(self._get_current_image())
+                try:
+                    self._session._add_image(self._get_current_image())
+                except Exception as exc:
+                    logger.warning(
+                        "Got %d bytes, but exception while decoding image."
+                        " Assuming no more page are available",
+                        len(self._data), exc_info=exc
+                    )
+                    raise StopIteration()
                 if self.multiple:
                     self._session._next()
                 raise
