@@ -16,9 +16,8 @@
     } while(0)
 
 
-PyinsaneImageStream::PyinsaneImageStream(
-        data_cb getData, void *cbData
-    ) : mGetData(getData), mCbData(cbData), mRefCount(1), mWritten(0)
+PyinsaneImageStream::PyinsaneImageStream(data_cb getData, void *cbData)
+    : mGetData(getData), mCbData(cbData), mRefCount(1), mWritten(0)
 {
     TRACE();
 }
@@ -203,7 +202,8 @@ HRESULT PyinsaneWiaTransferCallback::GetNextStream(
         LONG, BSTR, BSTR, IStream **ppDestination)
 {
 #if 0
-    return SHCreateStreamOnFileEx(L"C:\\pouet.bmp", STGM_READWRITE | STGM_CREATE, FILE_ATTRIBUTE_NORMAL, TRUE, NULL, ppDestination);
+    return SHCreateStreamOnFileEx(L"C:\\pouet.bmp", STGM_READWRITE | STGM_CREATE,
+        FILE_ATTRIBUTE_NORMAL, TRUE, NULL, ppDestination);
 #else
     TRACE();
     *ppDestination = new PyinsaneImageStream(mGetData, mCbData);
