@@ -41,6 +41,7 @@ class Scan(object):
         self._session = session
         self.source = source
         self._data = b""
+        self._last_valid_data_data = b""
         self._img_size = None
         self.scan = rawapi.start_scan(self.source)
         self.multiple = multiple
@@ -51,30 +52,37 @@ class Scan(object):
         try:
             buf = self.scan.read()
             self._data += buf
-            self._got_data = True
         except EOFError:
+            # Jflesch> Some drivers (Brother for instance) keep telling us
+            # there is still something to scan yet when there is not.
+            # They send some data (image headers ?) and only then they
+            # realize there is nothing left to scan ...
+
             if len(self._data) >= self.MIN_BYTES:
                 try:
                     self._session._add_image(self._get_current_image())
+                    self._last_valid_data = self._data
                 except Exception as exc:
                     logger.warning(
                         "Got %d bytes, but exception while decoding image."
                         " Assuming no more page are available",
                         len(self._data), exc_info=exc
                     )
+                    self._data = self._last_valid_data
                     raise StopIteration()
                 if self.multiple:
                     self._session._next()
                 raise
             else:
-                # Too small. Scrap the crap from the drivers.
-                self._data = b""
+                # --> Too small. Scrap the crap from the drivers and switch
+                # back to the last valid data obtained (last page scanned)
+                self._data = self._last_valid_data
                 raise StopIteration()
 
     def _get_current_image(self):
         # We get the image as a truncated bitmap.
         # ('rawrgb' is not supported by all drivers ...)
-        # Bitmap headers are annoying.
+        # BMP headers are annoying.
         PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
         stream = io.BytesIO(self._data)
         img = PIL.Image.open(stream)
