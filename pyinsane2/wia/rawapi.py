@@ -214,8 +214,8 @@ def _start_scan(src, out):
         out.end_of_scan_cb,
         out.buffer,
     )
-    if ret is None:
-        raise WIAException("Failed to start scan")
+    if not ret:
+        raise WIAException("Failed to scan")
     return ret
 
 

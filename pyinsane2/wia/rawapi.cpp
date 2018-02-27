@@ -807,7 +807,7 @@ static PyObject *download(PyObject *, PyObject *args)
                 &dl_data.buffer
             )) {
         wia_log(WIA_WARNING, "download(): Invalid args");
-        return NULL;
+        Py_RETURN_FALSE;
     }
 
     wia_log(WIA_DEBUG, "download()");
@@ -815,14 +815,14 @@ static PyObject *download(PyObject *, PyObject *args)
     src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
     if (src == NULL) {
         wia_log(WIA_WARNING, "wrong param type. Expected a scan source");
-        return NULL;
+        Py_RETURN_FALSE;
     }
 
     if (!PyCallable_Check(dl_data.get_data_cb)
             || !PyCallable_Check(dl_data.end_of_page_cb)
             || !PyCallable_Check(dl_data.end_of_scan_cb)) {
         wia_log(WIA_WARNING, "download(): wrong param type. Expected callback(s)");
-        Py_RETURN_NONE;
+        Py_RETURN_FALSE;
     }
 
     dl_data.mutex = CreateMutex(NULL, FALSE, NULL);
@@ -831,7 +831,7 @@ static PyObject *download(PyObject *, PyObject *args)
     if (FAILED(hr)) {
         wia_log(WIA_WARNING, "source->QueryInterface(WiaTransfer) failed");
         wia_log_hresult(WIA_WARNING, hr);
-        Py_RETURN_NONE;
+        Py_RETURN_FALSE;
     }
 
     scan.callbacks = new PyinsaneWiaTransferCallback(
@@ -847,7 +847,7 @@ static PyObject *download(PyObject *, PyObject *args)
         end_of_scan_wrapper((void *)&dl_data);
         wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
-        Py_RETURN_NONE;
+        Py_RETURN_FALSE;
     } else if (FAILED(hr)) {
         wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
@@ -856,11 +856,12 @@ static PyObject *download(PyObject *, PyObject *args)
         wia_log_hresult(WIA_WARNING, hr);
 
         scan.transfer->Release();
+        Py_RETURN_FALSE;
     } else {
         wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
     }
-    Py_RETURN_NONE;
+    Py_RETURN_TRUE;
 }
 
 static PyObject *exit(PyObject *, PyObject* args)
