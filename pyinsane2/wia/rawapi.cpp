@@ -720,6 +720,7 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
+    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
 
     for ( ; nb_bytes > 0 ; nb_bytes -= nb, cdata += nb) {
@@ -734,6 +735,7 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
         Py_XDECREF(res);
     }
 
+    wia_log_set_pythread_state(&download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -749,12 +751,14 @@ static void end_of_page_wrapper(void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
+    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
     res = PyEval_CallObject(download->end_of_page_cb, NULL);
     if (res == NULL) {
         wia_log(WIA_WARNING, "Got exception from callback download->end_of_page_cb !");
     }
     Py_XDECREF(res);
+    wia_log_set_pythread_state(&download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -770,12 +774,14 @@ static void end_of_scan_wrapper(void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
+    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
     res = PyEval_CallObject(download->end_of_scan_cb, NULL);
     if (res == NULL) {
         wia_log(WIA_WARNING, "Got exception from callback download->end_of_scan_cb !");
     }
     Py_XDECREF(res);
+    wia_log_set_pythread_state(&download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -833,14 +839,17 @@ static PyObject *download(PyObject *, PyObject *args)
         &dl_data
     );
 
+    wia_log_set_pythread_state(&dl_data._save);
     dl_data._save = PyEval_SaveThread();
     hr = scan.transfer->Download(0, scan.callbacks);
 
     if (hr == WIA_ERROR_PAPER_EMPTY) {
         end_of_scan_wrapper((void *)&dl_data);
+        wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
         Py_RETURN_NONE;
     } else if (FAILED(hr)) {
+        wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
 
         wia_log(WIA_WARNING, "source->transfer->Download() failed");
@@ -848,6 +857,7 @@ static PyObject *download(PyObject *, PyObject *args)
 
         scan.transfer->Release();
     } else {
+        wia_log_set_pythread_state(NULL);
         PyEval_RestoreThread(dl_data._save);
     }
     Py_RETURN_NONE;

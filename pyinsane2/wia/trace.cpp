@@ -5,6 +5,7 @@
 #include "trace.h"
 #include "util.h"
 
+static PyThreadState **g_thread_state = NULL;
 
 static PyObject *g_log_obj = NULL;
 static PyObject *g_levels[WIA_MAX_LEVEL + 1] = { 0 }; // pre-allocated strings
@@ -34,6 +35,10 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
     _snprintf_s(g_log_buffer2, sizeof(g_log_buffer2), _TRUNCATE, "%s(L%d): %s", file, line, g_log_buffer);
     g_log_buffer2[WIA_COUNT_OF(g_log_buffer2) - 1] = '\0';
 
+    if (g_thread_state) {
+        PyEval_RestoreThread(*g_thread_state);
+    }
+
     msg = PyUnicode_FromString(g_log_buffer2);
 
     level = g_levels[lvl];
@@ -41,6 +46,10 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
     res = PyObject_CallMethodObjArgs(g_log_obj, level, msg, NULL);
     if (res != NULL) {
         Py_DECREF(res);
+    }
+
+    if (g_thread_state) {
+        *g_thread_state = PyEval_SaveThread();
     }
 }
 
@@ -85,4 +94,9 @@ PyObject *register_logger(PyObject *, PyObject *args)
     }
 
     Py_RETURN_NONE;
+}
+
+void wia_log_set_pythread_state(PyThreadState **thread_state)
+{
+    g_thread_state = thread_state;
 }
