@@ -5,7 +5,12 @@
 #include "trace.h"
 #include "util.h"
 
-static PyThreadState **g_thread_state = NULL;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+static volatile HANDLE g_mutex = NULL;
+static volatile PyThreadState **g_thread_state = NULL;
 
 static PyObject *g_log_obj = NULL;
 static PyObject *g_levels[WIA_MAX_LEVEL + 1] = { 0 }; // pre-allocated strings
@@ -35,8 +40,11 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
     _snprintf_s(g_log_buffer2, sizeof(g_log_buffer2), _TRUNCATE, "%s(L%d): %s", file, line, g_log_buffer);
     g_log_buffer2[WIA_COUNT_OF(g_log_buffer2) - 1] = '\0';
 
+    if (g_mutex) {
+        WaitForSingleObject(g_mutex, 0);
+    }
     if (g_thread_state) {
-        PyEval_RestoreThread(*g_thread_state);
+        PyEval_RestoreThread(*((PyThreadState**)g_thread_state));
     }
 
     msg = PyUnicode_FromString(g_log_buffer2);
@@ -50,6 +58,9 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
 
     if (g_thread_state) {
         *g_thread_state = PyEval_SaveThread();
+    }
+    if (g_mutex) {
+        ReleaseMutex(g_mutex);
     }
 }
 
@@ -96,7 +107,12 @@ PyObject *register_logger(PyObject *, PyObject *args)
     Py_RETURN_NONE;
 }
 
-void wia_log_set_pythread_state(PyThreadState **thread_state)
+void wia_log_set_pythread_state(HANDLE mutex, PyThreadState **thread_state)
 {
-    g_thread_state = thread_state;
+    g_mutex = mutex;
+    g_thread_state = (volatile PyThreadState**)thread_state;
 }
+
+#ifdef __cplusplus
+}
+#endif

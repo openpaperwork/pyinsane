@@ -12,6 +12,10 @@
 
 #include <Python.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum wia_log_level {
     WIA_DEBUG,
     WIA_INFO,
@@ -41,6 +45,10 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
 void _wia_log_hresult(enum wia_log_level lvl, const char *file, int line, HRESULT hr);
 
 PyObject *register_logger(PyObject *, PyObject *args);
-void wia_log_set_pythread_state(PyThreadState **thread_state);
+void wia_log_set_pythread_state(HANDLE mutex, PyThreadState **thread_state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

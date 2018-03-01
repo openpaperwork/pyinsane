@@ -37,7 +37,7 @@ class WiaAction(object):
         global wia_action_queue
 
         if wia_thread is None or not wia_thread.is_alive():
-            raise WIAException("WIA thread died unexpectidly !")
+            raise WIAException("WIA thread died unexpectedly !")
         wia_action_queue.put(self)
 
     def wait(self):

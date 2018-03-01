@@ -49,6 +49,11 @@ static PyObject *init(PyObject *, PyObject* args)
         return NULL;
     }
 
+    if (!PyEval_ThreadsInitialized()) {
+        wia_log(WIA_WARNING, "Python thread not yet initialized ?!");
+        PyEval_InitThreads();
+    }
+
     wia_log(WIA_INFO, "WIA->init()");
 
     hr = CoInitialize(NULL);
@@ -559,7 +564,7 @@ static PyObject *get_constraints(PyObject *, PyObject *args)
                 continue;
         }
         if (constraint == NULL) {
-            wia_log(WIA_WARNING, "Failed to parse constraint of [%s]\n",
+            wia_log(WIA_WARNING, "Failed to parse constraint of [%s]",
                     g_wia_all_properties[i].name);
             continue;
         }
@@ -720,8 +725,8 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
-    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
+    wia_log_set_pythread_state(download->mutex, NULL);
 
     for ( ; nb_bytes > 0 ; nb_bytes -= nb, cdata += nb) {
         nb = (int)WIA_MIN(nb_bytes, download->buffer.len);
@@ -735,7 +740,7 @@ static void get_data_wrapper(const void *data, int nb_bytes, void *cb_data)
         Py_XDECREF(res);
     }
 
-    wia_log_set_pythread_state(&download->_save);
+    wia_log_set_pythread_state(download->mutex, &download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -751,14 +756,16 @@ static void end_of_page_wrapper(void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
-    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
+    wia_log_set_pythread_state(download->mutex, NULL);
+
     res = PyEval_CallObject(download->end_of_page_cb, NULL);
     if (res == NULL) {
         wia_log(WIA_WARNING, "Got exception from callback download->end_of_page_cb !");
     }
     Py_XDECREF(res);
-    wia_log_set_pythread_state(&download->_save);
+
+    wia_log_set_pythread_state(download->mutex, &download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -774,14 +781,15 @@ static void end_of_scan_wrapper(void *cb_data)
 
     WaitForSingleObject(download->mutex, 0);
 
-    wia_log_set_pythread_state(NULL);
     PyEval_RestoreThread(download->_save);
+    wia_log_set_pythread_state(download->mutex, NULL);
+
     res = PyEval_CallObject(download->end_of_scan_cb, NULL);
     if (res == NULL) {
         wia_log(WIA_WARNING, "Got exception from callback download->end_of_scan_cb !");
     }
     Py_XDECREF(res);
-    wia_log_set_pythread_state(&download->_save);
+    wia_log_set_pythread_state(download->mutex, &download->_save);
     download->_save = PyEval_SaveThread();
 
     ReleaseMutex(download->mutex);
@@ -795,11 +803,6 @@ static PyObject *download(PyObject *, PyObject *args)
     struct wia_scan scan;
     HRESULT hr;
     struct wia_source *src;
-
-    if (!PyEval_ThreadsInitialized()) {
-        wia_log(WIA_WARNING, "Python thread not yet initialized ?!");
-        PyEval_InitThreads();
-    }
 
     if (!PyArg_ParseTuple(args, "OOOOy*",
                 &capsule,
@@ -839,18 +842,27 @@ static PyObject *download(PyObject *, PyObject *args)
         &dl_data
     );
 
-    wia_log_set_pythread_state(&dl_data._save);
+    WaitForSingleObject(dl_data.mutex, 0);
     dl_data._save = PyEval_SaveThread();
+    wia_log_set_pythread_state(dl_data.mutex, &dl_data._save);
+    ReleaseMutex(dl_data.mutex);
+
     hr = scan.transfer->Download(0, scan.callbacks);
 
     if (hr == WIA_ERROR_PAPER_EMPTY) {
         end_of_scan_wrapper((void *)&dl_data);
-        wia_log_set_pythread_state(NULL);
+
+        WaitForSingleObject(dl_data.mutex, 0);
+        wia_log_set_pythread_state(NULL, NULL);
         PyEval_RestoreThread(dl_data._save);
+        ReleaseMutex(dl_data.mutex);
+
         Py_RETURN_FALSE;
     } else if (FAILED(hr)) {
-        wia_log_set_pythread_state(NULL);
+        WaitForSingleObject(dl_data.mutex, 0);
+        wia_log_set_pythread_state(NULL, NULL);
         PyEval_RestoreThread(dl_data._save);
+        ReleaseMutex(dl_data.mutex);
 
         wia_log(WIA_WARNING, "source->transfer->Download() failed");
         wia_log_hresult(WIA_WARNING, hr);
@@ -858,9 +870,13 @@ static PyObject *download(PyObject *, PyObject *args)
         scan.transfer->Release();
         Py_RETURN_FALSE;
     } else {
-        wia_log_set_pythread_state(NULL);
+        WaitForSingleObject(dl_data.mutex, 0);
+        wia_log_set_pythread_state(NULL, NULL);
         PyEval_RestoreThread(dl_data._save);
+        ReleaseMutex(dl_data.mutex);
     }
+
+    // TODO(Jflesch): destroy mutex ?
     Py_RETURN_TRUE;
 }
 

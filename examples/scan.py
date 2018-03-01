@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import sys
 
 from PIL import Image
@@ -8,6 +9,15 @@ import pyinsane2
 
 
 def main():
+    logger = logging.getLogger()
+    sh = logging.StreamHandler()
+    formatter = logging.Formatter(
+            '%(levelname)-6s %(name)-30s %(message)s'
+        )
+    sh.setFormatter(formatter)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(sh)
+
     steps = False
 
     args = sys.argv[1:]
