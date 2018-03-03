@@ -25,7 +25,7 @@ doc: install_py
 
 check:
 	flake8
-	pydocstyle pyinsane2
+# 	pydocstyle pyinsane2
 
 test: ${VERSION_FILE}
 	tox
