@@ -154,7 +154,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::QueryInterface(REFIID riid, void 
     else
     {
         *ppvObject = NULL;
-        wia_log(WIA_WARNING, "Stream::QueryInterface(): Unknown interface requested\n");
+        wia_log(WIA_WARNING, "Stream::QueryInterface(): Unknown interface requested");
         return E_NOINTERFACE;
     }
 
