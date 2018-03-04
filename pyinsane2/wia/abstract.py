@@ -41,14 +41,21 @@ class Scan(object):
         self._session = session
         self.source = source
         self._data = b""
-        self._last_valid_data_data = b""
+        self.is_valid = False
+        self.is_complete = False
         self._img_size = None
+        logger.info("Starting scan")
         self.scan = rawapi.start_scan(self.source)
         self.multiple = multiple
 
     def read(self):
         # will raise EOFError at the end of each page
         # will raise StopIteration when all the pages are done
+        if self.is_complete:
+            if self.multiple:
+                return self._session._next().read()
+            else:
+                raise StopIteration()
         try:
             buf = self.scan.read()
             self._data += buf
@@ -57,35 +64,39 @@ class Scan(object):
             # there is still something to scan yet when there is not.
             # They send some data (image headers ?) and only then they
             # realize there is nothing left to scan ...
-
+            logger.info("End of page")
+            self.is_complete = True
             if len(self._data) >= self.MIN_BYTES:
                 try:
                     self._session._add_image(self._get_current_image())
-                    self._last_valid_data = self._data
+                    self.is_valid = True
                 except Exception as exc:
                     logger.warning(
                         "Got %d bytes, but exception while decoding image."
                         " Assuming no more page are available",
                         len(self._data), exc_info=exc
                     )
-                    self._data = self._last_valid_data
+                    logger.info("End of scan session")
+                    self._session._cancel_current()
                     raise StopIteration()
-                if self.multiple:
-                    self._session._next()
                 raise
             else:
                 # --> Too small. Scrap the crap from the drivers and switch
                 # back to the last valid data obtained (last page scanned)
-                self._data = self._last_valid_data
+                self._session._cancel_current()
                 raise StopIteration()
 
     def _get_current_image(self):
+        stream = io.BytesIO(self._data)
         # We get the image as a truncated bitmap.
         # ('rawrgb' is not supported by all drivers ...)
         # BMP headers are annoying.
         PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-        stream = io.BytesIO(self._data)
-        img = PIL.Image.open(stream)
+        try:
+            img = PIL.Image.open(stream)
+            img.load()
+        finally:
+            PIL.ImageFile.LOAD_TRUNCATED_IMAGES = False
         self._img_size = img.size
         return img
 
@@ -138,6 +149,7 @@ class ScanSession(object):
         self.multiple = multiple
         self.source = scanner.srcs[srcid]
         self.images = []
+        self.previous = None
         self.scan = Scan(self, self.source, self.multiple)
 
     def _add_image(self, img):
@@ -145,6 +157,12 @@ class ScanSession(object):
 
     def _next(self):
         self.scan = Scan(self, self.source, self.multiple)
+        return self.scan
+
+    def _cancel_current(self):
+        if self.previous is None:
+            return
+        self.scan = self.previous
 
 
 class ScannerCapabilities(object):
@@ -573,6 +591,20 @@ class Scanner(object):
             self.options['mode'] = ModeOption(self)
 
     def scan(self, multiple=False):
+        if (not ('source' in self.options and
+                 self.options['source'].capabilities.is_active())):
+            value = ""
+        else:
+            value = self.options['source'].value
+        if hasattr(value, 'decode'):
+            value = value.decode('utf-8')
+        if (("adf" not in value.lower() and
+                 "feeder" not in value.lower())):
+            # XXX(Jflesch): If we try to scan multiple pages
+            # from a  feeder, we never get WIA_ERROR_PAPER_EMPTY
+            # and loop forever
+            multiple = False
+
         if 'pages' in self.options:
             try:
                 # Even with an ADF, Pyinsane actually request one page
@@ -582,6 +614,7 @@ class Scanner(object):
                 self.options['pages'].value = 1
             except:
                 logger.exception("Failed to set options [pages]")
+
         return ScanSession(self, self.options['source'].value, multiple)
 
     def __str__(self):

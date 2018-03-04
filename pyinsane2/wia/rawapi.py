@@ -214,6 +214,8 @@ def _start_scan(src, out):
         out.end_of_scan_cb,
         out.buffer,
     )
+    if ret is None:  # Brother MFC-7360N
+        raise StopIteration()
     if not ret:
         raise WIAException("Failed to scan")
     return ret

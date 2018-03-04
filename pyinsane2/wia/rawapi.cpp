@@ -856,8 +856,8 @@ static PyObject *download(PyObject *, PyObject *args)
         wia_log_set_pythread_state(NULL, NULL);
         PyEval_RestoreThread(dl_data._save);
         ReleaseMutex(dl_data.mutex);
-
-        Py_RETURN_FALSE;
+        wia_log(WIA_WARNING, "No more paper");
+        Py_RETURN_NONE;
     } else if (FAILED(hr)) {
         WaitForSingleObject(dl_data.mutex, 0);
         wia_log_set_pythread_state(NULL, NULL);
