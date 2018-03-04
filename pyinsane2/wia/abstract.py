@@ -598,8 +598,7 @@ class Scanner(object):
             value = self.options['source'].value
         if hasattr(value, 'decode'):
             value = value.decode('utf-8')
-        if (("adf" not in value.lower() and
-                 "feeder" not in value.lower())):
+        if "adf" not in value.lower() and "feeder" not in value.lower():
             # XXX(Jflesch): If we try to scan multiple pages
             # from a  feeder, we never get WIA_ERROR_PAPER_EMPTY
             # and loop forever
