@@ -14,6 +14,7 @@ static volatile PyThreadState **g_thread_state = NULL;
 
 static PyObject *g_log_obj = NULL;
 static PyObject *g_levels[WIA_MAX_LEVEL + 1] = { 0 }; // pre-allocated strings
+static PyObject *g_default_msg = NULL;
 static int g_min_level = WIA_DEBUG;
 
 static char g_log_buffer[1024];
@@ -52,12 +53,12 @@ void _wia_log(enum wia_log_level lvl, const char *file, int line, LPCSTR fmt, ..
     level = g_levels[lvl];
 
     res = PyObject_CallMethodObjArgs(
-            g_log_obj, level, msg == NULL ? "NULL NULL NULL NULL !!" : msg, NULL
+            g_log_obj, level, msg != NULL ? msg : g_default_msg, NULL
     );
     if (res != NULL) {
         Py_DECREF(res);
     }
-    if (msg) {
+    if (msg != NULL) {
         Py_DECREF(msg);
     }
 
@@ -92,6 +93,7 @@ PyObject *register_logger(PyObject *, PyObject *args)
         g_levels[WIA_INFO] = PyUnicode_FromString("info");
         g_levels[WIA_WARNING] = PyUnicode_FromString("warning");
         g_levels[WIA_ERROR] = PyUnicode_FromString("error");
+        g_default_msg = PyUnicode_FromString("NULL NULL NULL !!");
     }
 
     if (!PyArg_ParseTuple(args, "iO", &min_log_level, &log_obj)) {
