@@ -1,3 +1,9 @@
+2018-03-05 : 2.0.12:
+- Build method has been changed: Use now "make install" instead of
+  "python3 ./setup.py install"
+- WIA: Add traces (from the C++ code, but using the Python logging module)
+- WIA: Fix behavior regarding feeders (Brother MFC-7360N for instance)
+
 2018-02-22 : 2.0.11:
 - Add pyinsane2.__version__
 - Sane: Normalize behavior between single and multi scan: Single scan must raise a StopIteration
