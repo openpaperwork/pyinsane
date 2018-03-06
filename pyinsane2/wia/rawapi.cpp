@@ -310,7 +310,7 @@ static PyObject *get_sources(PyObject *, PyObject *args)
         if (*output[1].puuid == WIA_CATEGORY_FINISHED_FILE
                     || *output[1].puuid == WIA_CATEGORY_FOLDER
                     || *output[1].puuid == WIA_CATEGORY_ROOT) {
-            wia_log(WIA_WARNING, "Ignoring unknown source type for [%s]", (char *)source_name_str);
+            wia_log(WIA_WARNING, "Ignoring unmanaged source type for [%s]", (char *)source_name_str);
             free(source);
             continue;
         } else if (*output[1].puuid == WIA_CATEGORY_AUTO) {
@@ -324,6 +324,8 @@ static PyObject *get_sources(PyObject *, PyObject *args)
         } else {
             source->type = WIA_SRC_FLATBED;
             wia_log(WIA_INFO, "Got source [%s] (flatbed)", (char *)source_name_str);
+        } else {
+            wia_log(WIA_WARNING, "Ignoring unknown source type for [%s]", (char *)source_name_str);
         }
 
 
