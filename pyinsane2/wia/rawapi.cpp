@@ -250,6 +250,7 @@ static PyObject *get_sources(PyObject *, PyObject *args)
     PyObject *capsule;
     PyObject *tuple;
     PyObject *all_sources;
+    int nb_sources = 0;
     struct wia_source *source;
     PROPSPEC input[2] = {0};
     PROPVARIANT output[2] = {0};
@@ -282,6 +283,8 @@ static PyObject *get_sources(PyObject *, PyObject *args)
     while(hr == S_OK) {
         hr = enum_item->Next(1, &child, NULL);
         if (hr != S_OK) {
+            wia_log(WIA_WARNING, "get_sources(): enum_item->next() failed");
+            wia_log_hresult(WIA_WARNING, hr);
             continue;
         }
 
@@ -302,31 +305,38 @@ static PyObject *get_sources(PyObject *, PyObject *args)
         assert(output[0].vt == VT_BSTR);
         assert(output[1].vt == VT_CLSID);
 
+        CW2A source_name_str(output[0].bstrVal);
+
         if (*output[1].puuid == WIA_CATEGORY_FINISHED_FILE
                     || *output[1].puuid == WIA_CATEGORY_FOLDER
                     || *output[1].puuid == WIA_CATEGORY_ROOT) {
+            wia_log(WIA_WARNING, "Ignoring unknown source type for [%s]", (char *)source_name_str);
             free(source);
             continue;
         } else if (*output[1].puuid == WIA_CATEGORY_AUTO) {
             source->type = WIA_SRC_AUTO;
+            wia_log(WIA_INFO, "Got source [%s] (auto)", (char *)source_name_str);
         } else if (*output[1].puuid == WIA_CATEGORY_FEEDER
                 || *output[1].puuid == WIA_CATEGORY_FEEDER_BACK
                 || *output[1].puuid == WIA_CATEGORY_FEEDER_FRONT) {
             source->type = WIA_SRC_FEEDER;
+            wia_log(WIA_INFO, "Got source [%s] (feeder)", (char *)source_name_str);
         } else {
             source->type = WIA_SRC_FLATBED;
+            wia_log(WIA_INFO, "Got source [%s] (flatbed)", (char *)source_name_str);
         }
 
-        CW2A source_name_str(output[0].bstrVal);
-        wia_log(WIA_INFO, "Got source [%s]", (char *)source_name_str);
 
         source_name = PyUnicode_FromWideChar(output[0].bstrVal, -1);
         capsule = PyCapsule_New(source, WIA_PYCAPSULE_SRC_NAME, free_source);
         tuple = PyTuple_Pack(2, source_name, capsule);
 
         PyList_Append(all_sources, tuple);
+        nb_sources++;
         Py_DECREF(tuple);
     }
+
+    wia_log(WIA_INFO, "%d sources found", nb_sources);
 
     return all_sources;
 }
