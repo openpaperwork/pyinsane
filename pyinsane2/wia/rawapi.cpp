@@ -323,9 +323,7 @@ static PyObject *get_sources(PyObject *, PyObject *args)
             wia_log(WIA_INFO, "Got source [%s] (feeder)", (char *)source_name_str);
         } else {
             source->type = WIA_SRC_FLATBED;
-            wia_log(WIA_INFO, "Got source [%s] (flatbed)", (char *)source_name_str);
-        } else {
-            wia_log(WIA_WARNING, "Ignoring unknown source type for [%s]", (char *)source_name_str);
+            wia_log(WIA_INFO, "Got source [%s] (assuming flatbed)", (char *)source_name_str);
         }
 
 
