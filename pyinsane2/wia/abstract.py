@@ -583,8 +583,10 @@ class Scanner(object):
 
         if 'source' in original:
             self.options['source'] = original['source']
-        else:
+        elif len(self._srcs_list) > 0:
             self.options['source'] = SourceOption(self._srcs_list)
+        else:  # Epson WorkForce ES-300W
+            self.options['source'] = SourceOption(self._dev)
         if 'mode' in original:
             self.options['mode'] = original['mode']
         else:

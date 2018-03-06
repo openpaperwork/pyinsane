@@ -802,7 +802,7 @@ static PyObject *download(PyObject *, PyObject *args)
     struct download dl_data = { 0 };
     struct wia_scan scan;
     HRESULT hr;
-    struct wia_source *src;
+    IWiaItem2 *src;
 
     if (!PyArg_ParseTuple(args, "OOOOy*",
                 &capsule,
@@ -815,7 +815,10 @@ static PyObject *download(PyObject *, PyObject *args)
 
     wia_log(WIA_DEBUG, "download()");
 
-    src = (struct wia_source *)PyCapsule_GetPointer(capsule, WIA_PYCAPSULE_SRC_NAME);
+    /* With most scanners, scan is run on a source.
+     * With Epson Workforce ES-300W, it is run on the device itself.
+     */
+    src = capsule2item(capsule);
     if (src == NULL) {
         wia_log(WIA_WARNING, "wrong param type. Expected a scan source");
         Py_RETURN_FALSE;
@@ -830,7 +833,7 @@ static PyObject *download(PyObject *, PyObject *args)
 
     dl_data.mutex = CreateMutex(NULL, FALSE, NULL);
 
-    hr = src->source->QueryInterface(IID_IWiaTransfer, (void**)&scan.transfer);
+    hr = src->QueryInterface(IID_IWiaTransfer, (void**)&scan.transfer);
     if (FAILED(hr)) {
         wia_log(WIA_WARNING, "source->QueryInterface(WiaTransfer) failed");
         wia_log_hresult(WIA_WARNING, hr);
