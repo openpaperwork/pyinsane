@@ -450,7 +450,7 @@ class Scanner(object):
     def __init__(self, name):
         self._dev = rawapi.open(name)
         self._srcs_list = rawapi.get_sources(self._dev)
-        self.srcs = {}
+        self.srcs = {"any": self._dev}
         for (srcid, src) in self._srcs_list:
             self.srcs[srcid] = src
 
@@ -586,7 +586,7 @@ class Scanner(object):
         elif len(self._srcs_list) > 0:
             self.options['source'] = SourceOption(self._srcs_list)
         else:  # Epson WorkForce ES-300W
-            self.options['source'] = SourceOption([self._dev])
+            self.options['source'] = SourceOption([("any", self._dev)])
         if 'mode' in original:
             self.options['mode'] = original['mode']
         else:
