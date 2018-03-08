@@ -12,7 +12,7 @@
 
 
 #define TRACE() do { \
-        wia_log(WIA_DEBUG, "%s()", __FUNCTION__); \
+        wia_log(WIA_DEBUG, "%s(): L%d", __FUNCTION__, __LINE__); \
     } while(0)
 
 
@@ -78,7 +78,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
         *pcbWritten = 0;
         return S_OK;
     }
-    TRACE();
+    wia_log(WIA_DEBUG, "%s(): L%d: %lu bytes", __FUNCTION__, __LINE__, cb); \
     mGetData(pv, cb, mCbData);
     TRACE();
     mWritten += cb;
