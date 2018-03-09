@@ -251,13 +251,13 @@ process for scanning:
 <table border="0">
 	<tr>
 		<td>
-			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/stable/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" width="359" height="300" />
+			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/master/doc/sane_driver_corrupted_mem.png" alt="corrupted scan" width="359" height="300" />
 		</td>
 		<td>
 			--&gt;
 		</td>
 		<td>
-			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/stable/doc/sane_proc_workaround.png" alt="scan fine" width="352" height="308" />
+			<img src="https://raw.githubusercontent.com/openpaperwork/pyinsane/master/doc/sane_proc_workaround.png" alt="scan fine" width="352" height="308" />
 		</td>
 	</tr>
 </table>
