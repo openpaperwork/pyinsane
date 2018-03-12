@@ -31,7 +31,7 @@ PyinsaneImageStream::~PyinsaneImageStream()
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Clone(IStream **)
 {
-    wia_log(WIA_WARNING, "IStream::Clone() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Clone() not implemented but called !");
     return E_NOTIMPL;
 }
 
@@ -45,28 +45,28 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Commit(DWORD)
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*)
 {
-    wia_log(WIA_WARNING, "IStream::CopyTo() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::CopyTo() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
-    wia_log(WIA_WARNING, "IStream::LockRegion() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::LockRegion() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD)
 {
-    wia_log(WIA_WARNING, "IStream::UnlockRegion() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::UnlockRegion() not implemented but called !");
     return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Read(void *, ULONG, ULONG *)
 {
-    wia_log(WIA_WARNING, "IStream::Read() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Read() not implemented but called !");
     return E_NOTIMPL;
 }
 
@@ -89,7 +89,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Write(void const* pv, ULONG cb, U
 
 HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Revert()
 {
-    wia_log(WIA_WARNING, "IStream::Revert() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Revert() not implemented but called !");
     return E_NOTIMPL;
 }
 
@@ -104,14 +104,15 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(
         plibNewPosition->QuadPart = mWritten;
         return S_OK;
     }
-    wia_log(WIA_WARNING, "IStream::Seek() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::Seek(%lld, %u) not implemented but called !",
+            dlibMove.QuadPart, dwOrigin);
     return E_NOTIMPL;
 }
 
 
-HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER)
+HRESULT STDMETHODCALLTYPE PyinsaneImageStream::SetSize(ULARGE_INTEGER newSize)
 {
-    wia_log(WIA_WARNING, "IStream::SetSize() not implemented but called !\n");
+    wia_log(WIA_WARNING, "IStream::SetSize(%llu) not implemented but called !", newSize);
     return E_NOTIMPL;
 }
 
