@@ -103,6 +103,10 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(
         TRACE();
         plibNewPosition->QuadPart = mWritten;
         return S_OK;
+    } else if (mWritten == 0 && dwOrigin == STREAM_SEEK_SET && dlibMove.QuadPart == 0) {
+        TRACE();
+        plibNewPosition->QuadPart = 0;
+        return S_OK;
     }
     wia_log(WIA_WARNING, "IStream::Seek(%lld, %u) not implemented but called !",
             dlibMove.QuadPart, dwOrigin);
