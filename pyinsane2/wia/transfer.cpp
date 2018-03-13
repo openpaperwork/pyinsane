@@ -104,6 +104,7 @@ HRESULT STDMETHODCALLTYPE PyinsaneImageStream::Seek(
         plibNewPosition->QuadPart = mWritten;
         return S_OK;
     } else if (mWritten == 0 && dwOrigin == STREAM_SEEK_SET && dlibMove.QuadPart == 0) {
+        // Epson WorkForce ES-300W
         TRACE();
         plibNewPosition->QuadPart = 0;
         return S_OK;
