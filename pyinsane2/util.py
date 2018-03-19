@@ -49,3 +49,30 @@ class AliasOption(object):
         return ("Option [{}] (alias for {})".format(
             self.__dict__['name'], self.__dict__['alias_for']
         ))
+
+
+class ResolutionOption(object):
+    def __init__(self, actual_opt, options):
+        self.__dict__['_opt'] = actual_opt
+        constraint = actual_opt.constraint
+        if isinstance(constraint, tuple):
+            if len(constraint) > 3 and constraint[1] < constraint[2]:
+                # constraint is (min, interval, max)
+                # constraint must be (min, max, interval)
+                constraint = (
+                    constraint[0],
+                    constraint[2],
+                    constraint[1]
+                )
+        self.__dict__['constraint'] = constraint
+
+    def __getattr__(self, attr):
+        if attr == 'constraint':
+            return self.__dict__['constraint']
+        return getattr(self.__dict__['_opt'], attr)
+
+    def __setattr__(self, attr, new_value):
+        setattr(self.__dict__['_opt'], attr, new_value)
+
+    def __str__(self):
+        return str(self.__dict__['_opt'])

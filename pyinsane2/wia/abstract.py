@@ -577,8 +577,10 @@ class Scanner(object):
         if "yres" in self.options.keys():
             res_alias_for.append("yres")
         if res_alias_for != []:
-            self.options['resolution'] = util.AliasOption(
-                "resolution", res_alias_for, self.options
+            self.options['resolution'] = util.ResolutionOption(
+                util.AliasOption(
+                    "resolution", res_alias_for, self.options
+                )
             )
 
         if 'source' in original:
