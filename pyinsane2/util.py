@@ -52,7 +52,7 @@ class AliasOption(object):
 
 
 class ResolutionOption(object):
-    def __init__(self, actual_opt, options):
+    def __init__(self, actual_opt):
         self.__dict__['_opt'] = actual_opt
         constraint = actual_opt.constraint
         if isinstance(constraint, tuple):
