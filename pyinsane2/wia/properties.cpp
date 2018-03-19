@@ -886,8 +886,11 @@ PyObject *int_vector_to_pyobject_tuple(const CAL *values)
     PyObject *out;
     PyObject *val[2];
     if (values->cElems < 2) {
-        wia_log(WIA_WARNING, "Got a range with not enough elements !");
+        wia_log(WIA_WARNING, "Got a range with not enough elements ! (%d)", values->cElems);
         return NULL;
+    }
+    if (values->cElems > 2) {
+        wia_log(WIA_WARNING, "Got a range with extra elements: %d", values->cElems);
     }
     val[0] = PyLong_FromLong(values->pElems[0]);
     val[1] = PyLong_FromLong(values->pElems[1]);
