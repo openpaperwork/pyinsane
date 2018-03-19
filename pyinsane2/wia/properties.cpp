@@ -884,17 +884,20 @@ PyObject *int_vector_to_pyobject_list(const CAL *values)
 PyObject *int_vector_to_pyobject_tuple(const CAL *values)
 {
     PyObject *out;
-    PyObject *val[2];
+    PyObject *val;
+    int i;
+
     if (values->cElems < 2) {
         wia_log(WIA_WARNING, "Got a range with not enough elements ! (%d)", values->cElems);
         return NULL;
     }
-    if (values->cElems > 2) {
-        wia_log(WIA_WARNING, "Got a range with extra elements: %d", values->cElems);
+
+    out = PyTuple_New(values->cElems);
+    for (i = 0 ; i < values->cElems ; i++) {
+        val = PyLong_FromLong(values->pElems[i]);
+        PyTuple_SetItem(out, i, val);
     }
-    val[0] = PyLong_FromLong(values->pElems[0]);
-    val[1] = PyLong_FromLong(values->pElems[1]);
-    return PyTuple_Pack(2, val[0], val[1]);
+    return out;
 }
 
 PyObject *str_vector_to_pyobject(const CABSTR *values)
@@ -902,7 +905,7 @@ PyObject *str_vector_to_pyobject(const CABSTR *values)
     PyObject *out = PyList_New(values->cElems);
     PyObject *val;
     ULONG i;
-    
+
     for (i = 0 ; i < values->cElems ; i++) {
         //val = PyLong_FromLong(values->pElems[i]);
         val = PyUnicode_FromWideChar(SysAllocString(values->pElems[i]), SysStringLen(values->pElems[i]));
