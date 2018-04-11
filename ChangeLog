@@ -1,5 +1,7 @@
 2018-xx-xx : 2.0.13:
-- WIA: Support of Espon WorkForce ES-300W
+- Sane: Support of Epson DS-310: Do not try to set a value on an option that
+  can have only one value. Sane driver may return an error.
+- WIA: Support of Epson WorkForce ES-300W
 
 2018-03-05 : 2.0.12:
 - Build method has been changed: Use now "make install" instead of
