@@ -104,6 +104,12 @@ def set_scanner_opt(scanner, opt, values):
                 )
                 continue
 
+            if len(scanner.options[opt].constraint) <= 1:
+                # XXX(Jflesch): Epson DS-310
+                # Do not try to set a value when there is only one value
+                # possible. Sane will return SANE_STATUS_INVAL.
+                return
+
         # Then try to set it
         try:
             scanner.options[opt].value = value
