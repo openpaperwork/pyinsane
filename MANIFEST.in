@@ -1,7 +1,0 @@
-recursive-include pyinsane2 *.py *.glade *.xml *.css *.cpp *.h *.txt
-recursive-include tests *.py
-include AUTHORS
-include ChangeLog
-include README.md
-include setup.cfg
-include LICENSE
